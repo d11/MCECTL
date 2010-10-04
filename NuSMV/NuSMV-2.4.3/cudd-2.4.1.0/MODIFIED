@@ -1,0 +1,28 @@
+The following files have been modified to use CUDD in NuSMV
+
+Makefile
+cudd/cudd.h
+cudd/cuddBridge.c
+cudd/cuddCompose.c
+cudd/cuddAddIte.c
+cudd/cuddExport.c
+cudd/cuddGenCof.c
+cudd/cuddInit.c
+cudd/cuddInt.h
+cudd/cuddSat.c
+cudd/cuddTable.c
+cudd/cuddUtil.c
+cudd/cuddReorder.c
+cudd/Makefile
+util/cpu_stats.c
+util/util.h
+mtr/mtrGroup.c
+setup.sh
+shutdown.sh
+
+The following files have been added to the CUDD distribution
+MODIFIED
+lib
+cudd/cuddAddOp.c (Added)
+cudd/cuddBddOp.c (Added)
+

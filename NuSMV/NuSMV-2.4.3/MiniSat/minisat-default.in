@@ -1,0 +1,26 @@
+#! /bin/sh
+
+# ----------------------------------------------------------------------
+# Minisat settings for NuSMV
+#
+# ** WARNING ** DO NOT CHANGE THIS FILE!
+# Instead copy it to 'minisat-default' and modify your local version if 
+# you need to customize it.
+# ----------------------------------------------------------------------
+
+# This was for older version 1.14
+#minisat_ver=1.14
+#minisat_zip=MiniSat_v${minisat_ver}_src.zip
+#minisat_dir=MiniSat_v${minisat_ver}
+
+minisat_ver=061208
+minisat_zip=minisat2-${minisat_ver}.zip
+minisat_dir=minisat
+
+# ----------------------------------------------------------------------
+minisat_patch=MiniSat_v${minisat_ver}_nusmv.patch
+minisat_link=MiniSat_v${minisat_ver}
+minisat_libname=MiniSat
+minisat_ifcname=Solver_C.h
+
+patched_tag=patched_${minisat_ver}

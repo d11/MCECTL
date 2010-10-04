@@ -1,0 +1,152 @@
+#define __d2w(a,b) 0d ## a ## _## b
+#define _d2w(a,b) __d2w(a,b)
+#define __0 _d2w(N,0)
+#define __1 _d2w(N,1)
+#define __2 _d2w(N,2)
+#define __3 _d2w(N,3)
+#define __4 _d2w(N,4)
+#define __5 _d2w(N,5)
+#define __8 _d2w(N,8)
+#define __100 _d2w(N,100)
+#define __200 _d2w(N,200)
+#define __1200 _d2w(N,1200)
+#define __M _d2w(N,M)
+
+
+
+MODULE main
+
+VAR a : word[ N ];
+VAR b : word[ N ];
+VAR c : word[ N ];
+VAR d : word[ N ];
+
+VAR a_prev : word[ N ];
+VAR b_prev : word[ N ];
+VAR c_prev : word[ N ];
+VAR d_prev : word[ N ];
+
+VAR a_prev_prev : word[ N ];
+VAR b_prev_prev : word[ N ];
+VAR c_prev_prev : word[ N ];
+VAR d_prev_prev : word[ N ];
+
+VAR a_prev_prev_prev : word[ N ];
+VAR b_prev_prev_prev : word[ N ];
+VAR c_prev_prev_prev : word[ N ];
+VAR d_prev_prev_prev : word[ N ];
+
+VAR a_prev_prev_prev_prev : word[ N ];
+VAR b_prev_prev_prev_prev : word[ N ];
+VAR c_prev_prev_prev_prev : word[ N ];
+VAR d_prev_prev_prev_prev : word[ N ];
+
+VAR a_prev_prev_prev_prev_prev : word[ N ];
+VAR b_prev_prev_prev_prev_prev : word[ N ];
+VAR c_prev_prev_prev_prev_prev : word[ N ];
+VAR d_prev_prev_prev_prev_prev : word[ N ];
+
+VAR a_prev_prev_prev_prev_prev_prev : word[ N ];
+VAR b_prev_prev_prev_prev_prev_prev : word[ N ];
+VAR c_prev_prev_prev_prev_prev_prev : word[ N ];
+VAR d_prev_prev_prev_prev_prev_prev : word[ N ];
+
+ASSIGN next(a_prev) := a;
+ASSIGN next(b_prev) := b;
+ASSIGN next(c_prev) := c;
+ASSIGN next(d_prev) := d;
+
+ASSIGN next(a_prev_prev) := a_prev;
+ASSIGN next(b_prev_prev) := b_prev;
+ASSIGN next(c_prev_prev) := c_prev;
+ASSIGN next(d_prev_prev) := d_prev;
+
+ASSIGN next(a_prev_prev_prev) := a_prev_prev;
+ASSIGN next(b_prev_prev_prev) := b_prev_prev;
+ASSIGN next(c_prev_prev_prev) := c_prev_prev;
+ASSIGN next(d_prev_prev_prev) := d_prev_prev;
+
+ASSIGN next(a_prev_prev_prev_prev) := a_prev_prev_prev;
+ASSIGN next(b_prev_prev_prev_prev) := b_prev_prev_prev;
+ASSIGN next(c_prev_prev_prev_prev) := c_prev_prev_prev;
+ASSIGN next(d_prev_prev_prev_prev) := d_prev_prev_prev;
+
+ASSIGN next(a_prev_prev_prev_prev_prev) := a_prev_prev_prev_prev;
+ASSIGN next(b_prev_prev_prev_prev_prev) := b_prev_prev_prev_prev;
+ASSIGN next(c_prev_prev_prev_prev_prev) := c_prev_prev_prev_prev;
+ASSIGN next(d_prev_prev_prev_prev_prev) := d_prev_prev_prev_prev;
+
+ASSIGN next(a_prev_prev_prev_prev_prev_prev) := a_prev_prev_prev_prev_prev;
+ASSIGN next(b_prev_prev_prev_prev_prev_prev) := b_prev_prev_prev_prev_prev;
+ASSIGN next(c_prev_prev_prev_prev_prev_prev) := c_prev_prev_prev_prev_prev;
+ASSIGN next(d_prev_prev_prev_prev_prev_prev) := d_prev_prev_prev_prev_prev;
+
+VAR l0 : word[ N ];
+VAR l1 : word[ N ];
+VAR l2 : word[ N ];
+VAR l3 : word[ N ];
+VAR l4 : word[ N ];
+VAR l5 : word[ N ];
+VAR l6 : word[ N ];
+
+ASSIGN next(l0) := a; 
+ASSIGN next(l1) := __2 * b; 
+ASSIGN next(l2) := l0 + l1; 
+ASSIGN next(l3) := __4 * c_prev; 
+ASSIGN next(l4) := l2 + l3; 
+ASSIGN next(l5) := __8 * d_prev_prev; 
+ASSIGN next(l6) := l4 + l5;
+
+VAR r0 : word[ N ];
+VAR r1 : word[ N ];
+VAR r2 : word[ N ];
+VAR r3 : word[ N ];
+VAR r4 : word[ N ];
+VAR r5 : word[ N ];
+VAR r6 : word[ N ];
+
+ASSIGN next(r0) := d; 
+ASSIGN next(r1) := r0<<1; 
+ASSIGN next(r2) := r1 + c_prev_prev;
+ASSIGN next(r3) := r2<<1;
+ASSIGN next(r4) := r3 + b_prev_prev_prev_prev;
+ASSIGN next(r5) := r4<<1;
+ASSIGN next(r6) := r5 + a_prev_prev_prev_prev_prev_prev;
+
+VAR l6_prev : word[ N ];
+VAR l6_prev_prev : word[ N ];
+VAR l6_prev_prev_prev : word[ N ];
+ASSIGN next(l6_prev) := l6;
+ASSIGN next(l6_prev_prev) := l6_prev;
+ASSIGN next(l6_prev_prev_prev) := l6_prev_prev;
+
+VAR counter : word[3];
+
+ASSIGN
+init(counter) := 0d3_0;
+next(counter) :=
+ case
+  counter = 0d3_0 : 0d3_1;
+  counter = 0d3_1 : 0d3_2;
+  counter = 0d3_2 : 0d3_3;
+  counter = 0d3_3 : 0d3_4;
+  counter = 0d3_4 : 0d3_5;
+  counter = 0d3_5 : 0d3_6;
+  counter = 0d3_6 : 0d3_7;
+  counter = 0d3_7 : 0d3_7;
+  TRUE : counter;
+ esac;
+
+INVARSPEC (counter = 0d3_7) -> (l6_prev_prev_prev = r6)
+
+
+-- FREEZE INPUTS
+-- ASSIGN next(a) := a;
+-- ASSIGN next(b) := b;
+-- ASSIGN next(c) := c;
+-- ASSIGN next(d) := d;
+
+-- ASSIGN init(a) := __0;
+-- ASSIGN init(b) := __1;
+-- ASSIGN init(c) := __2;
+-- ASSIGN init(d) := __3;

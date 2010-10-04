@@ -1,0 +1,121 @@
+#define __d2w(a,b) 0d ## a ## _## b
+#define _d2w(a,b) __d2w(a,b)
+#define __0 _d2w(N,0)
+#define __1 _d2w(N,1)
+#define __2 _d2w(N,2)
+#define __4 _d2w(N,4)
+#define __8 _d2w(N,8)
+#define __100 _d2w(N,100)
+#define __200 _d2w(N,200)
+#define __1200 _d2w(N,1200)
+#define __M _d2w(N,M)
+
+MODULE main
+
+VAR pc_is_s0 : boolean;
+VAR pc_is_s1 : boolean;
+VAR pc_is_s2 : boolean;
+VAR pc_is_s3 : boolean;
+VAR pc_is_done : boolean;
+
+INIT pc_is_s0
+
+INVAR pc_is_s0 -> (! pc_is_s1 & ! pc_is_s2 & ! pc_is_s3 & ! pc_is_done )
+INVAR pc_is_s1 -> (! pc_is_s0 & ! pc_is_s2 & ! pc_is_s3 & ! pc_is_done )
+INVAR pc_is_s2 -> (! pc_is_s1 & ! pc_is_s0 & ! pc_is_s3 & ! pc_is_done )
+INVAR pc_is_s3 -> (! pc_is_s1 & ! pc_is_s2 & ! pc_is_s0 & ! pc_is_done )
+INVAR pc_is_done -> (! pc_is_s1 & ! pc_is_s2 & ! pc_is_s3 & ! pc_is_s0 )
+
+
+TRANS pc_is_s0 -> next(pc_is_s1); 
+TRANS pc_is_s1 -> next(pc_is_s2); 
+TRANS pc_is_s2 -> next(pc_is_s3); 
+TRANS pc_is_s3 -> next(pc_is_done); 
+TRANS pc_is_done -> next(pc_is_done); 
+
+VAR LIN :  Word[ NNNN ];
+VAR RIN :  Word[ NNNN ];
+
+-- ASSIGN init( LIN ) := 0h_000f;
+-- ASSIGN init( RIN ) := 0h_0001;
+
+VAR OUT1 :  Word[ NNNN ];
+VAR OUT2 :  Word[ NNNN ];
+
+DEFINE OUT2_r0 := OUT2[ _r0 ];
+DEFINE OUT2_r1 := OUT2[ _r1 ];
+DEFINE OUT2_r2 := OUT2[ _r2 ];
+DEFINE OUT2_r3 := OUT2[ _r3 ];
+
+VAR l_in : Word[ N ];
+VAR r_in : Word[ N ];
+VAR c_in : Word[ 1 ];
+VAR out :  Word[ N1 ];
+VAR wout : Word[ N ];
+VAR cout : Word[ 1 ];
+
+ASSIGN cout := out[ N:N ];
+ASSIGN wout := out[ _r0 ];
+
+ASSIGN
+ next( LIN ) := LIN;
+ next( RIN ) := RIN;
+ init( OUT1 ) := LIN + RIN;
+ next( OUT1 ) := OUT1;
+
+ -- what changes at stage 0
+TRANS
+   pc_is_s0 ->(next(l_in) = LIN[ _r0 ] &
+ 	       next(r_in) = RIN[ _r0 ] &
+	       next(out)  = (0b_0 :: next(l_in)) + (0b_0 :: next(r_in)) &
+	       next(OUT2) = OUT2[ _r3 ] :: OUT2[ _r2 ] :: OUT2[ _r1 ] :: next(out)[ _r0 ])
+
+ -- what changes at stage 1
+TRANS
+   pc_is_s1 ->(next(l_in) = LIN[ _r1 ] &
+	       next(r_in) = RIN[ _r1 ] &
+	       next(c_in) = cout &
+	       next(out)  = (0b_0 :: next(l_in)) + (0b_0 :: next(r_in)) + (__0 :: next(c_in)) &
+	       next(OUT2) = OUT2[ _r3 ] :: OUT2[ _r2 ] :: next(out)[ _r0 ] :: OUT2[ _r0 ])
+
+ -- what changes at stage 2
+TRANS
+   pc_is_s2 ->(next(l_in) = LIN[ _r2 ] &
+	       next(r_in) = RIN[ _r2 ] &
+	       next(c_in) = cout &
+	       next(out)  = (0b_0 :: next(l_in)) + (0b_0 :: next(r_in)) + (__0 :: next(c_in)) &
+	       next(OUT2) = OUT2[ _r3 ] :: next(out)[ _r0 ] :: OUT2[ _r1 ] :: OUT2[ _r0 ])
+
+ -- what changes at stage 3
+TRANS
+   pc_is_s3 ->(next(l_in) = LIN[ _r3 ] &
+	       next(r_in) = RIN[ _r3 ] &
+	       next(c_in) = cout &
+	       next(out)  = (0b_0 :: next(l_in)) + (0b_0 :: next(r_in)) + (__0 :: next(c_in)) &
+	       next(OUT2) = next(out)[ _r0 ] :: OUT2[ _r2 ] :: OUT2[ _r1 ] :: OUT2[ _r0 ])
+TRANS
+  pc_is_done -> 
+  (next(l_in) = l_in &
+   next(r_in) = r_in &
+   next(c_in) = c_in &
+   next(out) = out &
+   next(OUT2) = OUT2)
+
+
+SPEC AF (pc_is_done)
+
+SPEC AF (OUT1 = OUT2)
+
+SPEC AG (pc_is_s1 -> OUT1[ _r0 ] = OUT2[ _r0 ] )
+SPEC AG (pc_is_s2 -> OUT1[ _r1 ] = OUT2[ _r1 ] )
+SPEC AG (pc_is_s3 -> OUT1[ _r2 ] = OUT2[ _r2 ] )
+SPEC AG (pc_is_done -> OUT1[ _r3 ] = OUT2[ _r3 ] )
+
+-- LTLSPEC ((l_in = __0) & (l_in = __100)) -> (OUT1 = OUT2)
+
+INVARSPEC (pc_is_done) -> ( ( OUT1[ _r0 ] = OUT2[ _r0 ] ) &
+			   ( OUT1[ _r1 ] = OUT2[ _r1 ] ) &
+			   ( OUT1[ _r2 ] = OUT2[ _r2 ] ) &
+			   ( OUT1[ _r3 ] = OUT2[ _r3 ] ) )
+
+

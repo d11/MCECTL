@@ -1,0 +1,3227 @@
+2007-05-21  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.4.3 ===
+
+2007-05-21 10:55  Marco Roveri <roveri@itc.it>
+
+	* src/: ltl/ltl.c, mc/mcMc.c: Added printing of warning message if
+	  the the set of fair states is empty. 
+
+2007-05-21 09:33  Marco Roveri <roveri@itc.it>
+
+	* src/parser/ord/ord_input.l: Allowed quoted atoms to be read in
+	  the ordering file.
+
+2007-05-21 09:31  Marco Roveri <roveri@itc.it>
+
+	* src/compile/type_checking/checkers/CheckerCore.c: Fix for 
+	  bug #466 (type checker error printer was not taking into 
+	  account unary minus).
+
+2007-05-21 09:29  Marco Roveri <roveri@itc.it>
+
+	* src/bmc/sbmc/sbmcTableauIncLTLformula.c: Fix for bug #464
+	  (problem with past temporal depth). Thanks to Tommi Junttila for
+	  providing the patch. 
+
+2007-05-21 09:26  Marco Roveri <roveri@itc.it>
+
+	* src/cmd/: cmdFile.c, cmdMisc.c: Added command completion
+	  functionalities to the interactive shell when readline library
+	  is linked. Thanks to Tivadar Szemethy <tivadar.szemethy AT
+	  vanderbilt.edu> who contributed the code for this feature.
+
+	
+2007-05-17 13:46  Roberto Cavada <cavada@itc.it>
+
+	* src/trace/TraceManager.c BUG FIX TraceManager could possibly
+	  cause segfault when destrying itself. This resolves an hack that
+	  was applied by MR.
+
+2007-05-17 11:23  Roberto Cavada <cavada@itc.it>
+
+	* src/parser/grammar.y: BUG FIX #457 Real, exponential and
+	  fractional constants are no longer allowed to be parsed when
+	  mathsat is disabled.
+
+2007-05-16 17:27  Marco Roveri <roveri@itc.it>
+
+	* src/compile/compileCmd.c: BUG FIX Added a call to PropDb_clean()
+	  to flatten_hierarchy command to deal with the case of attempting
+	  to add a property that has problems. Before, in the database,
+	  after the removal of original problem in the input file, and
+	  flattening there were some properties duplicated. 
+
+2007-05-16 17:25  Marco Roveri <roveri@itc.it>
+
+	* src/prop/: prop.h, propDb.c: - Added a message to report type
+	  error for a property that violates type error. Before nothing
+	  was reported, and it was difficult to understand where the
+	  problem was.
+
+2007-05-16 17:23  Marco Roveri <roveri@itc.it>
+
+	* src/compile/type_checking/checkers/CheckerCore.c: BUG FIX Type
+	  checker now support self at top level and return type error.
+
+2007-05-16 17:14  Roberto Cavada <cavada@itc.it>
+
+	* src/: bmc/sbmc/sbmcStructs.c, compile/compileCone.c,
+	  compile/compileFlatten.c, compile/symb_table/symb_table.c,
+	  enc/bdd/BddEnc.c, mathsat/mathsatMemories.c, rbc/ConjSet.c,
+	  sa/saDCOI.c, utils/WordNumber.c: BUG FIX #437 Fixed memory
+	  leaks.	  
+
+2007-05-16 16:21  Roberto Cavada <cavada@itc.it>
+
+	* src/: bmc/sbmc/sbmcBmcInc.c, bmc/sbmc/sbmcStructs.c,
+	  bmc/sbmc/sbmcStructs.h, sa/saSbmc.c: BUG FIX #438 Structure is
+	  now freed, but content cannot be freed because: - content can be
+	  changed by calling setters - setters was not documented about
+	  ownership of content.	  
+
+2007-05-16 15:42  Roberto Cavada <cavada@itc.it>
+
+	* src/compile/compileFlatten.c: BUG FIX #456 Fixed evaluation of
+	  "self" inside Compile_resolve_name 
+
+2007-05-15 17:22  Marco Roveri <roveri@itc.it>
+
+	* src/ltl/ltlRewrite.c, src/ltl/ltl2smv/ltl2smv.c,
+	  test/bug_455/bug3.smv, test/bug_455/test.sh: CRITICAL BUG FIX
+	  Fixes for bug 451 and 455.
+
+2007-05-15 16:24  Marco Roveri <roveri@itc.it>
+
+	* src/compile/compileUtil.c: Fix for bug 458.
+	  AF p | AF q cannot in general be rewritten as AF (p | q)  
+
+2007-05-15 16:21  Roberto Cavada <cavada@itc.it>
+
+	* doc/user-man/syntax.tex, src/parser/grammar.y: BUG FIX #457 *
+	  Cegar-related tokens are allowed to be parsed only when mathsat
+	  was	enabled at configure time.  * Added CEGAR tokens to the
+	  list of documented reserved words
+
+2007-05-09 17:43  Roberto Cavada <cavada@itc.it>
+
+	* src/: compile/PredicateNormaliser.c,
+	  compile/PredicateNormaliser.h, fsm/sexp/SexpFsm.c,
+	  mathsat/mathsatWriteMathSAT.c, mbp/fsm/GameSexpFsm.c: FEATURE
+	  Relaxed semantics of function
+	  PredicateNormaliser_normalise_constrain.  It is no longer
+	  required the given expression is a top-level expression like a
+	  constrain. Renamed the function to PredicateNormaliser_normalise_expr.
+
+2007-05-09 17:12  Roberto Cavada <cavada@itc.it>
+
+	* src/enc/bdd/BddEnc.c: CRITICAL BUG FIX Too strict assertions
+	  prevented the system to allocate more than 4096 BDD variables.
+	  ** This should be consisdered a ctitical bug fix **
+
+2007-05-09 16:25  Roberto Cavada <cavada@itc.it>
+
+	* src/compile/PredicateNormaliser.c: BUG FIX PredicateNormalizer
+	  was not handling UMINUS nodes 
+
+2007-05-09 16:25  Roberto Cavada <cavada@itc.it>
+
+	* src/node/nodePrint.c: BUG FIX print_sexp was not handling UMINUS
+	  
+
+2007-05-09 15:13  Roberto Cavada <cavada@itc.it>
+
+	* src/parser/: parserUtil.c FEATURE Added new function
+	  Parser_ReadCmdFromFile
+
+2007-05-08 18:22  Roberto Cavada <cavada@itc.it>
+
+	* src/compile/PredicateNormaliser.c: BUG FIX Fixed
+	  PredicateNormalizer to push down bool cast when CASE node are
+	  inside its operand.  
+
+2007-05-08 18:21  Roberto Cavada <cavada@itc.it>
+
+	* src/enc/be/BeEnc.c: BUG FIX Fixed a bug in BeEnc. The bug was
+	  never occurring because affected function was not called.
+	  Thanks to AT for finding it.
+
+2007-05-08 13:19  Roberto Cavada <cavada@itc.it>
+
+	* src/utils/: utils.c, utils.h: FEATURE Added new function int
+	  Utils_strcasecmp ARGS((const char* s1, const char* s2))
+	  to compare two strings case insensitive.	  
+
+2007-05-06 18:10  Marco Roveri <roveri@itc.it>
+
+	* src/enc/: bdd/BddEnc.c, bool/BoolEnc.c: Added two cases to avoid
+	  encoding into BDD of Integer and Real variables.
+
+2007-05-04 16:38  Andrei Tchaltsev <tchaltsev@itc.it>
+
+	* src/sa/plugins/: TraceVIS.c, TraceVIS_private.h: RENAMING I
+	  renamed "vars_list" to "symb_list" because those were lists of
+	  symbols, not variables. This difference may be important with an
+	  introduction of frozen variables.
+
+2007-05-03 18:21  Roberto Cavada <cavada@itc.it>
+
+	* src/enc/bdd/BddEnc.c: BUG FIX Fixed a bug in method
+	  BddEnc_get_layer_vars_cube.  
+
+2007-05-03 17:49  Roberto Cavada <cavada@itc.it>
+
+	* src/: compile/compile.h, enc/bdd/BddEnc.c, enc/bdd/BddEnc.h,
+	  ltl/ltl.c, mbp/mbpBuildModel.c, mbp/mbpCheckReachAvoidSpec.c:
+	  METHOD RENAME Renamed method BddEnc_produce_vars_cube to
+	  BddEnc_get_layer_vars_cube.  The method gets also a new parameter
+	  to 'filter' symbols type that should occur into the returned cube
+	  (VarFilterType).
+
+2007-05-03 17:47  Roberto Cavada <cavada@itc.it>
+
+	* src/fsm/: FsmBuilder.c, FsmBuilder.h: NEW FUNCTION Added function
+	  FsmBuilder_clusterize_expr 
+
+2007-04-18 16:40  Roberto Cavada <cavada@itc.it>
+
+	* test/bug_456/: bug0.smv, test.sh: NEW TEST For bug #456 
+
+2007-04-18 16:35  Roberto Cavada <cavada@itc.it>
+
+	* test/bug_455/: bug1.smv, bug2.smv, ltl2smv.c, ltlRewrite.c,
+	  test.sh: NEW TESTS - Added 2 more tests - Added patches proposed
+	  by MR
+
+2007-04-18 16:29  Roberto Cavada <cavada@itc.it>
+
+	* test/bug_455/: bug0.smv, test.sh: TEST Added test for bug #455  
+
+2007-04-18 16:13  Roberto Cavada <cavada@itc.it>
+
+	* src/utils/: NodeList.c, NodeList.h: NEW FUNCTION Added method
+	  concat_unique to NodeList 
+
+2007-04-13 11:38  Roberto Cavada <cavada@itc.it>
+
+	* src/trace/TraceManager.c: BUG FIX TraceManager did not take into
+	  account of layers that had been previously unregistered.
+
+	
+
+2007-04-06  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.4.2 ===
+
+
+2007-04-05 19:45  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/trace/plugins: TraceExplainer.c, TraceTable.c,
+	TraceXmlDumper.c: BUG FIX WORDS were not correctly handled by most
+	of trace printers.  Thanks to Vincent Gourcuff <vincent.gourcuff
+	AT lurpa ens-cachan fr> for reporting the bug.
+	
+2007-04-05 17:42  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/ltl/: ltlRewrite.c: BUG FIX LTL2SMV is prevented from trying
+	solving problems whose formule contains input variables that are
+	WORDS. An error message warns the user about the currently
+	unsupported feature.
+	
+2007-03-29 09:40  Roberto Cavada <cavada@irst.itc.it>
+
+	* doc/user-man/: batch.tex, inter.tex, main.bib: DOCS Documented
+	  rbc and sexp inlining 
+
+
+2007-03-28 16:31  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/sm/smMain.c: FEATURE Changed arguments of command line
+	  options -sin and -rin from 0|1 to off|on.
+
+	  This allows for different future values like 'auto' 
+
+
+2007-03-28 15:49  Roberto Cavada <cavada@irst.itc.it>
+
+	* Makefile.am, configure.ac, nusmv-2.2.pc.in, nusmv-2.4.pc.in: FILE
+	  RENAMING nusmv-2.4.pc.in substitutes old nusmv-2.2.pc.in 
+
+
+2007-03-28 15:48  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: compile/compileBEval.c, compile/compileFlatten.c,
+	  ltl/ltl2smv/ltl2smv.c: BUG FIX, CLEANUP
+
+	  - Similarly to what we did for CheckerCore.c, we removed a too
+	  strong assertion about CASE nodes: right side was expected to be
+	   either a CASE or a FAILURE, but there are internally built CASE
+	   nodes that contains other kind of else nodes.
+
+	  - Cleanups in src/compile
+
+
+2007-03-28 13:25  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/type_checking/checkers/CheckerCore.c: BUG FIX Removed
+	  a too strong assertion about CASE nodes: right side was expected
+	  to be either a CASE or a FAILURE, but there are internally built
+	  CASE nodes that contains other kind of else nodes.  
+
+
+2007-03-27 16:18  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/utils/defs.h: FEATURE Modify definition of boolean to rely on
+	  stdbool.h if found by configure 
+
+
+2007-03-27 14:38  Roberto Cavada <cavada@irst.itc.it>
+
+	* README, README_PLATFORMS: DOCS Added notes to compile nusmv at 64
+	  bits 
+
+
+2007-03-27 14:28  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/fsm/sexp/SexpFsm.c: DOCS Minor modification to a comment
+	  (related to inlining) 
+
+
+2007-03-27 14:25  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/beRbcManager.c, rbc/ConjSet.c, rbc/ConjSet.h,
+	  rbc/InlineResult.c, rbc/rbcInline.c: DOCS Commented code for
+	  classes ConjSet, ConjElem, InlineResult and top level fcuntions
+	  for rbc inlining 
+
+
+2007-03-27 11:50  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/bePkg.c, bmc/bmcConv.c, compile/compileBEval.c,
+	  enc/operators.c, enc/bdd/BddEnc.c, enc/be/BeEnc.c,
+	  enc/bool/BoolEnc.c, fsm/sexp/SexpFsm.c, parser/psl/pslNode.c,
+	  rbc/ConjSet.h, rbc/InlineResult.c, rbc/rbc.h: CLEANUP Fixed most
+	  of compilation warnings (missing inclusions/declarations, unused
+	  vars, etc.) 
+
+
+2007-03-27 10:37  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: fsm/sexp/SexpFsm.c, opt/optCmd.c, opt/optInt.h,
+	  sm/smMain.c: FEATURES - Renamed symb_inlining to sexp_inlining as
+	  requested by MR - Hidden option rbc_inlining_lazy (default is 0,
+	  setting is prevented) - Added new command line options [-sin 0|1]
+	  and [-rin 0|1] to control   system vars sexp_inlining and
+	  rbc_inlining - Fixed verbosity of sexp inlining 
+
+
+2007-03-27 09:36  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac: BUG FIX Fixed a typo $zchafflibdir -> $zchaffincdir
+	  Thanks to Mark Tuttle <mark.r.tuttle@intel.com> for reporting the
+	  typo.  
+
+
+2007-03-27 09:34  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/utils/Makefile.am: BUG FIX defs.h was not distributed.  
+
+
+2007-03-26 19:27  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileCheck.c: BUG FIX #146 To be checked 
+
+
+2007-03-26 15:38  Roberto Cavada <cavada@irst.itc.it>
+
+	* test/bug_146/: bug11.smv, bug12.smv, test.sh: NEW TEST For bug
+	  #146 (recursively defined symbols are not detected)
+
+
+2007-03-26 00:04  Marco Roveri <roveri@irst.itc.it>
+
+	* test/bug_451/bug1.smv, test/bug_451/bug2.smv,
+	  test/bug_451/bug3.smv, test/bug_451/test.sh,
+	  src/compile/type_checking/checkers/CheckerCore.c: Fix for bug
+	  #451.
+
+	  - Please note that we moved the position where FAILURE is handled
+	  in   cuddAddOp.c. Now they are handled after the base cases.
+	  E.g. false & FAILURE -> false
+
+	  - In the compile/type_checking/checkers/CheckerCore.c stand alone
+	    FAILURE node is assigned type boolean, to let it pass the type
+	   checking.
+
+	  - In ltl/ltl2smv/ltl2smv.c a case node is curretly expanded into
+	  (C &	 T) | (!C & E). This fix was needed because when there are
+	  inputs in   some defined symbol occurring in an LTL formula, the
+	  ltl formula is   flattened, defines are expanded and the
+	  resulting LTL formula is   rewritten by removing input variables
+	  and replacing them with an   additional variable which keep track
+	  of the value of the input   variable. The input variable is
+	  replaced with the X (i.e. temporal   operator) of the new
+	  variable.
+
+
+2007-03-23 17:25  Roberto Cavada <cavada@irst.itc.it>
+
+	* Makefile.am, src/dd/dd.c: CLEANUP Removed any compile-time
+	  dependencies of CUDD wrt nusmv.  Dependencies are still there
+	  (print_node, node_is_failure, etc.) but now are resolved at
+	  linking time when nusmv is built.
+
+	  Nusmv files are no more imported by cudd.  This affects both cudd
+	  versions 2.3 and 2.4 
+
+
+2007-03-23 17:23  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/node/: node.c, node.h: NEW FUNCTION Added function
+	  'node_is_failure' 
+
+
+2007-03-23 16:02  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/bmc/sbmc/sbmcUtils.c: BUG FIX Fixed a wrong condition into an
+	  assertion 
+
+
+2007-03-23 11:12  Marco Roveri <roveri@irst.itc.it>
+
+	* src/ltl/ltl2smv/ltl2smv.c: Partially fix of bug #451.
+
+	  The case is expanded into an equivalent formula.
+
+	  Is partially fixed since now the type checker complains with
+	  possible FAILURE nodes coming from CASEs, and then handling of
+	  FAILURE in the base cases of AND/OR/XOR add operations.
+
+
+2007-03-22 14:15  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/parser/psl/psl_grammar.y: BUG FIX #450 Made affected PSL
+	  operators left associative like in nusmv core grammar.  
+
+
+2007-03-22 11:55  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: BUG FIX #452 The booleanizer cache
+	  did not take into account of contexts of booleanized formulae.
+
+	  Thanks to Vesa Ojala, Jori Dubrovin and Tommi Junttila for
+	  reporting the bug.
+
+
+2007-03-22 11:53  Roberto Cavada <cavada@irst.itc.it>
+
+	* test/: bug_451/test.sh, bug_452/test.sh: BUG FIX Tests were not
+	  working well.  
+
+
+2007-03-22 11:41  Roberto Cavada <cavada@irst.itc.it>
+
+	* test/bug_452/: bug0.smv, bug1.smv, test.sh: NEW TEST For bug #451
+	  
+
+2007-03-22 10:13  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/ltl/ltlRewrite.c: BUG FIX A first step to fix #451 (still
+	  open) 
+
+
+2007-03-21 17:04  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: sat/solvers/SatSim.c, sim/simData.c: BUG FIX Fixed a
+	  setting of Sim that made the solver possibly produce wrong
+	  results.  
+
+
+2007-03-21 16:21  Andrei Tchaltsev <tchaltsev@irst.itc.it>
+
+	* test/bug_451/: bug.smv, correct.smv, test.sh: [NEW BUG TEST]
+	  Added a test for bug #451
+
+
+2007-03-20 20:30  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcSatTrace.c, bmc/sbmc/sbmcUtils.c,
+	  compile/PredicateNormaliser.c, compile/compileBEval.c,
+	  compile/compileCheck.c, compile/compileFlatten.c,
+	  compile/symb_table/SymbCache.c, compile/symb_table/symb_table.c,
+	  compile/type_checking/TypeChecker.c,
+	  compile/type_checking/checkers/CheckerCore.c, dd/dd.c,
+	  enc/operators.c, enc/bdd/BddEnc.c, enc/bdd/BddEncCache.c,
+	  enc/be/BeEnc.c, enc/bool/BoolEnc.c, enc/utils/AddArray.c,
+	  enc/utils/OrdGroups.c, fsm/sexp/SexpFsm.c, mc/mcEval.c,
+	  node/node.h, node/nodePrint.c, node/printers/PrinterWffCore.c,
+	  parser/grammar.y, parser/input.l, parser/idlist/ParserIdList.c,
+	  parser/ord/ParserOrd.c, parser/ord/ord_grammar.y,
+	  parser/psl/pslNode.c, parser/psl/pslNode.h, rbc/rbcCnf.c,
+	  rbc/rbcCnfCompact.c, rbc/rbcCnfSimple.c, rbc/rbcFormula.c,
+	  rbc/rbcOutput.c, rbc/rbcSubst.c, sat/solvers/SatMinisat.c,
+	  sat/solvers/SatSim.c, sat/solvers/SatZchaff.c, sim/simInt.h,
+	  trace/TraceLabel.c, trace/plugins/TraceXmlDumper.c,
+	  utils/NodeList.c, utils/WordNumber.c, utils/defs.h,
+	  utils/error.c, utils/utils.h: BUG FIX, CLEANUP, NEW HEADER *
+	  Added header utils/defs.h with basic defines moved away from
+	  utils.h * Cleaned up all casts of pointers to/from integers *
+	  Fixed a bug in Sim
+
+	  WARNING: It seems that SIM is still afflicted by a bug, that I'm
+	  investigating.
+
+	  NOTE: From here on, every time you need to convert a pointer
+	  to/from an integer, use macros defined into defs.h:
+
+	    PTR_TO_INT(ptr)
+	    PTR_FROM_INT(ptr_type, int_val)
+
+	  For node_ptr, special macros are provided (by node.h)
+	  NODE_TO_INT(node_ptr)   NODE_FROM_INT(int_val)
+
+	  File containing code rules is going to be updated accordingly.
+
+
+2007-03-20 15:10  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/rbc/ConjSet.c: BUG FIX Fixed a bug in the ConjSet scheduling
+	  that made possible for the routine to enter an infinite recursive
+	  call.  Thanks to MR for reporting the bug.  
+
+
+2007-03-20 11:24  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/bePkg.c, bmc/bmcConv.c, bmc/sbmc/sbmcHash.c,
+	  compile/compileBEval.c, dag/dagVertex.c, enc/be/BeEnc.c,
+	  rbc/rbcOutput.c, sat/solvers/SatSim.c, set/setSet.c: BUG FIX This
+	  should make bmc working at 64 bit.  
+
+
+2007-03-16 16:07  Roberto Cavada <cavada@irst.itc.it>
+
+	* Makefile.am: BUG FIX Fixed to distribute all available patches
+	  for solvers.	
+
+
+2007-03-16 15:32  Roberto Cavada <cavada@irst.itc.it>
+
+	* Makefile.am, configure.ac, src/sat/solvers/Makefile.am: FEATURES
+	  * Unified building tools for solvers * Integrated new version of
+	  zchaff
+
+	  * WARNING: you will need to reconfigure nusmv *
+
+
+2007-03-16 13:07  Marco Roveri <roveri@irst.itc.it>
+
+	* src/enc/bdd/: BddEnc.c, BddEnc_private.h: Added warning for the
+	  feedback of the review of the code.
+
+
+2007-03-16 11:00  Marco Roveri <roveri@irst.itc.it>
+
+	* src/enc/operators.c: added warning with the notes for code
+	  revision
+
+
+2007-03-15 17:29  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac: FEATURE Added support to minisat2
+
+	  Still to be tested (at all at 64 bits)
+
+	  WARNING: 1. you must autoreconf
+
+	  2. you can stay with older version of minisat by copying and
+	  modifying    ../Minisat/minisat-default.in to
+	  ../Minisat/minisat-default that    is now out of CVS
+
+
+2007-03-15 14:47  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/beCnf.c, be/beRbcManager.c, bmc/bmcDump.c, bmc/bmcGen.c,
+	  bmc/bmcSatTrace.c, bmc/sbmc/sbmcUtils.c, dag/dag.h, dag/dagDfs.c,
+	  dag/dagEn.c, dag/dagEnStat.c, dag/dagInt.h, dag/dagVertex.c,
+	  fsm/sexp/SexpFsm.c, node/node.c, rbc/ConjSet.c,
+	  rbc/InlineResult.c, rbc/rbcCnfCompact.c, rbc/rbcCnfSimple.c,
+	  rbc/rbcFormula.c, rbc/rbcInt.h, rbc/rbcOutput.c, rbc/rbcSubst.c,
+	  rbc/rbcUtils.c, sat/SatSolver.c, sat/SatSolver.h,
+	  sat/solvers/SatMinisat.c, sat/solvers/SatSim.c,
+	  sat/solvers/SatZchaff.c, utils/utils.h: PORTING Ported BMC to 64
+	  bits
+
+	  ** This code is alpha **
+
+
+2007-03-14 11:31  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac, src/enc/bdd/BddEnc.c, src/enc/bdd/BddEnc_private.h:
+	  BUG FIX, PORTABILITY * Cudd 2.4 works now at 64 bits.  * Made
+	  statically allocated arrays dynamic in BddEnc.  
+
+
+2007-03-13 23:31  Marco Roveri <roveri@irst.itc.it>
+
+	* contrib/order_bits.pl: revised to fix a problem
+
+
+2007-03-08 17:42  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac: PORTING Porting to cudd-2.4.1.0
+
+	  IMPORTANT: run 'autoreconf' after updating
+
+	  There is still a pending issue about minimal groups size in
+	  BddEnc to be investigated.
+
+	  ** WARNING READ THIS ** nusmv will not link to cudd-2.4.1.0 by
+	  default (you will have to update directory "NuSMV2/cudd-2.4.1.0"
+	  before trying)
+
+	  As far as I know cudd-2.4.1.0 has never been systematically
+	  tested with nusmv, so proceed at your own risk if you are working
+	  with this development version of nusmv.
+
+	  Should you want to stay with old good version of CUDDs, specify
+	  "cuddname=cudd-2.3.0.1" when configuring nusmv or launching any
+	  builder.  ** END OF WARNING **
+
+
+2007-03-08 13:49  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/be.h, be/beRbcManager.c, bmc/bmcBmcInc.c,
+	  bmc/bmcBmcNonInc.c, bmc/bmcGen.c, bmc/bmcUtils.c, bmc/bmcUtils.h,
+	  bmc/sbmc/sbmcBmc.c, bmc/sbmc/sbmcBmcInc.c, bmc/sbmc/sbmcGen.c,
+	  bmc/sbmc/sbmcUtils.c, opt/opt.h, opt/optCmd.c, opt/optInt.h,
+	  rbc/ConjSet.c, rbc/ConjSet.h, rbc/InlineResult.c,
+	  rbc/InlineResult.h, rbc/rbc.h, rbc/rbcInline.c, sa/saBmc.c:
+	  FEATURE Api for inlining. rbc_inlining_lazy is still to be fixed.
+	  
+
+2007-03-01 11:06  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/fsm/sexp/SexpFsm.c: PERFORMANCES Optimized performances of
+	  scalar inlining. Substitution is performed in one single step for
+	  all variables. Scheduling and substitution matrix is created once
+	  for all susbtitutions.
+
+	  ** This feature needs to be benchmarked, in order to decide the
+	  default    settings **
+
+	  There is also some debugging verbosity still enabled, will be
+	  removed.
+
+
+2007-03-01 09:20  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c, src/enc/operators.h,
+	  src/enc/operators.c, test/bug_446/bug0.smv: BUG FIX #446 CASE
+	  nodes are now booleanized as WORD encogings (instead of pushing
+	  up cases). This result in a more readable boolean model, holds
+	  locality and requires one single circuit is built. Encoding
+	  complexity is the same, N*C where N is the word witdh, and C is
+	  the number of cases.
+
+	  ** This fix is expected to FIX bug 446 **
+	  
+
+2007-03-01 09:16  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/PredicateNormaliser.c: FEATURE Unions are handled by
+	  normalising each element of the set.	
+
+
+2007-02-27 18:27  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: BUG FIX Added a missing case to the
+	  booleanizer 
+
+
+2007-02-27 14:18  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcConv.c, compile/compileBEval.c: BUG FIX Fixed
+	  booleanization of WORDS when some node into a WORD type
+	  expression is a CASE node
+
+
+2007-02-27 14:16  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/bmc/: bmcBmcInc.c, bmcGen.c, sbmc/sbmcGen.c: SETTINGS Enabled
+	  inlining of bmc (inc/non inc) and smbc non inc Still needs a
+	  refactoring of inlining calls.  
+
+
+2007-02-27 14:15  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/fsm/sexp/Expr.c: FEATURE Made Expr_{and,or} lazy when left ==
+	  right 
+
+
+2007-02-27 14:14  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/PredicateNormaliser.c: BUG FIX
+
+	  Fixed a bug in PredicateNormaliser, that made nusmv segfault when
+	  processing CONTEXT nodes.  
+
+
+2007-02-27 14:12  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/rbc/: rbcInline.c, rbcInt.h: COSMETICS Fixed some verbosity
+	  during inlining.  
+
+
+2007-02-27 07:09  Marco Roveri <roveri@irst.itc.it>
+
+	* contrib/: Makefile.am, order_bits.pl: Script for interleaving
+	  bits
+
+
+2007-02-16 16:53  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/enc/be/BeEnc.c: BUG FIX Removed a line that was no longer
+	  supposed to exist, after latest commitment on this file
+	  (optimization of cache clean up) Please [MB} check it again (thank
+	  him for reporting it)
+
+
+2007-02-16 16:26  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/fsm/sexp/SexpFsm.c: TUNING Disable scalar inlining. It seems
+	  that the current implementation is too slow, and make building
+	  time worse than original.  
+
+
+2007-02-16 16:22  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/rbc/InlineResult.c: BUG FIX Variables are kept during ConjSet
+	  retrieving, instead of being replaced.  They will be substituted
+	  later.
+
+
+2007-02-16 16:14  Marco Bozzano <bozzano@irst.itc.it>
+
+	* src/: bmc/sbmc/sbmcBmcInc.c : Fixed typo.  Some
+	  constraints were added twice.  Checked with [TJ].
+
+
+2007-02-15 11:11  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/be.h, be/bePkg.c, be/beRbcManager.c, bmc/bmcGen.c,
+	  rbc/ConjSet.c, rbc/ConjSet.h,
+	  rbc/InlineResult.c, rbc/InlineResult.h, rbc/Makefile.am,
+	  rbc/rbc.h, rbc/rbcFormula.c, rbc/rbcInline.c, rbc/rbcInt.h,
+	  rbc/rbcSubst.c, rbc/rbcUtils.c: NEW FEATURE Added support for RBC
+	  inlining.
+
+	  WARNING: Inlining is currently disabled, as BMC and SBMC
+	  algorithms still need to be changed accordingly. Also,
+	  benchmarking is still running on non-inc BMC and SBMC.  
+
+
+2007-02-15 11:05  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/trace/plugins/TraceXml_private.h: BUG FIX Fixed portability
+	  issue 
+
+
+2007-02-13 16:01  Marco Roveri <roveri@irst.itc.it>
+
+	* todo/features: added few missing entries
+
+
+2007-02-13 12:26  Marco Bozzano <bozzano@itc.it>
+
+	* src/bmc/sbmc/: sbmcUtils.c, sbmcUtils.h: Added some new
+	  primitives in the interface, useful for SA.
+
+
+2007-02-08 14:11  Marco Roveri <roveri@irst.itc.it>
+
+	* src/dd/dd.h: Added missing inclusion.
+
+
+2007-01-30 18:46  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/rbc/clg/: clg.h, clgClg.c, clgInt.h: NEW PACKAGE clg is
+	  required by new CNF-izator 
+
+
+2007-01-30 16:46  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: be/be.h, be/beManager.c, be/beRbcManager.c,
+	  bmc/bmcBmcInc.c, bmc/bmcBmcNonInc.c, bmc/sbmc/sbmcBmc.c,
+	  bmc/sbmc/sbmcUtils.c, rbc/Makefile.am, rbc/rbc.h, rbc/rbcCnf.c,
+	  rbc/rbcCnfCompact.c, rbc/rbcCnfSimple.c, rbc/rbcFormula.c,
+	  rbc/rbcInt.h, rbc/rbcManager.c, rbc/rbcOutput.c, rbc/rbcStat.c,
+	  rbc/rbcSubst.c, sa/saCore.c: FEATURE Integrated a new CNF-izator
+	  provided by Sheridan, Keighren (and Junttila?)
+
+	  ! ! ! W A R N I N G ! ! !
+
+	  1. The new CNF is enabled by default and needs to be checked, but
+	     first experiments are very well promising!
+
+	     To set old CNF type uncomment line rbc/rbcCnf.c:59
+	     //#define CONV_SIMP 1
+
+	     .. and recompile.
+
+	  2. SA People: check warning tagged like "RC: " into saCore
+	  module.
+
+
+2007-01-30 13:53  Andrei Tchaltsev <tchaltsev@irst.itc.it>
+
+	* src/compile/compileCone.c: BUG FIX
+	  Dependency computation could not deal with COLON expressions.
+
+
+2007-01-30 13:05  Andrei Tchaltsev <tchaltsev@irst.itc.it>
+
+	* src/compile/compileCone.c: BUG FIX
+	  Dependency computation could not deal with WORD variables.
+
+
+2007-01-24 17:33  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/fsm/sexp/SexpFsm.c: BUG FIX Fixed expansion of defines during
+	  inlining.  
+
+
+2007-01-23 17:21  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcConv.c, bmc/bmcConv.h, compile/compile.h,
+	  compile/compileBEval.c, enc/bdd/BddEnc.c, enc/bdd/BddEncCache.c,
+	  enc/bdd/BddEncCache.h, enc/be/BeEnc.c, enc/bool/BoolEnc.c:
+	  PERFORMANCES
+
+	  A first attempt to improve general performances of cleaning up of
+	  caches (namely boolenizer, Bdd evaluator and BMC converter).
+
+	  The fix resulted in a more dirty design, but should reduce time
+	  required by cleanups.
+
+	  TO BE TESTED
+
+
+2007-01-23 16:41  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcCmd.c, bmc/bmcConv.c, compile/compile.h,
+	  compile/compileCheck.c, compile/compileCmd.c,
+	  enc/bdd/BddEncCache.c, fsm/FsmBuilder.c, fsm/FsmBuilder.h,
+	  fsm/sexp/SexpFsm.c, fsm/sexp/SexpFsm.h, ltl/ltl.c,
+	  prop/propProp.c: PERFORMANCE Added inlining capability to the
+	  SexpFsm.  When creating a SexpFsm, an additional layer can be
+	  optionally passed to force inlining of the model.
+
+	  This feature is still alpha and may require fixing, tuning and
+	  optimizations.  
+
+
+2007-01-23 16:38  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/parser/psl/pslNode.c: BUG FIX Flattener was possibly called
+	  during parsing, that resulted in a segfault.	
+
+
+2007-01-23 16:36  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: OPTIMIZATION Booleanization of (a !=
+	  b)  (where a and b are not words) is rewritten as
+	  !(booleanization of (a=b)) that produces better encoding.  Thanks
+	  to MR for providing the idea.  
+
+
+2007-01-16 10:07  Marco Roveri <roveri@irst.itc.it>
+
+	* todo/features: added one item
+
+
+2007-01-15 16:43  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcConv.c, bmc/bmcConv.h, compile/compile.h,
+	  compile/compileBEval.c, compile/compileCone.c,
+	  enc/bdd/BddEncCache.c, enc/be/BeEnc.c, enc/bool/BoolEnc.c: BUG
+	  FIX Removal of layers does: 1. cleanup of BddEnc evaluation cache
+	  2. cleanup of BddConv cache 3. cleanup of Booleanizer cache
+
+	  Cleanups occur only for those entries that contain the language
+	  that is being removed.
+
+	  STILL TO BE TESTED
+
+
+2007-01-15 16:40  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/utils/: assoc.c, assoc.h: NEW FUNCTION Added function
+	  assoc_get_keys that returns the list of inserted keys 
+
+
+2007-01-12 17:03  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/enc/utils/AddArray.c: FEATURE Added W[n] x W[m] -> W[n] to
+	  rotations.  
+
+
+2007-01-12 17:02  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: BUG FIX Fixed bit rotation for BMC
+	  
+
+2007-01-12 16:15  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/enc/: bdd/BddEnc.c, utils/AddArray.c, utils/AddArray.h:
+	  FEATURE Changed shift operators to accept W[n] x W[m] -> W[n]
+	  
+
+2007-01-12 16:14  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: MINOR COSMETICS Fixed indentation
+	  
+
+2007-01-12 16:13  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/dd/: dd.c, dd.h: BUG FIX
+
+	  - Added checking for FAILURE nodes into CUDDs boolean operators.
+	  - Removed unrequired dependency on symbols.h from CUDD - Modified
+	  cudd init interface to declare FAILURE node value.
+
+
+2007-01-11 16:03  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: compile/compileBEval.c,
+	  compile/type_checking/checkers/CheckerCore.c, parser/grammar.y,
+	  parser/input.l: FEATURE Implemented WORD Rotation As shifting,
+	  operators can be W[n] x N -> W[n] or W[n] x W[m] -> W[n], right
+	  argument <= n
+
+
+2007-01-11 10:16  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/compileBEval.c: BUG FIX Word1 was not booleanize its
+	  argument.  
+
+
+2007-01-11 09:25  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: compile/compileBEval.c, enc/operators.c, enc/operators.h:
+	  FEATURE Implemented bool and word1 casts.  
+
+
+2007-01-10 19:27  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: compile/compileBEval.c, enc/operators.c, enc/operators.h:
+	  CLEAN UP A first step of refactoring of new words encoding.  
+
+
+2007-01-10 18:35  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcConv.c, compile/compileBEval.c,
+	  compile/compileFlatten.c, enc/bdd/BddEnc.c, node/nodePrint.c: NEW
+	  FEATURE
+
+	  A new 'encoding' is provided for WORDS during booleanization.
+	  Supported operation: all over WORDS, but ROTATEs (coming soon).
+
+	  Alpha and not complete: requires some work in particular to make
+	  ADD side fully working with a few new features provided for BMC.
+
+	  Notice that the encoding is at the moment provided by the
+	  boolenizer, instead of the BoolEnc class.
+
+
+2007-01-10 18:31  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/enc/bool/BoolEnc.c: OPTIMIZATION WORD nodes are encoding for
+	  words. Now the word width is stored in the encoding as well.
+	  
+
+2007-01-10 18:27  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/dd/dd.h: TYPEDEF MOVING Moved definition of NPFNN to node
+	  package.  
+
+
+2007-01-10 18:26  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/type_checking/checkers/CheckerCore.c: NEW TYPE RULE
+	  Words are allowed on the right of shifting operators.
+
+	  Added closures: >>,<<: W[n] x W[m] -> W[n]
+
+	  Previously, only >>,<<: W[n] x N -> W[n] was allowed.
+
+	  This allows for a full use of registries when performing
+	  shifting, and make a great performances improvement in BMC when N
+	  is a combinatory circuit in W.
+
+
+2007-01-10 18:25  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/enc/utils/: AddArray.c, AddArray.h: COSMETICS Renamed
+	  'concatination' -> 'concatenation' at code and comment level.
+	  
+
+2007-01-10 18:23  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/utils/: error.c, error.h: NEW FUNCTION Added function
+	  'warning_possible_div_by_zero' to print out the corresponding
+	  warning when BMC is performed on div:WxW->W 
+
+
+2007-01-10 18:21  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/node/: node.c, node.h: NEW FUNCTION Added function 'map2' to
+	  traverse two lists in parallel.  
+
+
+2007-01-10 18:20  Roberto Cavada <cavada@irst.itc.it>
+
+	* doc/user-man/syntax.tex: DOCS Word shifting:
+
+	  Added closures: >>,<<: W[n] x W[m] -> W[n]
+
+	  Previously, only >>,<<: W[n] x N -> W[n] was allowed.
+
+	  This allows for a full use of registries when performing
+	  shifting, and make a great performances improvement in BMC when N
+	  is a combinatory circuit in W.
+
+
+2007-01-09 10:42  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/prop/propProp.c: fix leak.
+
+
+2007-01-03 15:44  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/enc/bdd/BddEnc.c: Add warning to
+	  BddEnc_ComputePrimeImplicants that some prime implicants are
+	  generated due to encoding of variables with non-power-of-two
+	  ranges rather than necessity of the function under consideration.
+
+
+2007-01-03 14:37  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: compile/compile.h, compile/compileFlatten.c,
+	  node/printers/PrinterPsl.c, parser/psl/pslConv.c,
+	  parser/psl/pslExpr.c, parser/psl/pslExpr.h, parser/psl/pslNode.c,
+	  parser/psl/pslNode.h, parser/psl/psl_grammar.y,
+	  parser/psl/psl_input.l, parser/psl/psl_symbols.h: FEATURE Added
+	  PSL 'forany' that is like 'forall' but instances are disjoined.
+	  WARNING: requires fix to the grammar to make it compliant with
+	  sugar-psl (see bug #444) 
+
+
+2007-01-03 14:33  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: dd/dd.c, dd/dd.h, enc/bdd/BddEnc.c, enc/utils/AddArray.c:
+	  BUG FIX Changed usage of add_apply when possible.  Requires code
+	  review.  Benchmarking is currently running.  
+
+
+2006-12-22 12:00  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/mc/mcInvar.c: CLEANUP, DOCS - Removed unsed variable 'status'
+	  - Added comment about returned value of a function
+
+	  Thanks to <felix.rauch@nicta.com.au> for reporting the problem.
+
+
+2006-12-18 10:10  Roberto Cavada <cavada@irst.itc.it>
+
+	* todo/: TODO-list.txt, features, priority: DOCS Reorganized the
+	  TODO list. The list has been split into two parts: 1. features
+	  (list of categorized features) 2. priority list
+
+
+2006-12-14 16:53  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: bmc/bmcBmcNonInc.c, compile/type_checking/TypeChecker.c,
+	  dd/dd.c, utils/range.c: BUG FIXES, CLEANUPS
+
+	  Applied bug fixes and cleanups suggested by Felix Rauch Valenti
+	  <frauch@cse.unsw.edu.au> (That we thanks)
+
+	  They we are working on a research project in the area of static
+	  analysis, i.e. finding problems (bugs) in C/C++ source code
+	  automatically. Our research project is called "Goanna" and uses
+	  NuSMV as its backend.
+
+	  See <http://www.ertos.nicta.com.au/research/goanna/>
+
+
+2006-12-14 12:35  Marco Roveri <roveri@irst.itc.it>
+
+	* todo/TODO-list.txt: still preliminar, only for backup.
+
+
+2006-12-13 19:21  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/enc/bdd/BddEnc.c: fix leak (thx RC)
+
+
+2006-12-13 19:03  Marco Roveri <roveri@irst.itc.it>
+
+	* toDoList.txt: moved to dir todo
+
+
+2006-12-13 19:02  Marco Roveri <roveri@irst.itc.it>
+
+	* todo/TODO-list.txt: initial not prioritized version of the TODO
+	  list
+
+
+2006-12-13 13:13  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/enc/bdd/BddEnc.c: fix bug:
+	  SymbTable_get_layers_state_input_symbols returns only the   list
+	  of DEFINEs referring to both state and input variables. Hence,
+	  need SymbTable_get_layers_[state|input]_symbols as well.
+
+
+2006-12-07 11:56  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: node/node.c, utils/NodeList.c: BUG FIX - Fixed
+	  NodeList_copy wrt [VS] reporting of misleading behaviour.  -
+	  Documented NodeList methods.	
+
+
+2006-12-07 11:22  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/compile/: FlatHierarchy.c, compileFlatten.c: BUG FIX
+	  FlatHierarchy is now filled with vars list by the flattener 
+
+
+2006-12-07 11:21  Roberto Cavada <cavada@irst.itc.it>
+
+	* NEWS: DOCS NEWS that went into 2.4.1 
+
+
+2006-12-07 11:20  Roberto Cavada <cavada@irst.itc.it>
+
+	* NEWS: DOCS NEWS file that went into 2.4.1 
+
+
+2006-12-07 11:04  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/be/: be.h, beRbcManager.c: added functions to query and
+	  negate the signs of cnf and be literals.
+
+
+2006-12-07 10:38  Andrei Tchaltsev <tchaltsev@irst.itc.it>
+
+	* src/compile/FlatHierarchy.c: COMMENT CHANGE
+
+
+2006-12-07 10:16  Marco Roveri <roveri@irst.itc.it>
+
+	* toDoList.txt: revised to do list.
+
+
+2006-12-06 15:54  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/bmc/sbmc/sbmcBmcInc.c: fix memory leak
+
+
+2006-12-06 14:07  Viktor Schuppan <Viktor.Schuppan@gmx.de>
+
+	* src/compile/FlatHierarchy.c: fix memory leak
+
+
+2006-12-05 17:24  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac, src/enc/bdd/BddEnc.c, src/opt/optCmd.c: CLEANUP
+	  Removed all warnings, to prepare release 2.4.1 
+
+
+2006-12-05 16:57  Roberto Cavada <cavada@irst.itc.it>
+
+	* NEWS: DOCS Removed thanks to D. Jones, as his bug report has nott
+	  been done through the official channels.
+	  
+
+2006-12-05 16:23  Roberto Cavada <cavada@irst.itc.it>
+
+	* configure.ac: DOCS Set version 2.4.1 
+
+
+2006-12-05 15:50  Roberto Cavada <cavada@irst.itc.it>
+
+	* examples/: ctl-ltl/p-queue.smv, ctl-ltl/periodic.smv,
+	  example_cmu/periodic.smv, example_irst/periodic.smv,
+	  guidance/guidance.smv, p-queue/p-queue.smv, pci/pci.smv,
+	  smv-dist/pci3p.smv: EXAMPLE FIXES
+
+	  Fixed a row of wrong example that were no longer compilable
+	  thanks to the type checker.
+
+	  WARNING: Examples pci* do not compile because of a module
+	  variable that shadow a module formal parameter.
+
+
+2006-12-05 15:14  Roberto Cavada <cavada@irst.itc.it>
+
+	* src/: fsm/bdd/BddFsm.c, parser/idlist/ParserIdList_private.h,
+	  parser/idlist/idlist_input.l, sm/smMisc.c, utils/error.h: CLEANUP
+	  Fixed a few missing declarations.  
+
+	
+
+2006-12-06 NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.4.1 ===
+
+2006-12-01 11:46  Roberto Cavada
+
+	* bmc/sbmc/sbmcUtils.c, sat/SatSolver.c: BUG FIX A list was
+	  destroyed when it was not supposed to.  Thanks to [VS] (Viktor
+	  Schuppan) for reporting the bug. Fixed also some prog doc.
+
+
+2006-11-29 18:11  Roberto Cavada
+	
+	* examples/psl-samples/: dme2-16.smv, syncarb10.smv, syncarb5.smv:
+	  EXAMPLE FIXes Fixed PSL examples wrt forall operator precedence.
+	  "forall p & forall q" is intended by nusmv to be equivalent to
+	  "forall (p & forall q)" and not "(forall p) & (forall q)" as the
+	  examples were erroneously supposing.
+
+
+2006-11-29 17:38  Roberto Cavada
+
+	* configure.ac, doc/user-man/Makefile.am, src/dd/dd.c, src/dd/dd.h,
+	  src/enc/base/BaseEnc.c, src/enc/base/BoolEncClient.c,
+	  src/enc/bdd/BddEnc.c, src/enc/bool/BoolEnc.c,
+	  src/scripts/code_gens/templates.py: COSMETICS, FUNCTION RENAMING
+	  * Renamed funcion dd_get_var_from_level to
+	  "dd_get_index_from_level" * Integrated feedback from MR
+
+
+2006-11-29 14:45  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: BUG FIX Wrt the previous commitment, I
+	  actually meant: 'Use "SymbTable_get_layers_state_input_symbols"
+	  instead'
+
+
+2006-11-29 14:29  Roberto Cavada
+
+	* src/enc/bdd/: BddEnc.c, BddEnc.h: REFACTORING
+	* Moved private method bdd_is_var_in_cube to the public
+	  interface, renaming	it as "BddEnc_is_var_in_cube"
+	* Removed unsuitable method
+	  bdd_enc_get_layers_state_input_sysmbols.  Use
+	  "SymbTable_get_layers_state_symbols" instead (WARNING: slightly
+	  different prototype, as dynamic instead of static arrays are
+	  used to    hold the set of layer names)
+
+
+2006-11-28 16:52  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: COSMETICS Added a warning and a comment
+	  about a TODO feature.
+
+	  The idea is to force a reordering to reuse possible old vars when
+	  no new vars are available.
+
+
+2006-11-28 15:46  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: CRITICAL BUG FIX
+
+	  According to CUDDs documentation, when groups of variable were
+	  created, consecutive var _indices_ were used. However, it has
+	  been proved that consecutive _levels_ were intended instead.
+
+	  This requirement had an important impact on the way class BddEnc
+	  chooses variables indices when allocating new variables, in
+	  particular when a previous layer remove had occurred.
+
+	  WHAT CHANGED: 1. Consecutive _levels_ are guaranteed now to be
+	  provided when allocating    a new bunch of variables.
+
+	  2. Next variables are still kept close to their corresponding
+	  current var (for state vars). "Close" here means that the
+	  _level_ of current and next vars are close each other. About
+	  their indices, they are kept close when possible (i.e. no
+	  groups of mixed state and input vars are created, that is
+	  _always_ the case in current version, but actually NuSMV 2.4
+	  supports the creation of such kind of groups).
+
+	  3. As a conseguence of point 2, next variables might have
+	  arbitrary    index wrt the corresponding current variable.
+
+
+2006-11-28 15:32  Roberto Cavada
+
+	* configure.ac: FEATURE 
+	  + It is now possible to make configure to
+	  link nusmv to a different   cudd version by assigning variable
+	  'cuddname' at configure time
+
+	    $> ./configure [options] cuddname=name
+
+	    Default is still "cudd-2.3.0.1"
+
+	  + Added verbosity to state the cudd version that is being used.
+
+
+2006-11-28 15:28  Roberto Cavada
+
+
+
+2006-11-28 15:26  Roberto Cavada
+
+	* src/dd/: dd.c, dd.h: NEW FUNCTION, VERBOSITY * Added new function
+	  dd_get_level_at_index * Added some verbosity about block creation
+
+
+2006-11-23 18:12  Marco Roveri
+
+	* doc/user-man/: batch.tex, inter.tex, nusmv.sty, syntax.tex: Final
+	  revision of the manual.
+
+
+2006-11-21 11:02  Roberto Cavada
+
+	* src/: dag/dagEn.c, enc/bdd/BddEnc.c, opt/optCmd.c, opt/optInt.h,
+	  parser/grammar.y, parser/ord/ord_input.l, simulate/simulate.c,
+	  trace/Trace.h, trace/TraceLabel.h, trace/Trace_private.h,
+	  trace/plugins/TraceExplainer.h,
+	  trace/plugins/TraceExplainer_private.h,
+	  trace/plugins/TraceTable.h, trace/plugins/TraceTable_private.h,
+	  trace/plugins/TraceXml.h, trace/plugins/TraceXml_private.h:
+	  CLEANUP Changed C++ comments to C90 standard.  Other general
+
+
+2006-11-21 10:10  Roberto Cavada
+
+	* configure.ac, src/compile/compileCmd.c, src/enc/enc.c,
+	  src/fsm/FsmBuilder.c, src/fsm/bdd/BddFsmCache.c, src/ltl/ltl.c,
+	  src/ltl/ltl2smv/ltl2smvMain.c, src/mathsat/mathsat.h,
+	  src/mathsat/mathsatCmd.c, src/mathsat/mathsatWriteMathSAT.c,
+	  src/mc/mcLE.c, src/node/node.c, src/opt/opt.h, src/sm/smInit.c,
+	  src/trace/pkg_trace.h: CLEANUP Fixed many warnings due to missing
+
+
+2006-11-20 19:04  Roberto Cavada
+
+	* doc/: tutorial/title.tex, user-man/app.tex, user-man/batch.tex,
+	  user-man/cmdpo.dia, user-man/cmdpo.eps, user-man/cmdpo.fig,
+	  user-man/inter.tex, user-man/syntax.tex, user-man/title.tex,
+	  user-man/typerulesapp.tex, user-man/cmd/check_spec.tex: DOCS
+	  Massive fix of the user manual, now aligned to version 2.4.
+	  Thanks to MR for providing feedback.
+
+	  TODO: tutorial should be updated to include the new features of
+	  2.4
+
+
+2006-11-20 11:27  Roberto Cavada
+
+	* src/parser/: grammar.y, input.l: FEATURE
+
+	  Added CTLSPEC as alias of SPEC at grammar level.  Internally ,
+	  CTLSPEC are built as SPEC nodes, and the system works with SPECs
+	  for backward compatibility. Simply, CTLSPEC is now allowed to be
+	  used instead of SPEC at grammar level.
+
+
+2006-11-20 10:38  Roberto Cavada
+
+	* src/compile/FlatHierarchy.c, src/compile/compileFlatten.c,
+	  test/bug_435/bug0.smv, test/bug_435/bug1.smv,
+	  test/bug_435/bug2.smv: PARTIAL BUG FIX #435
+
+	  Partially fixes bug 435, related to assignments of bit
+	  selections.  For current version, assignments of bit selections
+	  are reported as unsupported feature, and nusmv exists with an
+	  error message reported to the user.
+
+	  Test files have been added to allow easy tests for next version.
+
+2006-11-17 16:18  Roberto Cavada
+
+	* src/enc/: bdd/BddEnc.c, bool/BoolEnc.c: BUG FIX Fixed bits order
+	  in words.  Now lsb is at the right place in the internal array
+	  (index 0).  MSB occurs higher in the vars order, and the order is
+
+
+2006-11-17 15:06  Andrei Tchaltsev
+
+	* src/enc/bdd/BddEnc.c: BUG FIX
+
+	  Now the order of indexes of bits of a word var in ordering file
+	  and in SMV file are the same. For example,   VAR a : word[3];
+	  order bit a.0 now corresponds to word bit w[0:0] Before the fix
+	  a.0 corresponded to w[2:2].
+
+
+2006-11-16 15:54  Roberto Cavada
+
+	* src/: compile/compileCmd.c, compile/symb_table/SymbTable.c,
+	  compile/symb_table/SymbTable.h, simulate/simulateCmd.c,
+	  trace/TraceManager.c, trace/TraceManager.h, trace/traceCmd.c,
+	  trace/plugins/TraceExplainer.c,
+	  trace/plugins/TraceExplainer_private.h,
+	  trace/plugins/TracePlugin.c, trace/plugins/TracePlugin.h,
+	  trace/plugins/TracePlugin_private.h, trace/plugins/TraceTable.c,
+	  trace/plugins/TraceTable_private.h,
+	  trace/plugins/TraceXmlDumper.c, trace/plugins/TraceXmlLoader.c,
+	  trace/plugins/TraceXml_private.h: NEW FEATURE Added a mechanism
+	  to provide a finer control over symbols that are shown by trace
+	  plugins when their action occurs.
+
+	  Layers whose symbols must be shown by a trace plugin are
+	  registered into the TraceManager. This allows for showing symbols
+	  declared inside layers dynamically added during the execution.
+	  Layers can be registered and unregistered at any time.
+
+	  This feature is intended to provide immediate support to cegar,
+	  and as general improvement for possible algorithms.
+
+	  At the moment, the only registered layer is the model's layer.
+
+
+2006-11-16 15:49  Roberto Cavada
+
+	* src/compile/compileFlatten.c: BUG FIX resolve_name supports 
+	now BIT_SELECTION nodes.
+
+
+2006-11-13 17:03  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: BUG FIX Bits of scalar variables were not
+	grouped by default. 
+
+2006-11-13 11:29  Andrei Tchaltsev
+
+	* src/parser/grammar.y: REMOVED UNSUPPORTED ELEMENTS
+
+	  In the body of a GAME all unsupported constructs (such as
+	  LTLSPEC, INVARSPEC, FAIRNESS, etc) are commented out.
+
+	  
+
+2006-11-10 17:15  Roberto Cavada
+
+	* src/enc/bdd/: BddEnc.c, BddEnc_private.h: BUG FIX #432
+
+	  Related to missing error detection (like "division by zero").
+	  Optimization to avoid unuseful traversal of ADDs was a bit too
+
+
+2006-11-10 17:07  Roberto Cavada
+
+	* src/utils/: assoc.c, assoc.h: NEW FUNCTION Added
+
+
+2006-11-09 18:22  Andrei Tchaltsev
+
+	* doc/user-man/syntax.tex: COMMENT ADDED
+
+	  Added a comment about boolean operands of MOD expression.
+
+	  
+
+2006-11-09 14:12  Andrei Tchaltsev
+
+	* src/compile/type_checking/checkers/: CheckerCore.c, CheckerPsl.c,
+	  CheckerStatement.c, checkersInt.h: BUG FIX
+
+	  Now "mod" may have boolean operands but a warning is output
+	  (because such operation is technically useless).
+
+	  A new kind of type system violation was add:
+	  TC_VIOLATION_TYPE_WARNING
+
+	  
+
+2006-11-08 16:45  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: BUG FIX When input variables were encoded,
+	  the dynamic ordering got locked and not eventually unlocked.
+
+	  This makes dynamic ordering work again, but does not fixed
+	  performance issues reported by [MB], as now nusmv spends most of
+	  its time performing dynamic reordering :(
+
+	  Still to be investigated at higher level.
+
+
+2006-11-03 18:00  Marco Roveri
+
+	* src/compile/compileCmd.c: Removed the warning on the check.
+
+	  The compute_flat_model is not needed since the construction of
+	  the boolean model also build it if not already built.
+
+
+2006-11-03 17:52  Marco Roveri
+
+	* src/enc/bdd/BddEnc_private.h: Removed the warning.
+
+	  The comment already explain the problem, to consider whenever we
+	  will distribute MBP
+
+
+2006-11-03 17:48  Marco Roveri
+
+	* src/sm/smMisc.c: Moved the warning between an #if HAVE_MBP
+
+
+2006-11-03 15:52  Marco Roveri
+
+	* src/opt/: optCmd.c, optInt.h: Removed one warning related to
+	  option APPEND_CLUSTERS, by hiding the print of it by means of a
+	  #define in optInt.h
+
+
+2006-11-03 15:45  Marco Roveri
+
+	* src/mc/mcInvar.c: Removing warning. The use of BddEnc_expr_to_bdd
+	  is correct since here we deal only with invariants expressed as
+	  simple_expressions.  No temporal operator should be present. The
+	  "G" is implicit.
+
+
+2006-11-03 15:42  Marco Roveri
+
+	* src/ltl/ltl2smv/ltl2smv.c: slightly modified warning message.
+	  Printed only if debugging of ltl2smv is enabled at compilation
+	  time.
+
+
+2006-11-03 15:40  Marco Roveri
+
+	* src/fsm/bdd/BddFsm.c: Removed #warning the optimization is
+	  correct
+
+
+2006-11-03 15:38  Marco Roveri
+
+	* src/bmc/sbmc/sbmcTableau.c: Removed #warning turning into a
+	  comment.
+
+
+2006-11-03 10:04  Viktor Schuppan, Marco Roveri
+
+	* src/enc/bdd/BddEnc.c: Moved free of syms list to the end of the
+	  foreach loop.  This is because the list in the NodeList_ptr is
+	  traversed within the loop and is not a copy of the list within
+	  the NodeList_ptr. If left in the previous position, then a
+	  segfault happen.
+
+
+2006-11-02 17:19  Roberto Cavada
+
+	* src/: compile/type_checking/checkers/CheckerCore.c,
+	  compile/type_checking/checkers/CheckerPsl.c,
+	  node/printers/PrinterPsl.c, parser/psl/pslConv.c,
+	  parser/psl/pslExpr.c, parser/psl/pslExpr.h, parser/psl/pslNode.c,
+	  parser/psl/pslNode.h, parser/psl/psl_grammar.y,
+	  parser/psl/psl_symbols.h: BUG FIX #430 ITE (if-then-else) are now
+	  handles natively into PSL This fixes bug #430 as a side effect.
+
+2006-11-02 17:18  Roberto Cavada
+
+	* src/enc/bdd/: BddEnc.c, BddEnc_private.h: OPTIMIZATION FAILURE
+
+
+2006-11-02 16:10  MArco Bozzano
+
+	* src/: compile/compileUtil.c, sa/saCmd.c: When DCOI is used, now
+	  checking also that flat model has been constructed (DCOI needs
+	  the sexp corresponding to the global FSM).
+
+	  Fixed typo in Compile_check_if_flat_model_was_built().
+
+
+2006-11-02 15:54  Roberto Cavada
+
+	* src/compile/: compile.h, compileUtil.c: NEW FUNCTION Added
+	  function  Compile_check_if_flat_model_was_built
+
+	  ... to check flat model status and relative error reporting.
+
+
+2006-11-02 14:32  Marco Roveri
+
+	* src/enc/bdd/BddEnc.c: Revised function to extract prime
+	  implicants from a BDD.  Now only the variables in the specified
+	  layers are considered. All the others are discarded. The
+	  interface changed w.r.t. the previous one.
+
+
+2006-11-02 09:54  Viktor Schuppan
+
+	* src/enc/bdd/BddEnc.c: Fixed a typo on an argument of a function
+	  in BddEnc_ComputePrimeImplicants
+
+
+2006-10-31 14:39  Marco Roveri
+
+	* src/dd/: dd.c, dd.h, ddInt.h: Added two new functions for
+	  computing prime implicants of a BDD.
+
+	EXTERN bdd_ptr  bdd_largest_cube ARGS((DdManager *dd,
+	  				       bdd_ptr b, int *length)); 
+
+	EXTERN array_t * bdd_compute_primes ARGS((DdManager * dd, bdd_ptr b)); 
+
+	EXTERN bdd_ptr  bdd_make_prime ARGS((DdManager *dd, 
+	                                     bdd_ptr cube, bdd_ptr b));
+
+
+2006-10-31 14:38  Marco Roveri
+
+	* src/enc/bdd/BddEnc.c: Added a new not exported function
+
+	  array_t * BddEnc_ComputePrimeImplicants(BddEnc_ptr self, bdd_ptr
+	  bdd)
+
+	  which Finds the set of prime implicants of a BDD b. Each element
+	  of the resulting array is a prime implicant of the BDD b. The
+	  prime implicant is represented as a list of pairs (<vname> .
+	  {0|1}), with the intended meaning that the variable name <vname>
+	  should be considered positive (1) or negative (0).
+
+
+2006-10-31 14:07  Marco Bozzano
+
+	* src/sm/smMain.c: BUG FIX (minor).  Fixed this behaviour for
+	  option -m:
+
+	  $> ./NuSMV -int -m rer The method "(null)" is not a
+	  valid reorder method.
+
+	  Bug: argv was incremented too early.
+
+	  Correct behaviour:
+
+	  $> ./NuSMV -int -m rer The method "rer" is not a
+	  valid reorder method.
+
+2006-10-31 14:02  Marco Bozzano
+
+	* src/: enc/bdd/BddEnc.c, opt/optCmd.c, sm/smMain.c: Added
+	  command-line option -vars_order (sa package only, conditionally
+	  compiled).
+
+	  Also changed names of the NuSMV functions EXTERN void
+	  opt_set_vars_order_type ARGS((options_ptr, VarsOrdType)); EXTERN
+	  VarsOrdType opt_get_vars_order_type ARGS((options_ptr)); to
+	  EXTERN void set_vars_order_type ARGS((options_ptr, VarsOrdType));
+	  EXTERN VarsOrdType get_vars_order_type ARGS((options_ptr));
+	  to adhere to the NuSMV convention (hopefully)
+	  and consequently fixed a wrong export (unexisting function
+	  set_vars_order_type was previously exported).
+
+
+2006-10-31 11:42  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: PERFORMANCES improved
+
+
+2006-10-31 11:41  Roberto Cavada
+
+	* src/fsm/FsmBuilder.c: MINOR BUG FIX '&' was used instead of '&&'
+
+
+2006-10-31 11:06  Andrei Tchaltsev
+
+	* src/enc/bdd/BddEnc_private.h: WARNING ADDED
+
+	  As RC asked a compile-time warning is added as a remind to
+	  re-implement a function later on (this function changes var
+	  ordering).
+
+
+2006-10-25 14:17  Roberto Cavada
+
+	* src/sm/smMain.c: COSMETICS Fixed banner "environment variable" ->
+	  "system variable"
+
+	
+2006-10-24 17:00  Roberto Cavada
+
+	* src/bmc/bmcCmd.c, src/bmc/bmcCmd.h, src/bmc/bmcInt.h,
+	  src/bmc/bmcPkg.c, src/bmc/sbmc/sbmcCmd.c, src/compile/compile.h,
+	  src/compile/compileCmd.c, src/compile/compileUtil.c,
+	  src/fsm/bdd/bddCmd.c, src/fsm/be/BeFsm.c,
+	  src/mathsat/mathsatCmd.c, src/mbp/mbpCmd.c, src/mc/mcCmd.c,
+	  src/prop/propCmd.c, src/prop/propProp.c, src/sa/saCmd.c,
+	  src/simulate/simulateCmd.c, src/trace/traceCmd.c,
+	  doc/user-man/cmd/go.tex, doc/user-man/cmd/go_bmc.tex,
+	  doc/user-man/cmd/process_model.tex: 
+
+	  BUG FIX, NEW FEATURE
+	  * When COI is enabled, missing bmc model construction is reported
+	    accordingly (thanks [MB])
+	  * Factorized the code for checking (and reporting errors) for
+	    model construction.
+	  * Updated the whole src code accordingly
+	  * Added option -f (force building) to commands:
+	    - build_boolean_model   
+	    - bmc_setup	 
+	    - go
+	    - go_bmc
+	    - process_model
+	  * Documented new option for the listed commands
+	  * FIXED: command process_model no longer creates the boolean
+	    model
+
+2006-10-24 09:49  Roberto Cavada
+	
+	* src/sm/smMain.c: 	
+	  BUG FIX When -s was used with command 'quit', Sm_End
+	  (deinitialization) was performed erroneously twice. Thanks [MB]
+
+2006-10-23 11:51  Roberto Cavada
+	
+	* src/: compile/compile.h, compile/compileCmd.c,
+	  compile/compileUtil.c, fsm/bdd/BddFsm.c, fsm/bdd/BddFsm.h,
+	  fsm/bdd/bddCmd.c, fsm/bdd/bddInt.h, ltl/ltl.c, mbp/mbpCmd.c,
+	  mc/mcCmd.c, prop/propCmd.c, sa/saCmd.c, simulate/simulateCmd.c,
+	  trace/traceCmd.c: 
+	  BUG FIX
+	  Background: When COI is enabled, model construction is delayed
+	  until a property is checked.
+
+	  Bug: When coi is enabled and a model-related command (for
+	  example, check_fsm) is executed, the model is stated to be not
+	  yet built (correct), but the user is asked to execute command
+	  'build_model' that has no effect when coi is enabled (a warning
+	  is issued only when verbosity > 0). Thanks to [MB] for reporting.
+
+	  Fix: All commands depending on model construction checks options
+	  conditions and report to the user accordingly. 
+	
+2006-10-20 17:55  Roberto Cavada
+	
+	* src/ltl/ltl.c: BUG FIX #416
+	  Fixed simulation starting from states into traces generated by
+	  BDD-based LTL model checking. The trace is stripped of the
+	  tableau variables.
+
+	  ** Warning ** This fix may lead to more fake loops printed out
+	  when the trace is printed, as states that were different when
+	  tableau vars were in the trace now may become the same state
+	  after tableau vars are abstracted.
+
+2006-10-20 13:48  Roberto Cavada
+
+	* src/compile/FlatHierarchy.c: 
+	BUG FIX #423 Added missing ATOM case to assertion 
+
+2006-10-20 13:37  Roberto Cavada
+
+	* src/: bmc/bmcCmd.c, bmc/bmcCmd.h, bmc/sbmc/sbmcCmd.c,
+	  bmc/sbmc/sbmcCmd.h, cmd/cmd.h, cmd/cmdCmd.c: 
+	  BUG FIX #405 Fixed PFI
+
+2006-10-19 16:26  Roberto Cavada
+
+	* src/compile/compileFlatten.c: 
+	BUG FIX Flattener in the case of leaves did not call find_atom 
+
+2006-10-19 15:48  Roberto Cavada
+
+	* src/: node/node.c, node/node.h, utils/WordNumber.c,
+	  utils/WordNumber.h: 
+	  NEW FEATURE 
+	  - Added function node_normalize
+	  - Cosmetics in WordNumber 
+
+2006-10-19 15:18  Andrei Tchaltsev
+
+	* src/utils/: WordNumber.c, WordNumber.h: 
+	NEW FEATURE
+	  A new function is added: to convert not-memory-shared instances
+	  of WordNumber obtained after parsing to memory-shared ones.
+
+
+2006-10-17 09:07  Roberto Cavada
+
+	* doc/user-man/batch.tex: DOC Fixed docs of option -t according to
+	  wendy's feedback. 
+
+2006-10-16 17:10  Roberto Cavada
+
+	* doc/user-man/inter.tex, src/enc/enc.c, src/enc/enc.h,
+	  src/enc/bdd/BddEnc.c, src/opt/opt.h, src/opt/optCmd.c,
+	  src/opt/optInt.h: 
+	  NEW OPTION
+	  Added option vars_order to control the way variables are ordered
+	  by default, when no ordering file is specified.
+
+	  Possible values: 
+	  - inputs_before (default) 
+	  - inputs_after 
+	  - lexicographic
+
+	  Added documentation of the new option. At the moment the option
+	  is not accessible in batch mode.
+
+2006-10-16 12:21  Andrei Tchaltsev
+
+	* src/compile/compileFlatten.c: 
+	BUG FIX find_atom was not applied to numbers during name resolving.
+
+2006-10-16 11:14  Roberto Cavada
+
+	* src/: compile/compile.h, compile/compileUtil.c, fsm/FsmBuilder.c:
+	  BUG FIX 
+	  After wendy's feedback, fixed a bug due to the use of
+	  unflattened variable names in trans order list.
+
+2006-10-13 18:18  Andrei Tchaltsev
+
+	* src/parser/grammar.y: 
+	BIG FIX
+	Grammar is changed to allow negative integers in subrange,
+	type-values, and in place of array indexes.
+
+2006-10-13 15:17  Roberto Cavada
+
+	* src/: compile/compileFlatten.c, parser/grammar.y: 
+	BUG FIX
+	  Re-added support for negative numbers in subranges.  This was
+	  fixed by providing special cases in grammar production, and by
+	  implementing a very-minimal evaluator for constant numbers in
+	  compile. Thanks to MB for reporting it.
+
+
+2006-10-13 11:09  Roberto Cavada
+
+	* doc/user-man/batch.tex, doc/user-man/inter.tex, src/ltl/ltl.c,
+	  src/opt/opt.h, src/opt/optCmd.c, src/opt/optInt.h,
+	  src/sm/smMain.c: 
+	  NEW SYSTEM VARIABLE, NEW CMD LINE OPTION 
+	  - Added a new system var: 'ltl_tableau_forward_search' to enable
+	  calculation of reachable states set for the LTL tableau FSM
+	  - Added new command line option -flt to control the new variable
+	  in batch mode
+	  - Fixed ltl.c to exploit the new feature
+	  - Documented the new feature.
+
+2006-10-12 19:17  Marco Bozzano
+
+	* src/dd/dd.c: 
+	BUG FIX
+	Disabling re-ordering during execution of function
+	bdd_get_one_sparse_sat to prevent problems when reordering is
+	called during the printing of a counterexample (which happens
+	frequently using BMC ...). Thanks to Dave Jones for the bug report.
+
+2006-10-11 17:05  Roberto Cavada
+
+	* autoreconf.sh: 
+	NEW SCRIPT 
+	Use this script instead of
+	'autoreconf'. This checks automake is the right version and uses
+	other autotools accordingly.
+	After a CVS checkout: $> ./autoreconf.sh -i
+	After a modification to any file generated by autotools: 
+	$> ./autoreconf.sh
+	IMPORTANT: Use option "-i" only after checking out a new fresh
+	copy of the CVS repository
+
+2006-10-11 16:51  Marco Roveri, Roberto Cavada
+
+	* src/fsm/bdd/BddFsm.c: 
+	OPTIMIZATION When calculating states_input
+	constraints, we start from reachable states (if enabled) instead
+	of bdd_one when making the backward image.
+
+2006-10-10 17:05  Roberto Cavada
+
+	* src/mc/mcMc.c: 
+	PERFORMANCES Improved EG in order to return fair states when the
+	argument is bdd_one
+
+2006-10-10 15:17  Roberto Cavada
+
+	* src/: fsm/bdd/BddFsm.c, fsm/bdd/BddFsm.h, fsm/bdd/BddFsmCache.c,
+	  fsm/bdd/bddInt.h, ltl/ltl.c: 
+	  FEATURES 
+	  - Added method BddFsm::copy_reachable_states to copy 
+	  previously computed reachable states between two FSMs.  
+	  - Fixed LTL2SMV to perform reachable states only once
+
+2006-10-10 13:55  Andrei Tchaltsev
+
+	* src/node/printers/PrinterWffCore.c: 
+	FEATURE 
+	Word expressions was not implemented in boolean model
+	printing function.
+
+2006-10-09 19:46  Andrei Tchaltsev
+
+	* src/compile/type_checking/TypeChecker.c: 
+	BUG FIX
+	A variable was not initialized.
+
+2006-10-09 16:12  Roberto Cavada
+
+	* src/ltl/ltl2smv/ltl2smv.c: 
+	BUG FIX 
+	Ordering of tableau vars is now correct.
+
+2006-10-09 16:11  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: 
+	PREFORMANCES Re-shuffle of variables is now performed only when
+	needed when committing a new layer
+
+2006-10-09 16:05  Roberto Cavada
+
+	* src/compile/compileCone.c: 
+	BUG FIX For some reason, previous commitment on this file removed
+	case UMINUS 
+
+2006-10-09 12:17  Francesco Tapparo
+
+	* src/compile/compileCone.c: 
+	FEATURE
+	Added function Formula_GetDependenciesByType to calculated
+	filtered dependencies
+
+2006-10-06 15:59  Marco Roveri, Roberto Cavada
+
+	* src/ltl/: ltl.c, ltl2smv/ltl2smv.c: 
+	PERFORMANCES TUNING
+
+2006-10-05 16:17  Roberto Cavada
+
+	* src/sm/smMain.c: 
+	COSMETICS Changed starting banner about Minisat:
+	Minisat is MIT licence, so no 'WARNING' is needed, only copyright
+	and references notes.
+
+2006-10-05 16:02  Roberto Cavada
+
+	* src/ltl/ltl2smv/ltl2smv.c: 
+	FEATURE Integrated Stefano Tonetta's <tonettas@lu.unisi.ch> idea. 
+	Optimized code leads to an improvedperformance of about 30%.
+
+2006-10-05 14:54  Roberto Cavada
+
+	* doc/user-man/cmd/write_boolean_model.tex: 
+	DOCS 
+	Added documentation of a new feature of command
+	'write_boolean_model'. The new fetures dumps variables ordering
+	when needed.
+
+2006-10-05 14:40  Roberto Cavada
+
+	* src/compile/compileCmd.c: 
+	BUG FIX 
+	Variable ordering type (SCALAR or single BITS) is read from system
+	options when dumping vars ordering in command write_boolean_model
+
+2006-10-05 14:33  Roberto Cavada
+
+	* src/compile/compileCmd.c: 
+	USABILITY BUG FIX 
+	When COI is enabled and boolean model was not built before setting
+	the COI, the command 'write_boolean_model' issues an error to
+	warn the user of the special condition that prevents the command
+	to successfully teminate the task.
+
+
+2006-10-05 14:21  Roberto Cavada
+
+	* doc/user-man/inter.tex, doc/user-man/cmd/check_ctlspec.tex,
+	  doc/user-man/cmd/check_spec.tex, src/mc/mcCmd.c: 
+	  NEW COMMAND	  
+	  Added command 'check_ctlspec' as an alias of 'check_spec'.
+	  'check_spec' is still supported, but is stated to be deprecated.
+	  This makes the set of checking commands more consistent:
+	  check_ctlspec check_ltlspec check_pslspec
+
+2006-10-03 15:46  Roberto Cavada
+
+	* src/: compile/compileCmd.c, opt/optCmd.c: 
+	NEW FEATURE 
+	When the boolean model is dumped, and the reordering had been
+	previoulsy triggered by cudd, the ordering file is dumped as well,
+	and the user got notified accordingly.
+
+2006-10-03 15:41  Roberto Cavada
+
+	* src/: dd/dd.c, dd/dd.h, enc/bdd/BddEnc.c, enc/bdd/BddEnc.h,
+	  enc/bdd/BddEnc_private.h: 
+	  NEW FUNCTIONS Added functions to control reordering counting.
+
+2006-10-03 10:09  Roberto Cavada
+
+	* src/opt/optCmd.c: 
+	BUG FIX
+	  This bug fix is a temporary hack to prevent usage of corrupted
+	  memory.  It re-introduces memory leaks in the option handling,
+	  though.  We do need a better option handling (raise the dead
+	  option manager!)
+
+	  Thanks to MB for catching it.
+
+2006-10-03 09:49  Roberto Cavada
+
+	* src/: fsm/FsmBuilder.c, parser/idlist/ParserIdList.c,
+	  parser/idlist/idlist_grammar.y: 
+	  BUG FIX 
+	  Exception handled when parsing a wrong trans ordering that leads
+	  to a parsing error.
+
+2006-10-02 15:29  Roberto Cavada
+
+	* src/: opt/opt.h, opt/optCmd.c, opt/optInt.h,
+	  trans/bdd/ClusterList.c, trans/bdd/ClusterList.h,
+	  trans/bdd/ClusterOptions.c, trans/bdd/ClusterOptions.h: 
+	  FEATURES
+	  - Added option 'append_clusters' to control clustering (it is
+	  likely that the option will be hidden, it has been added for
+	  the sake of benchmarking)
+	  - Clusters are appended by default
+	  This should make wendy's idea fully integrated into nusmv.
+
+2006-09-29 14:40  Roberto Cavada
+
+	* doc/user-man/batch.tex, doc/user-man/inter.tex,
+	  doc/user-man/main.bib, src/sm/smMain.c: 
+	  FEATURE, DOCS 
+	  Added option -t <tv_file> to the batch mode. Added documentation
+	  for wendy's feature
+
+2006-09-29 14:08  Roberto Cavada
+
+	* src/: fsm/FsmBuilder.c, fsm/sexp/SexpFsm.c, opt/opt.h,
+	  opt/optCmd.c, sm/smMain.c: 
+	  NEW FEATURE 	  
+	  When building the scalar fsm, variable ordering is taken into
+	  account.  According to Wendy Johnston idea, this later will have
+	  (positive) effects on the BDD clustering construction.
+	  When specified, trans ordering file will override variable
+	  ordering. Clustering still have to be modified accordingly.
+
+2006-09-29 11:59  Roberto Cavada
+
+	* src/opt/: opt.h, optCmd.c, optInt.h: 
+	FEATURE, BUG FIX, CLEANUP
+	  - Added new option trans_order_file suggested by Wendy Johnston
+	  <wendy@itee.uq.edu.au>
+	  - Fixed memory leaks in the options package - Tidied up some code
+	  in options string settings.
+	  New option still needs to be documented.
+
+2006-09-28 16:00  Roberto Cavada
+
+	* src/fsm/sexp/SexpFsm.c: 
+	BUG FIX
+	Fixed memory leak in SexpFsm destroyer. Now reference counting is
+	carried out to correctly dispose of internal hash table.
+	Thanks to [AT] for reporting this bug.
+
+2006-09-28 15:35  Roberto Cavada
+
+	* src/compile/: compile.h, compileUtil.c: 
+	NEW FUNCTION 
+	Added function Compile_make_sorted_vars_list_from_order
+	The new function allows to construct sorted lists of symbols
+	given a partially ordered lists.
+
+2006-09-28 12:00  Andrei Tchaltsev
+
+	* src/enc/bdd/: BddEnc.c, BddEnc_private.h: 
+	INTERFACE CHANGE
+	Two static functions are moved to private interface (these two
+	functions are not ready for broad outside use, but required by MBP
+	package). After proper implementation and description the
+	functions should be moved to public interface.
+
+2006-09-28 11:20  Roberto Cavada
+
+	* src/: bmc/bmcCmd.c, bmc/bmcInt.h, bmc/bmcPkg.c,
+	  bmc/sbmc/sbmcCmd.c, compile/compile.h, compile/compileCmd.c,
+	  compile/compileStruct.c: 
+	  BUG FIX, CODE REFACTORING 
+	  - Splitted bmc package initialization and Be FSM construction 
+	  - bmc works now fine when COI is involved 
+	  - Factorized code that checks that bmc is up und running
+
+2006-09-27 16:17  Andrei Tchaltsev
+
+	* src/fsm/sexp/SexpFsm.c: 
+	BUG FIX
+	The bug was caused by freeing the same node_ptr twice: copy
+	constructor of SexpFsm copied a pointer to some its subpart, but
+	the destructor freed it.
+
+2006-09-26 16:27  Roberto Cavada
+
+	* configure.ac, src/parser/Makefile.am,
+	  src/parser/idlist/Makefile.am, src/parser/idlist/ParserIdList.c,
+	  src/parser/idlist/ParserIdList.h,
+	  src/parser/idlist/ParserIdList_private.h,
+	  src/parser/idlist/idlist_grammar.y,
+	  src/parser/idlist/idlist_input.l, src/parser/idlist/idlist_int.h,
+	  src/utils/error.c, src/utils/error.h: NEW FEATURE Added class
+	  ParserIdList with the relative parser based on flex/bison.  The
+	  new class allows for easily parse lists of IDs from files and
+	  strings.
+
+	  
+
+2006-09-26 12:02  Roberto Cavada
+
+	* src/enc/bdd/BddEnc.c: BUG FIX Fixed implicit ordering of scalar
+	  input variables.  Thanks to Andrew Miner <asminer@cs.iastate.edu>
+	  for reporting this bug.  
+
+2006-09-26 12:00  Roberto Cavada
+
+	* src/enc/base/BaseEnc.c: COSMETICS Addes a comment that makes a
+	  method's semantics more clear.  
+
+2006-09-26 09:44  Roberto Cavada
+
+	* src/mathsat/: mathsat.h, mathsatCmd.c, mathsatWriteMathSAT.c:
+	  FEATURE Fixed MathSat_write_hierarchy.  
+
+2006-09-20 16:43  Andrei Tchaltsev
+
+	* src/compile/symb_table/: SymbType.c, SymbType.h: 
+	NEW FEATURE	
+	Added a copy-constructor (SymbType_copy) to SymbType class.
+
+2006-09-20 15:31  Roberto Cavada
+
+	* src/: compile/symb_table/SymbLayer.c,
+	  compile/symb_table/SymbLayer_private.h,
+	  compile/symb_table/SymbTable.c, compile/symb_table/SymbTable.h,
+	  enc/base/BaseEnc.c, enc/bdd/BddEnc.c, enc/be/BeEnc.c,
+	  enc/bool/BoolEnc.c: 
+	  NEW FEATURE Added method rename_layer to the
+	  class SymbTable. All modification in encoders are only comments.
+
+2006-09-18 15:23  Roberto Cavada
+
+	* src/: bmc/bmcPkg.c, bmc/sbmc/sbmcPkg.c, cmd/cmdMisc.c,
+	  compile/FlatHierarchy.c, compile/FlatHierarchy.h,
+	  compile/compileCmd.c, compile/compileFlatten.c,
+	  fsm/sexp/SexpFsm.c, ltl/ltl2smv/ltl2smvMain.c, opt/opt.h,
+	  opt/optCmd.c, opt/optInt.h, parser/grammar.y, parser/input.l,
+	  parser/symbols.h, sm/sm.h, sm/smInit.c, sm/smInt.h, sm/smMain.c:
+	  FEATURES 
+	  - renamed option program_name to program_path 
+	  - added option program_name 
+	  - external tools that link nusmv no longer require to include
+	  "smInt.h" 
+	  - moved Sm{Init,End} to the public interface, renamed as
+	  Sm_{Init,End} 
+	  - added PRED (for predicates) to the grammar.
+
+2006-09-01 16:37  Roberto Cavada
+
+	* src/: compile/compileCmd.c, sm/smMisc.c: 
+	CRITICAL BUG FIX
+	Fixed the booleanization bug. Booleanization was performed even
+	when not needed, both in batch and interactive mode. Notice that
+	the interactive mode of 2.3.1 was also affected.
+	Warning: may need some tests of the user level 
+
+2006-08-23 18:02  Roberto Cavada
+
+	* src/: compile/compileBEval.c, compile/compileCone.c,
+	  compile/compileFlatten.c, compile/compileUtil.c,
+	  compile/symb_table/SymbLayer.c, compile/symb_table/SymbLayer.h,
+	  compile/symb_table/SymbType.c, compile/symb_table/SymbType.h,
+	  compile/type_checking/checkers/CheckerCore.c, enc/operators.c,
+	  enc/operators.h, enc/bdd/BddEnc.c, enc/utils/AddArray.c,
+	  enc/utils/AddArray.h, node/node.c, node/node.h,
+	  node/printers/PrinterWffCore.c, parser/grammar.y,
+	  parser/symbols.h, trans/bdd/ClusterList.c, utils/WordNumber.c,
+	  utils/WordNumber.h: 
+	  FEATURES 
+	  Ported some features of SMT-COMP
+	  Still missing:  
+	  - heurstics for words bit interleaving  
+	  - signed operators at parser level	  
+
+2006-08-22 18:41  Roberto Cavada
+
+	* src/compile/type_checking/checkers/CheckerPsl.c: 
+	BUG FIX 
+	In Sere repeats like {id [*N]} type checking caused a segfault as
+	N was checked to be integer, but the type checker up casts N to
+	boolean when N is in {0,1}.
+
+2006-08-17 15:38  Roberto Cavada
+
+	* src/: bmc/sbmc/sbmcCmd.c, bmc/sbmc/sbmcCmd.h, mc/mcCmd.c: 
+	NEW FEATURE 
+	Added options -s -c -N to the command check_pslspec
+	  	  
+2006-08-07 08:36  Roberto Cavada
+
+	* src/compile/compileFlatten.c: 
+	BUG FIX Added missing UMINUS case to the flattener.  
+
+2006-08-04 09:40  Roberto Cavada
+
+	* src/: compile/compileBEval.c,
+	  compile/type_checking/checkers/CheckerCore.c, enc/operators.c,
+	  enc/bdd/BddEnc.c, enc/utils/AddArray.c, enc/utils/AddArray.h,
+	  node/printers/PrinterWffCore.c, parser/smtParsing.c,
+	  parser/smtRewriter.c: 
+	  BUG FIX Added support to unary minus (UMINUS) 
+
+2006-08-03 13:05  Roberto Cavada
+
+	* src/: compile/compileBEval.c, enc/bdd/BddEnc.c,
+	  enc/utils/AddArray.c, enc/utils/AddArray.h: 
+	  FEATURE Added word sign extend  
+
+2006-08-03 09:30  Roberto Cavada
+
+	* src/enc/: bdd/BddEnc.c, utils/AddArray.c, utils/AddArray.h:
+	  FEATURE Added signed operators but sign extend
+
+	  
+Mon 31 Jul NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.4.0 ===
+
+
+Thu 27 Jul 2006 16:04:01 Roberto Cavada <cavada@irst.itc.it>
+	* configure.ac 
+	Removed unused dependency with bsd library (was not used, but
+	requested)
+
+Wed 26 Jul 2006 Roberto Cavada <cavada@irst.itc.it>
+	* doc/user-man/syntax.tex 
+	Added some text to document where IVAR are not allowed to occur. 
+
+Wed 26 Jul 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/enc/be/BeEnc.c src/bmc/bmcSatTrace.c
+	BUG FIX
+	Due to a bug in BMC counter-example construction, be vars indices
+	were still assumed to be > 0
+	
+	* src/compile/compileFlatten.c
+	BUG FIX
+	Array indices are checked to be atomic constants
+
+	* src/bmc/sbmc/sbmcBmcInc.c 
+	BUG FIX
+	This bug fix makes the command check_ltlspec_sbmc_inc re-entrant wrt ctrl+c
+	(A similar bug fix for non incremental command has been already
+	committed)
+
+	* doc/user-man/{inter.tex,main.bib}
+	* doc/user-man/cmd/{check_ltlspec_sbmc.tex,check_ltlspec_sbmc_inc.tex,gen_ltlspec_sbmc.tex}
+	Added docs of new commands and options for SBMC
+
+	* src/bmc/sbmc/sbmcTableauLTLformula.c
+	BUG FIX
+	Added a fallback behaviour to the il-opt algorithm for the case
+	k=0
+
+	* src/bmc/sbmc/sbmcUtils.c 
+	BUG FIX
+	Fixed creation/destruction of the loop var layer.
+	The bug occurred if the user interrupted the execution (ctrl+c) of
+	sbmc commands. 
+
+Tue 25 Jul 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/enc/be/BeEnc.c 
+	BUG FIX
+	Physical indices for BE vars were created starting from 1 instead
+	of 0
+
+	* src/bmc/{bmcDump.c,bmcSatTrace.c}
+		* src/bmc/sbmc/sbmcUtils.c
+	* src/be/{be.h,beRbcManager.c}
+	* src/rbc/rbcCnf.c 
+	BUG FIX
+	Having BE variables with index 0 occurring in CNF was not allowed. 
+	Fixed by hiding the way BE indices are associated to BE literals. 
+	Thanks to [MB] for double checking the fix. 
+
+	* src/compile/type_checking/TypeChecker.c 
+	PERFORMANCE 
+	Changed complexity of type checking of enumerations from O(N*N) to 
+	at most	O(N*lgN). This *makes* the difference when relatively big
+	number of constants are used (see for example the test for
+	bug_155)
+
+	* src/utils/NodeList.c
+	BUG FIX
+	When the underlying list is shared, it is no longer destroyed by 
+	the class destroyer. 
+
+Fri 21 Jul 2006	Charles Arthur Jochim <jochim@irst.itc.it>
+	* configure.ac 
+	Add flag to enable/disable readline at configuration time.
+	
+Wed 19 Jul 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/utils/{error.c,error.h}
+	* src/parser/grammar.y
+	* src/enc/utils/AddArray.c
+	* src/fsm/sexp/SexpFsm.c 
+	* src/enc/operators.c 
+	* src/compile/{compile.h,compileBEval.c,compileWrite.c}
+	* src/bmc/sbmc/sbmcBmc.c,sbmcUtils.c}
+	* src/nmb{bmcBmcInc.c,bmcBmcNonInc.c,bmcConv.c,bmcTest.c}
+	* src/node/printers/PrinterWffCore.c 
+	* src/node/{node.h,nodePrint.c}
+	BUG FIX
+	Partially fixed the inconsisten behaviour when compiling 
+	(possibly) not exhaustive CASEs expression into either BDD or BE:
+	With BDDs it is possible to detect correctly bad CASEs and report them 
+	to the user, whereas with BEs only a syntactical analysis is performed 
+	at the moment, so it is not always possible (for release 2.4.0) 
+	to distinguish between right cases and not-exhaustive cases. 
+
+	When BEs (BMC) are used, a warning is printed in ambiguous cases. 
+	
+	* src/enc/bdd/{BddEnc.c,BddEnc.h,BddEnc_private.h}
+	NEW FEATURE
+	Added public methods 'add_to_expr' and 'bdd_to_expr' to the class BddEnc
+	(Thanks to <thiagocarvalho@yahoo.com> for requesting it. 
+
+Mon 17 Jul 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/parser{grammar.y,input.l,symbols.h}
+	* node/printers/PrinterWffCore.c 
+	* src/node/nodePrint.c 
+	* src/fsm/sexp/{SexpFsm.c,SexpFsm.h}
+	* compile/type_checking/checkers/{CheckerCore.c,CheckerPsl.c,CheckerStatement.c}
+	* src/compile/{compileCmd.c,compileFlatten.c,compileWrite.c}
+	NEW GRAMMAR STATEMENT
+	Added a new statement at SMV grammar level: CONSTANTS
+	The new statement allows a user (or a generator) to make NuSMV 
+	declar  e a set of symbolic constants when flattening a SMV file. 
+	This makes it posssible to parse a file that contains DEFINEs whose 
+	body refer to symbolic constants values that do not occur into VARS
+	ranges. This is the case of SMV files generated by the command 
+	write_boolean_model that dumps boolean variables as VARS, and 
+	each scalar variable as a DEFINEs whose body is the boolean encoding
+	of the scalar variable (to help reading counter-examples, simulation, 
+	etc. as the user can still reason with scalar values even when
+	working with a purely booleanized model)
+	Dumping of CONSTANTS is conditioned to the value of the system variable
+	backward_compatibility.
+	
+	* src/opt/{opt.h,optCmd.c,optInt.h}
+	OPTION RENAMING
+	Renamed system variable 'type_checking_backward_compatibility' to 
+	'backward_compatibility'
+
+	* src/sm/smMain.c
+	NEW CMDLINE OPTION
+	Added new command line option '-old' to control the variable 
+	'backward_compatibility' in batch mode
+
+	* src/compile/compileBEval.c
+	BUG FIX
+	Determinization variables are now declared as STATE variables
+	instead of INPUT vars, as determinization happens at state level, 
+	and not at transition level. This allows determinization vars to 
+	stay into INITs and INVARs as it may happen when booleanized 
+	models are written and then need to be re-parsed. 
+
+	* src/compile/{compile.h,compileUtil.c}
+	* src/ltl/ltl2smv/ltl2smvMain.c 
+	* src/prop/propProp.c
+	NEW FEATURE
+	Added function:
+	 node_ptr Compile_pop_distrib_ops(node_ptr prop) 
+	 ... that simplifies the given property by exploiting the
+	 distributivity of G, AG and H over AND, and distributivity of F, AF
+	 and O over OR:
+	    1) <OP> <OP> a           :-> <OP> a
+	    2) (<OP> a) * (<OP> b)   :-> <OP> (a * b);
+	    3) (<OP> (a * <OP> b))   :-> <OP> (a * b);
+	    4) (<OP> (<OP> a * b))   :-> <OP> (a * b);
+	    5) (<OP> (<OP> a * <OP> b)) :-> <OP> (a * b); 
+	   Where <OP> can be either:
+	        G|AG|H for * := &
+		F|AF|O for * := |
+
+Tue 11 Jul 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/psl/psl_grammar.y 
+	* src/node/printers/PrinterPsl.c 
+	BUG FIXES
+	1. "G Sequence" is no longer a parsable PSL property 
+	   (accordingly to the grammar provided by IBM)
+        2. always, never and eventually! are now printed correctly when
+	   printing a following PSL Sequence
+        3. Removed nested {} when printing SEREs
+	
+Mon 10 Jul 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/compile/{compile.h,compileCmd.c,compileStruct.c}
+	BUG FIX
+	Changed the behaviour of the command flatten_hierarchy when it fails:
+	now it resets also the result of the command read_model to allow the
+	user to fix the model and then re-read when working in interactive
+	mode.
+
+Fri 7 Jul 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/psl/pslConv.c 
+	BUG FIX
+	Conversion of PSL -> LTL was not handling the operator 'until!'
+	(until bang) 
+
+Mon 3 Jul 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/sm/smMain.c
+	FEATURE
+	Reachable states are now computed by default (i.e. command line option 
+	-f is set by default)
+	+ New command line option -df is provided to prevent the computation
+	+ Docs have been changed accordingly
+
+Mon 12 Jun Marco Roveri <roveri@irst.itc.it>
+	* src/bmc/sbmc/...
+	First porting of the Incremental SBMC by Tommi Juntilla, Timo
+	Latval. Helianko published in CAV 05.
+
+Thu 1 Jun 2006 Marco Roveri <roveri@irst.itc.it>
+	* src/dd/{dd.h,dd.c}
+	Added a function bdd_get_one_sparse_sat that returns one satidfying
+	assignment for a BDD (i.e. a path from the root to the leaf 1).
+
+	* src/compile/compileWrite.c
+	BUG FIX #397
+	Now fairness conditions FAIRNESS a & b are printed by the 
+	write flat model as FAIRNESS a & b instead of the wrong:
+	 FAIRNESS a 
+         FAIRNESS b
+
+	* src/ompile/compileCheck.c
+	BUG FIX #314
+	We cover also the hierarchy. Before only next of input variables
+	in the rhs of next assign where detected only if they where
+	occurring in the top level module (main).
+
+Mon 29 May 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/sm/smInit.c
+	* src/ltl/ltl.c 
+	BUG FIX
+	Fixed a couple of memory leaks. Thanks to [AT] for profiling and
+	finding these bugs.
+
+Fri 26 May 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/compile/compileFlatten.c 
+	BUG FIX #393
+	When there is name clashing between a variable and a formal
+	parameter, this error message is printed (and the execution
+	prevented from continuing): file <FILE>: line <N>: variable
+	"<NAME>" shadows formal parameter
+	
+Fri 19 May 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/compile/compileCmd.c 
+	NEW COMMAND
+	+ Added command print_fsm_stats
+	+ Old command print_clusterinfo is still supported, but documented as 
+	  deprecated in 2.4
+	+ Added docs for the new command 
+
+	* src/mc/mcMc.c 
+	* src/prop/{prop.h,propProp.c}
+	* doc/user-man/syntax.tex
+	* doc/user-man/cmd/compute.tex 
+	BUG FIX #315
+	+ Fixed MAX behaviour when any of initial or final states is empty. 
+	+ Added value undefined to COMPUTE specifications
+	+ Fixed docs
+	+ Added warning during MAX computation for: 
+	  - initial states empty
+	  - final states empty
+	  - empty fair states
+	
+	* src/compile/compileCmd.c
+	* src/opt/optCmd.c 
+	* src/sm/smInit.c 
+	* doc/user-man/cmd/process_model.tex
+	BUG FIX #394
+	+ Fixed re-enabling of dd dynamic reordering after reset when
+	  previously enabled.
+	+ removed system variable 'enable_reorder' at user level
+	+ added option -r to the command 'process_model' to force 
+	  reordering and dumping of vars order. 
+	+ fixed docs accordingly
+	
+Thu 18 May 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/prop/propCmd.c 
+	BUG FIX #313
+	Added PSL support to commands {check,add}_property (added option -s)
+
+Mon 15 May 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/node/node.{c,h}
+	BUG FIX #311
+	Fixed lineno overflow
+
+	* src/parser/parserUtil.c 
+	BUG FIX #318
+	Fixed reentrancy of parsing function. Exception is catched and 
+	parser status is reset. 
+
+Fri 12 May 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/sim/{simClause.c,simInt.h}
+	BUG FIX #175
+	Fixed integer overflow. Still to be tested.
+
+Tue 9 May 2006 Marco Roveri <roveri@irst.itc.it>
+	* src/parser/grammar.y 
+	FEATURE
+	Allowed the declaration of array of modules.
+
+Tue 11 Apr 2006	Roberto Cavada <cavada@irst.itc.it>
+	* src/fsm/sexp/SexpFsm.{h,c}
+	FEATURE
+	Changed class SexpFsm in order to provide a better mechanism to 
+	build FSMs on the fly. 
+	It is now possbile to derive a SexpFsm f2 from a SexpFsm f1, by 
+	changing parts of f2 and keeping f1 unchanged. 
+
+	Method create_from_members has been removed, and constructor
+	makes use of the FlatHierarchy structure to pass FSM data. 
+
+	FlatHierarchy has been exptended to allow developers to copy, modify 
+	and derive an existing instance into another instance that will 
+	eventually be used to create a new FSM chain. 
+
+Tue 4 Apr 2006 Roberto Cavada <cavada@irst.itc.it>
+	NEW FEATURES
+	+ Plugged in support for PSL at system level 
+	  - type checker supports now psl through a checker for PSL nodes
+	  - psl formulae are still converted to a core-compliant parse tree for 
+	    model checking and dependency finding
+	+ Provided a generic architecture to support grammar extensions
+
+Mon 13 Feb 2006	Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* /src/sm/smMisc.c
+	CODE REWRITING
+	The batch mode was implemented as a list of functions which performed
+	the required actions.
+	Now the batch mode is a list of commands.
+
+
+Mon 13 Feb 2006 Roberto Cavada <cavada@irst.itc.it>
+	* src/sm/smMain.c
+	DOC FIX
+	Fixed references to the zchaff home page. 
+	Thankt to Roopsha <roopsha@ece.utexas.edu> for reporting it. 
+
+Thu 12 Jan 2006 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/ltl/ltl.c 
+	BUG FIX
+	Ltl_CheckLtlSpec function did not re-throw a caught exception but just 
+	returned.
+
+Fri 7 Oct 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/compile/type_checking/PredicateNormaliser.{h,c}
+	NEW FEATURE
+	A new class PredicateNormaliser is created (in src/compile).
+	This class can take an symbolic expression (Sexp_ptr) and normalise
+	predicates in it. A predicate-normalised expression is an expression
+	whose not-boolean subexpression (predicate) cannot have boolean operands.
+	Also a symbolic FSM class (src/fsm/sexp) was updated: now it has 
+	a new constructor which takes a symbolic FSM and a predicate-normaliser
+	and returns a new symbolic FSM with all constrains (INIT, TRANS and INVAR)
+	already normalised.
+
+Fri 9 Sep 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/sm/smMain.c 
+	NEW COMMAND LINE OPTION
+	A new command line option "-old_div_op" is enabled.
+	This option switches from the "new" ANSI C semantics of division and remainder
+	operators to the old one used in NuSMV 2.3.1 and earlier.
+
+Tue 24 May 2005	Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/enc/utils/AddArray.{h,c}
+	NEW CLASS
+	A new class AddArray is created in enc/utils module.
+	This class is used during BDD evaluation to deal with arrays of ADD.
+	Except ADD arrays primitives, this class also has functions to perform
+	Word operations on arrays of boolean values. 
+
+	* src/sm/smMain.c
+	NEW COMMAND LINE OPTION
+	Added a new option "-word_mono". With this flag Words are encoded as
+	a signle ADD. Without this flag Words are encoded as 
+	arrays of boolean values.
+
+	* src/opt/{opt.h,optCmd.c,optInt.h}
+	NEW VARIABLE
+	A new variable encode_word_monolithic is added.  Its true value means that
+	one ADD is used to encode a Word expression, whereas false value means
+	that an array of ADD will be used (one for every bit).
+	
+Thu 21 Apr 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/opt/{opt.h,optCmd.c,optInt.h}
+	NEW VARIABLE
+	A new system variable "output_word_format" is added.
+	Possible values are 2, 8, 10, 16.
+	This variable specifies how (in what base) Word numbers are printed out
+	during traces outputting, counterexamples, etc.
+
+Mon 4 Apr 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/enc/bdd/BddEnc.c
+	NEW FEATURE
+	Word type is added to evaluation and some other parts of NuSMV.
+	Further changes are expected soon.
+
+
+Tue 15 Feb 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it> 
+	* src/compile/type_checking
+	Here is the first full version of the type checking package.
+
+Wed 9 Feb 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it> 
+	* src/opt/{opt.h,optCmd.c,optInt.h}
+	NEW FEATURE
+	There are two new environment variables:
+	+ "backward_compatibility" 
+	+ "type_checking_warning_on"
+
+Fri 14 Jan 2005 Roberto Cavada <cavada@irst.itc.it>
+	* src/be/{be.h,beRbcManager.c}
+	* src/rbc/{rbc.h,rbcSubst.c}
+	* src/enc/be/BeEnc.c
+	NEW FEATURE
+	Added logical level to BEs at BeEnc level
+
+Tue 11 Jan 2005 Andrei Tchaltsev <tchaltsev@irst.itc.it> 
+	* src/parser/{grammar.y,input.l,symbols.h}
+	NEW FEATURE
+	Modified parser and lexer to deal with new type "word" and its associated 
+	operators (<<, >>, <<<, >>>, ::, [:]).
+
+Mon 10 Jan 2005	Roberto Cavada <cavada@irst.itc.it>
+	* src/enc/be
+	First shot of class BeEnc.
+
+Wed 24 Nov 2004	Roberto Cavada <cavada@irst.itc.it>
+	* src/enc/base/{BaseEnc.c,BaseEnc.h,BaseEnc_private.h}
+	* src/enc/base/{BoolEncClient.c,BoolEncClient.h,BoolEncClient_private.h}
+	* src/enc/bool/{BoolEnc.c BoolEnc.h BoolEnc_private.h}
+	NEW CLASSES
+	+ BaseEnc is the abstract pure base class for all the encodings
+	+ BoolEncClient is the abstract purebase class for all the encodings 
+	  that need an instance of BoolEnc to operate. 
+        + BoolEnc handles the booleanization of variables, and keeps track 
+	  of the var <-> bool encoding relation.
+
+	
+Tue 28 Sep 2004 Roberto Cavada <cavada@irst.itc.it>
+	NEW CLASS
+	* src/compile/symb_table/{SymbLayer.c SymbLayer.h SymbTable.c SymbTable.h}
+	Added class SymbTable, as a collection of Layers.
+
+	
+
+Mon 21 Nov NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.3.1 ===
+	
+Fri 18 Nov 2005 12:37:51 Roberto Cavada <cavada@irst.itc.it>
+	* Makefile.am configure.ac
+	Integrated new zchaff helper directory
+	Default used zchaff version is now 2004.11.15
+
+Fri 18 Nov 2005 10:38:06 Roberto Cavada <cavada@irst.itc.it>
+	* ../zchaff
+	Improved integration with zchaff.
+	Like Minisat, zchaff is now compiled into a dedicated directory. 
+	scripts are provided to help the user to unpack, patch and compile
+	zchaff. 
+
+Wed 16 Nov 2005 11:44:40 Simone Semprini <semprini@irst.itc.it>
+	* src/parser/psl/{pslConv.c,pslInt.h,pslNode.c,pslNode.h}
+	BUG FIX
+	Fixed forall expansion of PSL formulae, moving it earlier in the
+	PSL compilation process.
+
+Wed 16 Nov 2005 14:38:52 Roberto Cavada <cavada@irst.itc.it>
+	* src/utils/portability.{h,c} src/ltl/ltl2smv/main.c
+	PORTABILITY 
+	Added 
+	- portability module to package utils
+	- some code into ltl2smv/main.c for the sake of portability
+	Now nusmv can be cross-compiled (at least for mingw...)
+	
+Wed 16 Nov 2005 09:40:32 Roberto Cavada <cavada@irst.itc.it>
+	* src/dd/dd.h
+	BUG FIX
+	Fixing a few wrong declations (param type add_ptr used instead 
+	of bdd_ptr).
+	Thanks to Ittai Balaban <ittaibalaban@gmail.com> for reporting the
+	bug. 
+	
+Tue 15 Nov 2005 17:31:44 Roberto Cavada <cavada@irst.itc.it>
+	* configure.ac 
+	BUG FIX
+	Fixed a few configuration tests about zchaff and minisat.
+
+Tue 15 Nov 2005 15:02:02 Roberto Cavada <cavada@irst.itc.it>
+	* src/opt/opt.h
+	FEATURE
+	Minisat is the default sat solver when available (ported from 2.4)
+
+Tue 15 Nov 2005 14:40:28 Roberto Cavada <cavada@irst.itc.it>	
+	* Makefile.am
+	BUG FIX
+	'make dist' failed on automake >= 1.7, as generated files were 
+	expected to be distributed. (ported from 2.4)
+
+Tue 15 Nov 2005 14:34:26 Roberto Cavada <cavada@irst.itc.it>
+	* src/sm/smInit.c 
+	BUG FIX
+	The command 'reset' reset also ordering file variable to a 
+	default value. 'reset' does not modify input_order and 
+	output_order variables anymore. (ported from 2.4)
+
+Tue 15 Nov 2005 13:48:57 Roberto Cavada <cavada@irst.itc.it>
+	* src/trace/plugins/{TraceXmlDumper.c,TraceXml_private.h}
+	FEATURE
+	The Xml dumper plugin dumps loops information now. (ported from
+	2.4)
+
+Tue 15 Nov 2005 13:48:12 Roberto Cavada <cavada@irst.itc.it>
+	* README.MiniSat Makefile.am configure.ac src/sm/smMain.c 
+	FEATURE 
+	NuSMV now uses Minisat-1.14. 
+
+Tue 15 Nov 2005 09:15:01 Roberto Cavada <cavada@irst.itc.it>
+	* src/cmd/cmdMisc.c src/sm/smMain.c
+	BUG FIX
+	When an error occurs during command execution (in interactive
+	mode) and the flag on_failure_script_quit is set, nusmv exists now
+	with the value 1. (ported from 2.4)
+
+	
+Mon 14 Nov 2005 15.30 Roberto Cavada <cavada@irst.itc.it>
+	* src/sm/smMain.c
+	Added command line option "sat_solver" that allows to specify 
+	the SAT solver to be used in batch mode. 
+	Many thanks to Guido Wimmel <wimmel@in.tum.de> for providing 
+	the code to handle the option. 
+	
+Thu 10 Nov 2005 09:08:31 Marco Roveri <roveri@irst.itc.it>
+	* src/ltl/ltl.c
+	BUG FIX
+	Fixed problem with COI when only LTL properties are present in the
+	SMV file. The COI structure were wrongly initialized due to the
+	push/pop mechanism to implement LTL BDD based model checking.
+	The problem does not occur in the version 2.4.
+	Thanks to Kevin Xuke <xk02@mails.tsinghua.edu.cn> for reporting
+	this bug.
+
+Tue, 13 Sep 2005 14:37:10  Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/input.l src/parser/psl/psl_input.l 
+	PORTABILITY FIX
+	Upcased yy_current_buffer for the sake of portability with
+	different flex versions.
+
+Fri 2 Sep 2005 10:21:25	Roberto Cavada <cavada@irst.itc.it> SimoneSemprini <semprini@irst.itc.it>
+	* src/parser/psl/pslNode.c 
+	BUG FIX
+	Fixed a bug that made expressions like LTL * SERE not correctly
+	converted to LTL, as the tree was not travesed correctly by 
+	is_ltl and is_obe predicates. 
+
+Tue 30 Aug 2005 12:01:09 Roberto Cavada <cavada@irst.itc.it>
+	* src/enc/symb/Encoding.c src/utils/error.{c,h}
+	BUG FIX
+	The actual existance of vars ordering input file is now checked. 
+	Previously, when the file was not found stdin was used instead. 
+
+Mon 22 Aug 2005 08:29:07 Andrei Tchaltsev <tchaltsev@irst.itc.it>
+	* src/fsm/bdd/{BddFsm.c,BddFsmCache.c,bddInt.h}
+	BUG FIX
+	Fixed bug in BddFsm_get_strong_backward_image: the function
+	bdd_fsm_get_backward_si_projection computed legal states/input
+	without caring for invariants.
+	In BddFsm_get_strong_backward_image I also removed unnecessary
+	conjunctions with invariants since they are performed in
+	BddFsm_get_weak_backward_image.
+	Function bdd_fsm_get_backward_si_projection was fixed and renamed to
+	bdd_fsm_get_legal_state_input (more understandable name). Also a
+	variable backward_projection (which hold the result of
+	bdd_fsm_get_backward_si_projection) was renamed to
+	legal_state_input.
+
+
+
+Fri 15 Jul 2005 17:00:00 NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.3.0 ===
+
+	
+Fri 15 Jul 2005 08:49:52 Roberto Cavada <cavada@irst.itc.it>
+	* src/fsm/bdd/BddFsm.c 
+	Bug fix: the command check_fsm did not consider already computed
+	reachable states when computation of reachable was not requested
+	by specifying the option -f or by executing the interactive
+	command compute_reachable.
+
+Thu 14 Jul 2005 15:58:26 Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/psl/pslConv.c
+	Bug fix, feature
+	- Extended subtitution in replicator
+	- Nested replicators with same IDs are no longer allowed. 
+	
+Fri 8 Jul 2005 10:48:38 Simone Semprini <semprini@itc.it>
+	* src/parser/psl/{pslConv.c,pslInt.h,pslNode.c}
+	- Integration of last functionalities regarding [*] and [+]
+	  standalone not top level into new architecture
+	- Varius extension to already existing functions
+	- Some bug fixes
+	- Some old functions removed
+	- Some new functions added (renamed extension of old ones)	
+	
+Thu 7 Jul 2005 16:45:28 Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/psl/
+	Package refactoring.
+	- splitted psl_expr int a few separate modules:
+	  - pslExpr: interface for the parser (PslExpr)
+	  - pslNode: low level functions over PslNode
+	  - pslConv: high level functions over PslNode (convertions)
+	  - pslPrint: printing feature over PslNode
+
+	Files psl_expr.{h,c} have been removed. 
+	Since the interfaces are changed, other packages have been adjusted 
+	accordingly: prop, compile	
+	
+Thu 7 Jul 2005 09:37:47 Roberto Cavada <cavada@irst.itc.it>
+	* src/parser/psl/psl_expr.c
+	Feature: nested suffix implications are now supported.
+	
+Wed 6 Jul 2005 11:14:07 Simone Semprini <semprini@itc.it>
+	* src/parser/psl/psl_expr.c
+	Bug fixes, refactoring
+	- Extension of is_handled family of functions to deal with
+          [*count] stand-alone and with [*] and [+] that are stand-alone but
+          not top level (e.g. a;[*];b)
+	- Treatment of stand-alone [+] complete
+	- Treatment of [*] and [+] that are stand-alone but not top level
+	  to be implemented
+	
+Tue 5 Jul 2005 16:55:02 Roberto Cavada <cavada@irst.itc.it> Simone Semprini <semprini@itc.it>
+	* src/parser/psl/psl_expr.c
+	Bug fixes, new feature
+	- completed handling of * on propositionals
+	- several bug fixes
+	
+Mon 4 Jul 2005 14:45:19 Roberto Cavada <cavada@irst.itc.it> Simone Semprini <semprini@itc.it>
+	* src/parser/psl/psl_expr.{h,c}
+	Bug fixes, new feature
+	- In function PslNode_is_handled_sere: case TKCOMPOUND merged
+	  conjuctions and disjunction.
+        - Renamed PslNode_has_handled_sere to PslNode_is_handled_psl
+	- Extended PslNode_is_handled_psl to deal with whilenot and other sere-based 
+	  ops there were not dealt with. 
+	
+Mon 4 Jul 2005 09:35:56 Simone Semprini <semprini@itc.it>
+	* doc/user-man/{syntax.tex,app_grammar.tex}
+	- PSL part of user-man uptodate with grammar in PSL parser.
+	- app_grammar.tex extended witl PSL grammar
+	
+Mon 4 Jul 2005 08:53:47 Fabio Barbon <barbonfab@itc.it>
+	* src/parser/psl/psl_expr.c
+	Fixed star handling according to [*] versus [*0] difference.
+	
+Thu 30 Jun 2005 15:44:59 Simone Semprini <semprini@itc.it>
+	* src/parser/psl/psl_expr.c
+	1. Completed translation of star-free sere.
+	2. Extended recognition of handled subset for sere with star count and
+	   star on propositionals (to be tested)
+	3. Implemented translation of star count sere (to be tested)
+	4. Partially implemented translation of star on propositionals
+	
+Wed 29 Jun 2005 09:52:35 Roberto Cavada <cavada@itc.it>
+	* src/sm/sm{Main,Misc}
+	Added command-line option -ips.
+
+Wed 29 Jun 2005 09:18:09 Marco Roveri <roveri@itc.it>
+	* examples/psl-samples
+	Porting to PSL of some SMV files from the previous distribution.
+
+Tue 28 Jun 2005 09:48:01 Simone Semprini <semprini@itc.it> 
+	* doc/user-man/cmd
+	Extensions to the user manual for PSL
+
+Tue 28 Jun 2005 08:39:03 Roberto Cavada <cavada@itc.it>
+	* src/parser/psl/spl_grammar.y
+	A first cleanup of the psl grammar for the version being
+	delivered. 
+
+Mon 27 Jun 2005 14:46:39 Roberto Cavada <cavada@itc.it>
+	* src/parser
+	Integrated the PSL parser from branch 2.4
+
+Fri 24 Jun 2005 15:12:07 Fabio Barbon <barbonfab@itc.it>
+	* src/parser/psl
+	Added code to translate SERE int LTL
+
+Fri 24 Jun 2005 09:46:46 Marco Roveri Roberto Cavada <roveri,cavada}@itc.it>
+	* src/parser/psl/psl_grammar.y
+	* src/parser/grammar.y
+	Bug fix: Fixed the handling of the IN context while interactive mode.
+	
+Wed 22 Jun 2005 15:03:46 Roberto Cavada <cavada@itc.it>
+	* nusmv/src/bmc/{bmcBmc.h,bmcCmd.c,bmcCmd.h}
+	Added psl model checking to batch mode. 
+
+Wed 22 Jun 2005 14:03:52 Roberto Cavada <cavada@itc.it>	
+	* src/prop/propDb.c
+	Those psl properties that cannot be converted to ltl nor ctl, are now 
+	allowed to be added to the prop db. 
+	No model checking is allowed on them, though. 
+	A warning will be issued when a property gets added under these
+	conditions.
+
+Wed 22 Jun 2005 13:34:26 Roberto Cavada <cavada@itc.it>	
+	* src/prop/{propInt.h,propProp.c}
+	Added lazy evaluation to property conversion psl->{ctl,ltl}
+
+Mon 20 Jun 2005 15:16:36 Roberto Cavada <cavada@itc.it>	
+	* src/mc/mcCmd.c
+	Implemented a new command 'check_pslspec'
+
+Fri 17 Jun 2005 12:23:26 Roberto Cavada <cavada@itc.it>	
+	* src/prop/{propDb.c,propProp.c}
+	PSLSPECs are now pushed within the PropDB like all other specs.
+
+Tue 14 Jun 2005 16:57:28 Marco Roveri <roveri@itc.it>
+	* src/parser/psl/psl_expr.c
+	Expanded pslltl2ltl to expand forall cases.
+
+Mon 6 Jun 2005 13:34:52	Marco Roveri <roveri@itc.it>
+	* src/parser/psl/psl_expr.c
+	Fixed a problem in the expansion of next_event_a|e
+
+Wed 4 May 2005 07:52:10	Roberto Cavada <cavada@itc.it>	
+	* src/parser/psl
+	Added a  parser for PSL.
+
+	
+
+Thu May 05 2005 18:00:00  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.2.5 ===
+
+Wed May 5 15:20:43 2005 Roberto Cavada <cavada@itc.it>
+	* src/trace/TraceManager.{h,c} 
+	Added method is_plugin_internal to deal with a request by the 
+	group sa-nusmv.
+	
+Wed May 4 16:56:52 2005 Roberto Cavada <cavada@itc.it>, Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/sm/smMain.c: NEW FEATURE (BUG FIX #183)
+	Option -load now sets the interactive mode. 
+	
+Wed May 4 16:16:20 2005 Roberto Cavada <cavada@itc.it>,	Andrei Tchaltsev <tchaltsev@itc.it>
+	* doc/tutorial/Makefile.am, doc/user-man/Makefile.am: BUG FIX #300
+	Fixed incorrect indexing in the documentation.
+	
+Wed May 4 15:33:51 2005 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/parser/parserUtil.c: BUG FIX
+	Fixed a bug in generation of temporary files.
+	
+Tue May 3 14:38:37 2005 Roberto Cavada <cavada@itc.it>,	Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/simulate/simulateTransSet.c: BUG FIX
+	A 'double' type was erroneously used instead of integer.
+	
+Tue May 3 14:35:43 2005 Andrei Tchaltsev <tchaltsev@itc.it>, Roberto Cavada <cavada@itc.it>
+Tue Apr 19 17:55:49 2005 Marco Roveri <roveri@itc.it>
+	* src/opt/optCmd.c, src/parser/parserUtil.c,
+	* src/sm/smInit.c, src/sm/smMain.c, src/utils/utils.c: BUG FIX
+	Fixed dealing with preprocessors, in particular, memory leaks,
+	incorrect string copying, removal of temporary files.
+	
+Mon Apr 18 11:40:12 2005 Marco Roveri <roveri@itc.it>
+	* src/opt/optCmd.c, src/sm/smMain.c: BUG FIX
+	Fixed the setting of system variables for reachable states
+	computation in interactive mode.
+	
+Tue Apr 12 10:16:27 2005 Marco Roveri <roveri@itc.it>
+	* src/ltl/ltl2smv/lex.l: BUG FIX
+	Fixed parsing of end-of-line under windows.
+	Thanks to H. Peter Gumm for the bug report.
+	
+Thu Apr 7 11:16:48 2005 Roberto Cavada <cavada@itc.it>
+	* src/simulate/{simulate.c, simulateTransSet.c,	simulateTransSet.h}:
+	BUG FIX. Fixed wrong cast of double to int.
+	Thanks to Alessandro Saiani for this bug report.
+	
+Tue Mar 22 17:28:25 2005 Marco Roveri <roveri@itc.it>
+	* src/compile/compileCmd.c: BUG FIX #297
+	This critical bug caused input constraints to be not included into a FSM 
+	during model construction.
+	
+
+Thu 17 Mar 2005 18:00:00  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.2.4 ===
+
+Thu 17 Mar 2005 14:46:00 Roberto Cavada <cavada@itc.it>
+        * src/simulate/simulateCmd.c: BUG FIX
+	In commands pick_state and simulate, the option -a had an inverted
+	semantics.
+	
+Tue 15 Mar 2005 17:35:32 Roberto Cavada <cavada@itc.it>
+	* doc/user-man/{inter.tex,nusmv.sty}: Added description of new
+	variables and options.
+	* doc/user-man/{echo,write_order,source}.tex: Added description of new
+	variables and options.
+
+Mon 14 Mar 2005 13:42:48 Roberto Cavada <cavada@itc.it>
+	* src/enc/symb/Encoding.c: Ported a bug fix back from 
+	version 2.2.99.
+	* src/enc/{enc.c,encInt.h}: Ported a bug fix back from 
+	version 2.2.99.
+
+Mon 14 Mar 2005 13:26:24 Roberto Cavada <cavada@itc.it>
+	* src/bmc/{bmcInt.h,bmcUtils.h}: INTERFACE CHANGE 
+	Moved function Bmc_Utils_generate_and_print_cntexample from
+	internal interface bmcInt to the bmc.utils module interface
+	bmcUtils.h as required by SA porting.
+
+Mon 14 Mar 2005 13:20:46 Roberto Cavada <cavada@itc.it>
+	* configure.ac: Changed version number to 2.2.4
+
+Mon 14 Mar 2005 13:20:06 Roberto Cavada <cavada@itc.it>
+	* src/simulate/{simulate.c,simulateTransSet.c}: BUG FIX #295 
+	This fixes bug 295 *only* for 2.2.4, and must be ported to 2.2.99
+
+Fri 11 Mar 2005 16:24:46 Roberto Cavada <cavada@itc.it>
+	* src/sm/{smMain.c,smMisc.c}:
+	* src/opt/{opt.h,optCmd.c,optInt.h}:
+	* src/compile/compileCmd.c:
+	* src/cmd/{cmdCmd.c,cmdMisc.c}:
+	NEW FEATURES
+	- New system variables:
+	  - write_order_dumps_bits
+          - on_failure_script_quits
+	- New command options:
+	   - Command write_order has options '-b'
+	   - Command echo has options '-a' and '-o filename'
+
+Fri 11 Mar 2005 16:17:17 Roberto Cavada <cavada@itc.it>
+	* src/node/nodeWffPrint.c: BUG FIX
+	Fixed a missing return statement. This bug has been back ported
+	from 2.2.99
+
+Tue 1 Mar 2005 12:29:51	Roberto Cavada <cavada@itc.it>
+	* cudd-2.3.0.1/mtr/mtrGroup.c: BUG FIX CANDIDATE
+	This is a bug fix candidate to allow groups to dissolve (required
+	by 2.2.99) This has no effect on the 2.2.x series.
+
+Tue 18 Jan 2005 14:56:13 Marco Roveri <roveri@itc.it>
+	* src/fsm/bdd/BddFsm.c: BUG FIX
+	Fixed problem in BddFsm_check_machine that wrongly printed out
+	also inputs instead of only state variables while printing
+	deadlock states.	
+
+Thu 30 Dec 2004 09:47:51 Gavin Keighren <keighren@irst.itc.it> 
+	* src/rbc/rbcFormula.c: BUG FIX
+	Fxed ordering of sons during generation of RBC's IIF nodes. This
+	fix slightly reduces the number of RBC nodes and corresponding CNF
+	indexes.
+	
+Wed 29 Dec 2004 12:00:00  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.2.3 ===
+
+Tue 21 Dec 2004 15:49:44 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/ltl/ltl.c: Fixed memory corruption due to uninitialized
+	string.
+	
+15.12.2004 11:00 Andrei Tchaltsev <tchaltsev@itc.it>
+	* examples/tcas/*.smv, examples/deadlock/*.smv
+	* examples/ctl-ltl/*.smv, examples/abp/*.smv, examples/brp/*.smv: 
+	Fixed some old smv files from examples. They can be now parsed by
+	the current version of NuSMV.
+	
+19.11.2004 15:53 Marco Roveri <roveri@itc.it>
+        * src/ltl/ltl.c, src/ltl/ltl2smv/ltl2smv.c: Fixed memory leaks
+	
+19.11.2004 12:12 Roberto Cavada <cavada@itc.it>
+	* src/bmc/bmcTableauPLTLformula.c: bug #289 the usage of past
+	operators with input variables caused segfault to occur. 
+		
+11.11.2004 13:51 Marco Roveri <roveri@itc.it>, Roberto Cavada <cavada@itc.it>
+	* src/trace/Trace.c: Bug fix (access to freed memory was carried
+	out).
+
+10.11.2004 09:18 Marco Roveri <roveri@itc.it>
+	* src/bmc/bmcDump.c: Fixed dumping of DIMACS.
+
+09.11.2004 15:19 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/be/beRbcManager.c: Removed redundant function
+	Be_Cnf_RemoveDuplicateLiterals.
+	
+29.10.2004 16:02 Roberto Cavada <cavada@itc.it>
+	* src/enc/bdd/BddEnc.c: Removed a too strong assertion.
+	
+29.10.2004 12:10 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/prop/prop.h: Bug fix (wrong prototype of the function
+	PropDb_print_all_status_type).
+	
+28.10.2004 18:18 Marco Roveri <roveri@itc.it>
+	* src/sm/smInt.h: Bug fix (not conditioned include).
+	
+28.10.2004 17:43 Marco Roveri <roveri@itc.it>
+	* src/dag/dag.h: Bug fix (wrong inot conditioned include).
+
+27.10.2004 19:05 Roberto Cavada <cavada@itc.it>
+	* src/compile/compileFlatten.c: Variables with a range 0..1
+	are now coded as boolean, not as normal scalar variables with bits. 
+        Now ranges 0..1 are upcasted to "boolean" automatically. 
+
+06.10.2004 13:43 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/rbc/rbcFormula.c, src/rbc/rbcCnf.c: Fixed memory leaks.
+
+04.10.2004 17:00 Marco Roveri <roveri@itc.it>
+	* src/compile/compileBEval.c: Fixed a bug in memoizing of
+	formula while converting SEXP to BEXP.
+
+
+14.09.2004 18:14 Andrei Tchaltsev <tchaltsev@itc.it> 
+	* src/ltl/*, src/ltl/ltl2smv: ltl2smv is changed to enable its 
+	invocation as a function, not as an external program.
+	
+
+02.09.2004 12:38 Andrei Tchaltsev <tchaltsev@itc.it>
+	* src/bmc/bmcDump.c: Fixed bug in the DIMACS dumping of constant
+	(true of false) formulas.
+	
+	
+Wed 25 Aug 2004 11:02:00 Roberto Cavada <cavada@irst.itc.it>
+	* src/compile/compile.h, src/compile/compileBEval.c: Added
+	memoizing to expr2bexpr conversion.
+	* src/bmc/bmcInt.h, src/bmc/bmcPkg.c, src/bmc/bmcWff.c: Added
+	memoizing to wff2nnf conversion.
+	* src/sm/smInit.c: fixed de-initialization of package bmc.
+
+Tue 17 Aug 2004 12:00:00 Marco Roveri <roveri@irst.itc.it>
+	* compile/compileFlatten.c: Fixed wrong flattening of defined
+	  symbols within the Compile_FlattenSexpExpandDefine.
+
+
+
+	
+Thu 6 Aug 2004 12:00:00  NuSMV team <nusmv@irst.itc.it> 
+	* === Released version 2.2.2 ===
+	
+Thu 5 Aug 2004 09:46:34  Roberto Cavada <cavada@irst.itc.it> 
+	* node/nodePrint.c: Added cases XOR and XNOR to print_sexp. 
+
+Wed 4 Aug 2004 14:06:11   Andrey Tchaltsev <tchaltsev@irst.itc.it> Gavin Keighren <keighren@irst.itc.it> 
+	* docs/user-man/*: Added and fixed documentation.
+
+Wed 4 Aug 2004 13:28:35  Roberto Cavada <cavada@irst.itc.it>
+        * options -k and -l, if specified more than once, make nusmv emit an error 
+          message and go back to the shell. 
+        * checked the use of mutually exclusive options -v and -p in bmc_simulate.
+        * Filename patterns like @@@@k are now correcly expanded as @@k. 
+          Ahead of this fix, @k was expanded at first. 
+        * When unknown options are used with bmc_simulate, the command execution 
+          is now stopped.
+        * Fixed unregistered traces in check_invar_bmc_inc and check_invar_bmc.
+        * Other minor fixes.
+
+Wed 4 Aug 2004 10:10:40  Roberto Cavada <cavada@irst.itc.it>
+	* Factorized counterexample printing code in bmc
+	* In bmc, during checking commands current bounds and the
+	specification were printed out if neither counter-example nor
+	proof was found. Now only bounds are printed out to provide feedback
+	to users, and the specification text is printed only when the
+	verbosity level is greater than two. 
+
+Tue 3 Aug 2004 17:24:37  Roberto Cavada <cavada@irst.itc.it>
+	* Fixed memory leaks in bmc.
+	* Fixed a bug in BMC commands options handling. 
+
+Tue 3 Aug 2004 14:23:51  Andrey Tchaltsev <tchaltsev@irst.itc.it>
+	* New function in module 'be'. For a given be index the function
+	returns an associated cnf index, and viceversa. 
+
+Mon 2 Aug 2004 14:34:24  Roberto Cavada <cavada@irst.itc.it>  Gavin Keighren <keighren@irst.itc.it>
+        * The tutorial contains now a section about complete invariant 
+	checking.  
+	* Fixed description of system variable 'ag_only_search' in the
+	user manual.
+
+Thu 29 Jul 2004 14:43:41  Roberto Cavada <cavada@irst.itc.it>
+	* enc/symb/Encoding.c: Fixed a problem that occurred in bmc when
+	determinization variables were introduced, and variable ordering
+	file was used. 
+
+Thu 29 Jul 2004 13:30:58  Roberto Cavada <cavada@irst.itc.it>
+	* enc/symb/Encoding.{h,c}: Added method is_symbol_determ_var to
+	class Encoding. 
+	
+Wed 28 Jul 2004 15:33:04  Roberto Cavada <cavada@irst.itc.it> 
+	* bmc/*: Bug fix #275. Arrays variables are now allowed to occur in
+	formulae, but only if they are boolean arrays. 
+
+Wed 28 Jul 2004 11:31:53  Roberto Cavada <cavada@irst.itc.it> 
+	* enc/symb/Encoding.c: Bug fix #273. When grouping variables,
+	variables for determinization were missing. This made the encoding
+	with ordering file possibly buggy. 
+	
+Tue 27 Jul 2004 12:12:11  Andrey Tchaltsev <tchaltsev@irst.itc.it> 
+	* sat/* : Added support for incremental sat solvers.
+	* bmc/* : Added algorithms for incremental bmc. 
+
+Tue 27 Jul 2004 12:12:11  Roberto Cavada <cavada@irst.itc.it> 
+	* bmc/*: Adapted non incremental bmc to the new sat interface.
+	* bmc/*: Added een/sorensson algorithm for non incremental invar
+ 	checking.
+
+Mon 19 Jul 2004 12:05:52  Marco Roveri <roveri@irst.itc.it>
+	* mc/mcMc.c, ltl/ltl.c: fixed missing intersection with fair
+	states before invoking counter-example extraction.
+
+Mon 19 Jul 2004 11:54:09  Roberto Cavada <cavada@irst.itc.it>
+	* compile/compileFlatten.c: Fixed a bug that occurred when
+	instantiating more than once a variable whose range contained one
+	value only.
+	
+Thu 15 Jul 2004 15:52:54  Roveri <roveri@irst.itc.it> Cavada <cavada@irst.itc.it>
+	* bmc/bmcConv.c: bexpr -> be conversion caches results. This makes
+	convertion more efficient. 	
+
+	
+Wed 14 Jul 2004 14:11:47 Marco Roveri  <roveri@irst.itc.it>
+	* bmc/bmcSat.c: Fixed wrong allocation when sat solvers but SIM
+	were called 
+	
+
+Tue 13 Jul 2004 14:02:14 Roberto Cavada  <cavada@irst.itc.it>
+	* sm/smMist.c: Fixed behaviour of option -r in batch mode
+	
+
+Wed 23 Jun 2004 12:00:00 Roberto Cavada  <cavada@irst.itc.it>
+	* Released minor version 2.2.1
+
+	
+Mon 21 Jun 2004 16:16:51  Andrey TChaltsev <tchaltsev@irs.itc.it>  Cavada <cavada@irs.itc.it>
+	* Added platform-dependant suffix when searching for executable
+	files
+
+	
+Thu 17 Jun 2004 12:00:00 Roberto Cavada  <cavada@irst.itc.it>	
+	* compile/compileFlatten.c: Fixed ordering of insertion of vars.
+	
+	* enc/bdd/BddEnc: Changed initial variables index: one instead of
+	zero. This makes dynamic reordering fully working.
+
+	* compile/compileFlatten.c: Fixed one-value range management.
+
+	* examples/m4: Added m4 examples provided by Villemaire.
+
+	* sm/smMisc.c: Realigned -o option behaviour wrt what version 2.1
+	did. 
+
+
+Tue 15 Jun 2004 09:59:53  Roberto Cavada  <cavada@irst.itc.it>
+	* compile/compileCheck.c: Fixed missing type ARRAY when checking
+	for input vars in assignements.
+	

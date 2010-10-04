@@ -1,0 +1,298 @@
+PredicateNormaliser.lo: PredicateNormaliser.c PredicateNormaliser.h \
+ ../compile/type_checking/TypeChecker.h ../node/MasterNodeWalker.h \
+ ../node/NodeWalker.h ../node/node.h /usr/include/stdio.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-32.h \
+ /usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+ /usr/include/bits/stdio.h ../utils/defs.h ../../config.h \
+ /usr/include/assert.h ../../../cudd-2.4.1.0/include/util.h \
+ /usr/include/unistd.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/confname.h /usr/include/getopt.h /usr/include/ctype.h \
+ /usr/include/endian.h /usr/include/bits/endian.h \
+ /usr/include/bits/byteswap.h /usr/include/xlocale.h \
+ /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h \
+ /usr/include/sys/select.h /usr/include/bits/select.h \
+ /usr/include/bits/sigset.h /usr/include/bits/time.h \
+ /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
+ /usr/include/alloca.h /usr/include/string.h /usr/include/bits/string.h \
+ /usr/include/bits/string2.h \
+ /usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stdbool.h ../utils/object.h \
+ /usr/include/memory.h ../utils/utils.h ../utils/list.h ../utils/utils.h \
+ ../compile/symb_table/SymbType.h ../compile/symb_table/SymbTable.h \
+ ../compile/symb_table/SymbLayer.h ../compile/symb_table/SymbType.h \
+ ../utils/NodeList.h ../compile/symb_table/SymbCache.h ../utils/array.h \
+ ../compile/type_checking/type_checking.h \
+ ../compile/type_checking/TypeChecker.h ../compile/symb_table/SymbLayer.h \
+ ../prop/prop.h ../fsm/FsmBuilder.h ../fsm/sexp/SexpFsm.h \
+ ../fsm/sexp/sexp.h ../fsm/sexp/Expr.h ../compile/FlatHierarchy.h \
+ ../compile/PredicateNormaliser.h ../enc/bdd/BddEnc.h ../enc/bdd/bdd.h \
+ ../dd/dd.h ../utils/avl.h ../../../cudd-2.4.1.0/include/cudd.h \
+ ../../../cudd-2.4.1.0/include/mtr.h ../enc/base/BoolEncClient.h \
+ ../enc/bool/BoolEnc.h ../enc/base/BaseEnc.h ../enc/utils/OrdGroups.h \
+ ../fsm/bdd/bdd.h ../enc/utils/AddArray.h ../utils/WordNumber.h \
+ ../fsm/bdd/BddFsm.h ../fsm/bdd/bdd.h ../fsm/bdd/FairnessList.h \
+ ../trans/bdd/BddTrans.h ../trans/generic/GenericTrans.h ../trans/trans.h \
+ ../trans/bdd/ClusterList.h ../trans/bdd/Cluster.h \
+ ../trans/bdd/ClusterOptions.h ../trans/bdd/ClusterList.h \
+ ../fsm/be/BeFsm.h ../enc/be/BeEnc.h ../be/be.h \
+ /usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include-fixed/limits.h \
+ /usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include-fixed/syslimits.h \
+ /usr/include/limits.h /usr/include/bits/posix1_lim.h \
+ /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+ /usr/include/bits/posix2_lim.h ../be/beRbcManager.h ../be/be.h \
+ ../utils/ustring.h ../set/set.h ../compile/compileInt.h \
+ ../compile/compile.h ../compile/FlatHierarchy.h \
+ ../compile/PredicateNormaliser.h ../compile/symb_table/SymbTable.h \
+ ../compile/symb_table/SymbLayer.h ../compile/symb_table/symb_table_int.h \
+ ../opt/opt.h ../sat/sat.h ../sat/SatSolver.h ../sat/SatIncSolver.h \
+ ../enc/enc.h ../utils/assoc.h ../../../cudd-2.4.1.0/include/st.h \
+ ../parser/symbols.h
+
+PredicateNormaliser.h:
+
+../compile/type_checking/TypeChecker.h:
+
+../node/MasterNodeWalker.h:
+
+../node/NodeWalker.h:
+
+../node/node.h:
+
+/usr/include/stdio.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-32.h:
+
+/usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stddef.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
+
+../utils/defs.h:
+
+../../config.h:
+
+/usr/include/assert.h:
+
+../../../cudd-2.4.1.0/include/util.h:
+
+/usr/include/unistd.h:
+
+/usr/include/bits/posix_opt.h:
+
+/usr/include/bits/confname.h:
+
+/usr/include/getopt.h:
+
+/usr/include/ctype.h:
+
+/usr/include/endian.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/bits/byteswap.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/sysmacros.h:
+
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/alloca.h:
+
+/usr/include/string.h:
+
+/usr/include/bits/string.h:
+
+/usr/include/bits/string2.h:
+
+/usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include/stdbool.h:
+
+../utils/object.h:
+
+/usr/include/memory.h:
+
+../utils/utils.h:
+
+../utils/list.h:
+
+../utils/utils.h:
+
+../compile/symb_table/SymbType.h:
+
+../compile/symb_table/SymbTable.h:
+
+../compile/symb_table/SymbLayer.h:
+
+../compile/symb_table/SymbType.h:
+
+../utils/NodeList.h:
+
+../compile/symb_table/SymbCache.h:
+
+../utils/array.h:
+
+../compile/type_checking/type_checking.h:
+
+../compile/type_checking/TypeChecker.h:
+
+../compile/symb_table/SymbLayer.h:
+
+../prop/prop.h:
+
+../fsm/FsmBuilder.h:
+
+../fsm/sexp/SexpFsm.h:
+
+../fsm/sexp/sexp.h:
+
+../fsm/sexp/Expr.h:
+
+../compile/FlatHierarchy.h:
+
+../compile/PredicateNormaliser.h:
+
+../enc/bdd/BddEnc.h:
+
+../enc/bdd/bdd.h:
+
+../dd/dd.h:
+
+../utils/avl.h:
+
+../../../cudd-2.4.1.0/include/cudd.h:
+
+../../../cudd-2.4.1.0/include/mtr.h:
+
+../enc/base/BoolEncClient.h:
+
+../enc/bool/BoolEnc.h:
+
+../enc/base/BaseEnc.h:
+
+../enc/utils/OrdGroups.h:
+
+../fsm/bdd/bdd.h:
+
+../enc/utils/AddArray.h:
+
+../utils/WordNumber.h:
+
+../fsm/bdd/BddFsm.h:
+
+../fsm/bdd/bdd.h:
+
+../fsm/bdd/FairnessList.h:
+
+../trans/bdd/BddTrans.h:
+
+../trans/generic/GenericTrans.h:
+
+../trans/trans.h:
+
+../trans/bdd/ClusterList.h:
+
+../trans/bdd/Cluster.h:
+
+../trans/bdd/ClusterOptions.h:
+
+../trans/bdd/ClusterList.h:
+
+../fsm/be/BeFsm.h:
+
+../enc/be/BeEnc.h:
+
+../be/be.h:
+
+/usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include-fixed/limits.h:
+
+/usr/lib/gcc/i686-pc-linux-gnu/4.4.3/include-fixed/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/bits/posix1_lim.h:
+
+/usr/include/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/bits/posix2_lim.h:
+
+../be/beRbcManager.h:
+
+../be/be.h:
+
+../utils/ustring.h:
+
+../set/set.h:
+
+../compile/compileInt.h:
+
+../compile/compile.h:
+
+../compile/FlatHierarchy.h:
+
+../compile/PredicateNormaliser.h:
+
+../compile/symb_table/SymbTable.h:
+
+../compile/symb_table/SymbLayer.h:
+
+../compile/symb_table/symb_table_int.h:
+
+../opt/opt.h:
+
+../sat/sat.h:
+
+../sat/SatSolver.h:
+
+../sat/SatIncSolver.h:
+
+../enc/enc.h:
+
+../utils/assoc.h:
+
+../../../cudd-2.4.1.0/include/st.h:
+
+../parser/symbols.h:

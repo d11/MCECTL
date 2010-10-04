@@ -1,0 +1,10 @@
+#define N 8
+#define N1 9
+#define NNNN 32
+#define _r0 7:0
+#define _r1 15:8
+#define _r2 23:16
+#define _r3 31:24
+
+#include "./calculatorN.smv"
+

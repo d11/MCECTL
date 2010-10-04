@@ -1,0 +1,13 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+datadir=${prefix}/share/nusmv
+cuddname=cudd-2.4.1.0
+
+Name: NuSMV-2.4
+Description: New Symbolic Model Verifier
+Requires: 
+Version: 2.4.3
+Cflags: -I. -I.. -I${includedir}/nusmv -I${includedir}/${cuddname} 
+Libs: -L${libdir} -lnusmv
