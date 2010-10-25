@@ -4,16 +4,23 @@ use warnings;
 use IPC::Run3;
 use Shell::Source;
 
+if (!exists $ENV{HOSTNAME}) {
+   my $hn = `hostname`;
+   chomp($hn);
+   $ENV{HOSTNAME} = $hn;
+}
+
+
 my $sh = Shell::Source->new(
    shell => "sh",
    file  => $ENV{HOME}."/.keychain/".$ENV{HOSTNAME}."-sh"
 );
 $sh->inherit;
 
-my $src_dir = $ENV{MBASE};
-
+my $src_dir;
+#= $ENV{MBASE}
 if ( (!$src_dir) || (! -x $src_dir) ) {
-   $src_dir = '/home/dan/4thYear';
+   $src_dir = '/home/dan/4thYear/';
    #die "Couldn't find source dir";
 }
 
