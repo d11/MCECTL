@@ -7,12 +7,12 @@ typedef formula* formula_ref;
 
 struct formula_false : public formula {
    std::string toString() {
-      return "[false]";
+      return "[FALSE]";
    }
 };
 struct formula_true : public formula {
    std::string toString() {
-      return "[true]";
+      return "[TRUE]";
    }
 };
 struct formula_pvar : public formula {
