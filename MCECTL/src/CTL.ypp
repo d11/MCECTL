@@ -2,14 +2,20 @@
 #include <stdio.h>
 #include <string.h>
 
+extern "C"
+{
+        int yyparse(void);
+        int yylex(void);  
+        int yywrap()
+        {
+                return 1;
+        }
+
+}
+
 void yyerror(const char *str)
 {
 	fprintf(stderr,"error: %s\n",str);
-}
-
-int yywrap()
-{
-	return 1;
 }
 
 main()
