@@ -1,0 +1,122 @@
+%{
+#include <cstdio>
+#include <cstring>
+#include "ctl_ast.h"
+#include <iostream>
+#include <memory>
+
+
+
+extern "C"
+{
+   int yyparse(void);
+   int yylex(void);  
+   int yywrap()
+   {
+      return 1;
+   }
+}
+
+void yyerror(const char *error)
+{
+   std::cerr << "error: " << error << std::endl;
+}
+
+formula_ref top_formula;
+
+main()
+{
+	yyparse();
+   std::cout << "Parsed formula:" << std::endl<< top_formula->toString() << std::endl;
+}
+
+%}
+
+%token FALSE TRUE NOT AND OR LPAREN RPAREN AX
+
+%union 
+{
+        char *string;
+        struct formula* formula_ref;
+}
+
+%token <string> PVAR 
+%type <formula_ref> false;
+%type <formula_ref> true;
+%type <formula_ref> pvar;
+%type <formula_ref> not;
+%type <formula_ref> and;
+%type <formula_ref> or;
+%type <formula_ref> ax;
+%type <formula_ref> rule_formula;
+%type <formula_ref> top;
+
+
+
+%%
+
+
+top:
+   rule_formula
+   {
+      top_formula = $$;
+   }
+   ;
+
+rule_formula:
+   not | and | or | ax | false | true | pvar 
+   {
+   }
+   ;
+
+false:
+   FALSE
+   {
+      $$ = new formula_false();
+   }
+   ;
+
+true:
+   TRUE 
+   {
+      $$ = new formula_true();
+   }
+   ;
+
+pvar:
+   PVAR
+   {
+      $$ = new formula_pvar($1);
+   }
+   ;
+
+not:
+   NOT rule_formula
+   {
+     $$ = new formula_not($2);
+   }
+   ;
+
+and:
+   LPAREN rule_formula AND rule_formula RPAREN
+   {
+     $$ = new formula_and($2, $4);
+   }
+   ;
+
+or:
+   LPAREN rule_formula OR rule_formula RPAREN
+   {
+     $$ = new formula_or($2, $4);
+   }
+   ;
+
+ax:
+   AX rule_formula
+   {
+     $$ = new formula_ax($2);
+   }
+   ;
+
+
+
