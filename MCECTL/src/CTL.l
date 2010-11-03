@@ -1,6 +1,6 @@
 %{
 //#include <stdio.h>
-#include "y.tab.h"
+#include "CTL_Parse.hh"
 %}
 
 %option nounput

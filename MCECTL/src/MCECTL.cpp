@@ -86,9 +86,9 @@ int main(int argc, char *argv[]) {
       cout << "Got option: " << p.first << ", " << p.second << endl;
    }
 
-   //Parser p;
+   Parser p;
 
-   //p.parse();
+   p.parse();
 
    Environment env;
    CommandProcessor command_processor(env);
