@@ -1,9 +1,11 @@
 %{
 #include <cstdio>
 #include <cstring>
-#include "ctl_ast.h"
 #include <iostream>
 #include <memory>
+
+#include "ctl_ast.h"
+#include "CTL.h"
 
 extern "C"
 {
@@ -22,31 +24,39 @@ void yyerror(const char *error)
 
 formula_ref top_formula;
 
+int Parser::parse() {
+   return yyparse();
+}
+
+
+/*
 main()
 {
 	yyparse();
    std::cout << "Parsed formula:" << std::endl<< top_formula->toString() << std::endl;
 
    delete top_formula;
-}
+}*/
 
 %}
 
-%token FALSE TRUE NOT AND OR LPAREN RPAREN AX
+%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION
 
 %union 
 {
-        char *string;
-        struct formula* formula_ref;
+   char *string;
+   struct formula* formula_ref;
 }
 
-%token <string> PVAR 
+%token <string> IDENTIFIER 
 %type <formula_ref> false;
 %type <formula_ref> true;
 %type <formula_ref> pvar;
 %type <formula_ref> not;
 %type <formula_ref> and;
 %type <formula_ref> or;
+%type <formula_ref> until;
+%type <formula_ref> release;
 %type <formula_ref> ax;
 %type <formula_ref> rule_formula;
 %type <formula_ref> top;
@@ -58,11 +68,54 @@ top:
    rule_formula
    {
       top_formula = $$;
-   }
-   ;
+   };
+
+rule_command:
+   declare_formula | declare_dfa | declare_pda
+   {
+   };
+
+declare_formula:
+   FORMULA_DECLARATION formula_name rule_formula
+   {
+   };
+
+formula_name:
+   IDENTIFIER
+   {
+   };
+
+declare_dfa:
+   DFA_DECLARATION dfa_name LPAREN rule_dfa RPAREN
+   {
+   };
+
+dfa_name:
+   IDENTIFIER
+   {
+   };
+
+rule_dfa:
+   {
+   };
+   
+
+declare_pda:
+   PDA_DECLARATION pda_name LPAREN rule_pda RPAREN
+   {
+   };
+
+pda_name:
+   IDENTIFIER
+   {
+   };
+
+rule_pda:
+   {
+   };
 
 rule_formula:
-   not | and | or | ax | false | true | pvar 
+   not | and | or | ax | until | release | false | true | pvar 
    {
    }
    ;
@@ -82,7 +135,7 @@ true:
    ;
 
 pvar:
-   PVAR
+   IDENTIFIER 
    {
       $$ = new formula_pvar($1);
    }
@@ -110,11 +163,22 @@ or:
    ;
 
 ax:
-   AX rule_formula
+   A X rule_formula
    {
-     $$ = new formula_ax($2);
+     $$ = new formula_ax($3);
    }
    ;
 
+until:
+   E LPAREN rule_formula U rule_formula RPAREN
+   {
+     $$ = new formula_until($3, $5);
+   };
+
+release:
+   E LPAREN rule_formula R rule_formula RPAREN
+   {
+     $$ = new formula_release($3, $5);
+   };
 
 

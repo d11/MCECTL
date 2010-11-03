@@ -1,3 +1,6 @@
+#ifndef CTL_AST_H
+#define CTL_AST_H
+
 #include <string>
 #include <boost/shared_ptr.hpp>
 
@@ -95,3 +98,42 @@ struct formula_ax : public formula {
       delete _formula;
    }
 };
+struct formula_until : public formula {
+   formula_ref _left_disjunct;
+   formula_ref _right_disjunct;
+   formula_until(formula_ref left, formula_ref right)
+      : _left_disjunct(left), _right_disjunct(right) { }
+   std::string toString() {
+      std::string tmp("[");
+      tmp += _left_disjunct->toString();
+      tmp += " UNTIL ";
+      tmp += _right_disjunct->toString();
+      tmp += "]";
+      return tmp;
+   }
+   ~formula_until() {
+      delete _left_disjunct;
+      delete _right_disjunct;
+   }
+};
+
+
+struct formula_release : public formula {
+   formula_ref _left_disjunct;
+   formula_ref _right_disjunct;
+   formula_release(formula_ref left, formula_ref right)
+      : _left_disjunct(left), _right_disjunct(right) { }
+   std::string toString() {
+      std::string tmp("[");
+      tmp += _left_disjunct->toString();
+      tmp += " UNTIL ";
+      tmp += _right_disjunct->toString();
+      tmp += "]";
+      return tmp;
+   }
+   ~formula_release() {
+      delete _left_disjunct;
+      delete _right_disjunct;
+   }
+};
+#endif

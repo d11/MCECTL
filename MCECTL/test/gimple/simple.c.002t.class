@@ -1,0 +1,40 @@
+Class <anonymous struct>
+   size=8 align=4
+   base size=8 base align=4
+<anonymous struct> (0x40bef000) 0
+
+Class <anonymous struct>::<anonymous union>
+   size=4 align=4
+   base size=4 base align=4
+<anonymous struct>::<anonymous union> (0x40bef070) 0
+
+Class <anonymous struct>
+   size=8 align=4
+   base size=8 base align=4
+<anonymous struct> (0x40bef038) 0
+
+Class <anonymous struct>
+   size=12 align=4
+   base size=12 base align=4
+<anonymous struct> (0x40bef0a8) 0
+
+Class <anonymous struct>
+   size=16 align=4
+   base size=16 base align=4
+<anonymous struct> (0x40bef0e0) 0
+
+Class _IO_marker
+   size=12 align=4
+   base size=12 base align=4
+_IO_marker (0x40bef118) 0
+
+Class _IO_FILE
+   size=148 align=4
+   base size=148 base align=4
+_IO_FILE (0x40bef150) 0
+
+Class <anonymous struct>
+   size=16 align=4
+   base size=16 base align=4
+<anonymous struct> (0x40bef188) 0
+

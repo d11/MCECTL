@@ -1,0 +1,12 @@
+
+;; Function int hello() (_Z5hellov)
+
+Analyzing function body size: int hello()
+Overall function body time: 12-0 size: 3-0
+With function call overhead time: 12-11 size: 3-2
+
+;; Function int main(int, char**) (main)
+
+Analyzing function body size: int main(int, char**)
+Overall function body time: 11-0 size: 2-0
+With function call overhead time: 11-13 size: 2-4
