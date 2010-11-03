@@ -1,0 +1,10 @@
+
+
+OCAMLINCLUDES += ../misc 
+
+OCAML_LIBS[] += 
+	../misc/libmisc
+
+OCamlLibrary(liblogics, mucalc)
+
+compile: 

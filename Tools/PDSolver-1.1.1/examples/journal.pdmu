@@ -1,0 +1,24 @@
+
+Rules:
+
+p a -> p _;
+p # -> f #;
+f # -> f #;
+f a -> f a a;
+f a -> p a;
+
+
+
+Mu Property:
+
+mu Z1 . nu Z2 . ((p & []Z1) | (f & []Z2))
+
+
+Propositions:
+
+p a p;
+p # p;
+f a f;
+f # f;
+
+

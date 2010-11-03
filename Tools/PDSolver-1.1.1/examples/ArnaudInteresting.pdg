@@ -1,0 +1,20 @@
+Rules:
+
+p # -> f #;
+p a -> p _;
+f a -> p a;
+f a -> f a a;
+f # -> f #;
+
+Control States:
+
+p Abelard 1;
+f Abelard 2;
+
+Interesting Configurations:
+
+p a a a #;
+p #;
+
+
+

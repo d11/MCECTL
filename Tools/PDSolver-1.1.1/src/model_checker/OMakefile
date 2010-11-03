@@ -1,0 +1,13 @@
+
+OCAMLINCLUDES += ../pdproblems ../logics ../misc
+
+OCAML_LIBS[] += 
+	../misc/libmisc
+	../pdproblems/libpdproblems
+	../logics/liblogics
+
+OCamlLibrary(libmc, mc mc_parity mc_pds_mucalc)
+
+
+compile: 
+

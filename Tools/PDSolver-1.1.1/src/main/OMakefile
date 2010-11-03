@@ -1,0 +1,24 @@
+
+OCAMLINCLUDES += ../pdproblems ../model_checker ../misc ../parser ../boolean_programs ../logics
+
+OCAML_OTHER_LIBS[] +=
+	nums
+	str
+	unix
+
+OCAML_LIBS[] += 
+	../misc/libmisc
+	../logics/liblogics
+	../pdproblems/libpdproblems
+	../model_checker/libmc
+	../boolean_programs/libbooleanprograms
+	../parser/libparser
+
+OCamlProgram(pdsolver, main command_line stats)
+
+compile: pdsolver.opt
+
+debug: pdsolver.run
+
+
+
