@@ -12,7 +12,7 @@
 %%
 0        return FALSE;
 1        return TRUE;
-[a-z]+   yylval.string=strdup(yytext); return IDENTIFIER;
+[a-z_]+   yylval.string=strdup(yytext); return IDENTIFIER;
 !        return NOT;
 \&       return AND;
 \|       return OR;

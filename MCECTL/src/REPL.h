@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <readline/readline.h>
+#include <readline/history.h>
 
 #include "ModelChecker.h"
 #include "Environment.h"
@@ -76,6 +77,7 @@ public:
          }
          else {
             string input(line);
+            add_history (line);
             free(line);
 
             try {
