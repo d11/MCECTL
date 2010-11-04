@@ -44,7 +44,6 @@ void usage(int exit_code) {
           */
 
 map<string, string> get_options(int argc, char *argv[]) {
-   cout << "Parsing options" << endl;
    static struct option longopts[] = {
       { "file", required_argument, 0, 'f' },
       { "verbose", 0, 0, 'v' },
@@ -73,7 +72,6 @@ map<string, string> get_options(int argc, char *argv[]) {
       cout << "Value:  " << (optarg != NULL ? optarg : "[none]") << endl;
    }
 
-   cout << "Finished parsing options" << endl;
    return options;
 }
 
@@ -86,23 +84,22 @@ int main(int argc, char *argv[]) {
       cout << "Got option: " << p.first << ", " << p.second << endl;
    }
 
-   Parser p;
-
-   p.parse();
 
    Environment env;
-   CommandProcessor command_processor(env);
+   GlobalOptions global_options;
+   CommandProcessor command_processor(env, global_options);
+   CommandParser command_parser;
 
-   REPL repl(command_processor);
+   REPL repl(command_processor, command_parser, global_options);
 
    iter = options.find("file");
    if(iter != options.end()) {
-      cout << "File option found" << endl;
+    //  cout << "File option found" << endl;
       LoadFileCommand command(iter->second);
       repl.SendCommand(command);
    }
    else {
-      cout << "No file option found" << endl;
+   //   cout << "No file option found" << endl;
    }
 
    repl.Run();

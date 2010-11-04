@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  CTL.h
+ *       Filename:  GlobalOptions.h
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  27/10/10 20:49:46
+ *        Created:  03/11/10 21:19:26
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,20 +15,17 @@
  *
  * =====================================================================================
  */
-#ifndef CTL_H
-#define CTL_H
 
-#include "Command.h"
-#include <string>
-#include <boost/shared_ptr.hpp>
+#ifndef _GLOBAL_OPTIONS_H_
+#define _GLOBAL_OPTIONS_H_
 
-class CommandParser {
-private:
+class GlobalOptions {
 
+   bool _quitting;
 public:
-   CommandParser() { }
-
-   boost::shared_ptr<Command> ParseString(string input);
+   GlobalOptions() : _quitting(false) { };
+   void SetQuitting() { _quitting = true; };
+   bool IsQuitting() { return _quitting; };
 };
 
 #endif

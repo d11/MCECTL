@@ -1,51 +1,68 @@
 %{
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <iostream>
 #include <memory>
 
 #include "ctl_ast.h"
 #include "CTL.h"
+#include "Command.h"
+#include <boost/shared_ptr.hpp>
+#include "ParseException.h"
+
+using namespace std;
 
 extern "C"
 {
+#include "Lex.h"
    int yyparse(void);
-   int yylex(void);  
    int yywrap()
    {
       return 1;
    }
 }
-
+/*
+   int yylex(void);  
+   YY_BUFFER_STATE yy_scan_string ( const char *str );
+}*/
 void yyerror(const char *error)
 {
-   std::cerr << "error: " << error << std::endl;
+   throw ParseException(error);
+   //cerr << "Error: " << error << endl;
 }
 
-formula_ref top_formula;
+// In which the result of the parse is stored
+command_ref temporary_command = NULL;
 
-int Parser::parse() {
-   return yyparse();
+//formula_ref top_formula;
+
+boost::shared_ptr<Command> CommandParser::ParseString(string input) {
+
+   yy_scan_string( input.c_str() );
+   try {
+      yyparse();
+   } catch (ParseException e) {
+      yylex_destroy();
+      throw;
+   }
+   yylex_destroy();
+
+   return boost::shared_ptr<Command>(temporary_command);
 }
 
-
-/*
-main()
-{
-	yyparse();
-   std::cout << "Parsed formula:" << std::endl<< top_formula->toString() << std::endl;
-
-   delete top_formula;
-}*/
 
 %}
 
-%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION
+%error-verbose
+
+%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION LOAD SHOW QUIT EMPTY ASSIGNMENT
 
 %union 
 {
    char *string;
    struct formula* formula_ref;
+   struct Command* command_ref;
 }
 
 %token <string> IDENTIFIER 
@@ -59,30 +76,69 @@ main()
 %type <formula_ref> release;
 %type <formula_ref> ax;
 %type <formula_ref> rule_formula;
-%type <formula_ref> top;
+
+%type <command_ref> top;
+%type <command_ref> rule_command;
+%type <command_ref> declare_formula;
+%type <command_ref> declare_dfa;
+%type <command_ref> declare_pda;
+%type <string> formula_name;
+%type <string> dfa_name;
+%type <string> pda_name;
+
+%type <command_ref> load_command;
+%type <command_ref> quit_command;
+%token <string> QUOTED;
+%type <string> filename; 
 
 %%
 
 
 top:
-   rule_formula
+   rule_command
    {
-      top_formula = $$;
+      temporary_command = $$;
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda
+   declare_formula | declare_dfa | declare_pda | load_command | quit_command | show_command
    {
    };
 
-declare_formula:
-   FORMULA_DECLARATION formula_name rule_formula
+load_command:
+   LOAD LPAREN filename RPAREN
    {
+      $$ = new LoadFileCommand($3);
+   };
+
+show_command:
+   SHOW LPAREN IDENTIFIER RPAREN
+   {
+      //. TODO
+   }
+
+quit_command:
+   QUIT 
+   {
+      $$ = new QuitCommand();
+   };
+
+filename:
+   QUOTED
+   {
+      $$ = $1;
+   };
+
+declare_formula:
+   FORMULA_DECLARATION formula_name ASSIGNMENT rule_formula
+   {
+      $$ = new DeclareFormulaCommand($2, $4);
    };
 
 formula_name:
    IDENTIFIER
    {
+      $$ = $1;
    };
 
 declare_dfa:
@@ -93,9 +149,11 @@ declare_dfa:
 dfa_name:
    IDENTIFIER
    {
+      $$ = $1;
    };
 
 rule_dfa:
+// TODO
    {
    };
    
@@ -103,11 +161,13 @@ rule_dfa:
 declare_pda:
    PDA_DECLARATION pda_name LPAREN rule_pda RPAREN
    {
+
    };
 
 pda_name:
    IDENTIFIER
    {
+      $$ = $1;
    };
 
 rule_pda:
