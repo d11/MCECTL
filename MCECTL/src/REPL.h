@@ -65,22 +65,28 @@ public:
 
    void Run() {
 
-      char *line; 
-      while (!_global_options.IsQuitting() && NULL != (line = readline( Prompt() ))) {
+      while (!_global_options.IsQuitting()) {
 
-         string input(line);
-         free(line);
+         char *line = readline( Prompt() );
 
-         try {
-            boost::shared_ptr<Command> command = _command_parser.ParseString( input );
-            _command_processor.ExecuteCommand(*command);
-         } catch (ParseException e) {
-            cout << e.what() << endl;
+         boost::shared_ptr<Command> command;
+         if (!line) {
+            cout << ":quit" << endl;
+            command = boost::shared_ptr<Command>(new QuitCommand());
          }
-      }
+         else {
+            string input(line);
+            free(line);
 
-      if (!_global_options.IsQuitting()) {
-         cout << ":quit" << endl;
+            try {
+               command = _command_parser.ParseString( input );
+            } catch (ParseException e) {
+               cout << e.what() << endl;
+               continue;
+            }
+         }
+         _command_processor.ExecuteCommand(*command);
+
       }
    }
 

@@ -69,7 +69,6 @@ class QuitCommand : public Command {
          return ":quit";
       }
       virtual void Execute(Environment &environment, GlobalOptions &options) const {
-         cout << "Quitting!" << endl;
          options.SetQuitting();
       }
 };
