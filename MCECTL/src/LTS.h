@@ -6,58 +6,42 @@
  *
  *    Labelled Transition System
  */
+
+#ifndef _LTS_H_
+#define _LTS_H_
+
 #include <map>
 #include <string>
+#include <set>
+#include <vector>
+#include "Automata.h"
 
-typedef 
+typedef std::set<std::string> Valuation;
 
-class Valuation {
-private:
-   std::set<std::string> _propositions;
-public:
-   Valuation()
-
-};
+//class Valuation {
+//private:
+//   std::set<std::string> _propositions; // propositions which are true
+//public:
+//   Valuation() { }
+//
+//};
 
 struct State {
    Valuation _valuation;
-   std::string toString() {
+   std::string toString() const {
       std::string tmp;
+      Valuation::const_iterator iter;
       for ( iter = _valuation.begin(); iter != _valuation.end(); iter++ )
       {
-         tmp += "'";
-         tmp += (*it).first;
-         tmp += " -> ";
-         tmp += (*it).second ? "T" : "F";
+         //tmp += "'";
+         tmp += *iter;
+         //tmp += (*iter).first;
+         //tmp += " -> ";
+         //tmp += (*iter).second ? "T" : "F";
          tmp += "\n";
       }
       return tmp;
    }
 };
 
-template <class T>
-struct RegularAction {
-   boost::weak_ptr<T> predecessor;
-   boost::weak_ptr<T> successor;
-   std::string action_name;
-} RegularAction;
-
-template <class T>
-class DFA {
-public:
-   typedef boost::shared_ptr<T> state_ref;
-   struct node;
-   typedef boost::shared_ptr<node> node_ref;
-private:
-   struct node {
-      state_ref state;
-      std::map<std::string, node_ref> successors;
-   };
-   std::vector<node_ref> _nodes;
-public:
-   DFA(const std::vector<node_ref> &nodes) : _nodes(nodes) {
-      std::cout << "Initting DFA" << std::endl;
-   }
-   std::vector<RegularAction<T>> _actions;
-   AutomatonIterator<RegularAction<T>> &initialState()
-};
+#endif

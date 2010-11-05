@@ -1,0 +1,17 @@
+MCECTL (Model Checker for Extended Computation Tree Logic)
+by Dan Horgan
+
+1. Dependencies
+
+   Build:
+      * CMake
+      * Flex, Bison
+      * boost::shared_ptr
+
+   Runtime:
+      * GNU Readline
+
+2. Compilation
+
+   cmake .
+   make

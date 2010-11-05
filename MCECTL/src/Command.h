@@ -17,6 +17,8 @@
 #include "Environment.h"
 #include "GlobalOptions.h"
 #include "ctl_ast.h"
+#include "LTS.h"
+#include "Automata.h"
 
 using namespace std;
 
@@ -61,6 +63,25 @@ public:
       delete _formula;
    }
 };
+class DeclareDFACommand : public Command {
+private:
+   string _dfa_name;
+   dfa_ref _dfa;
+public:
+   DeclareDFACommand(string name, dfa_ref dfa) : _dfa_name(name), _dfa(dfa) { }
+   virtual string ToString() const {
+      string s = "DFA ";
+      return s + _dfa_name + " := " + _dfa->ToString();
+   }
+   virtual void Execute(Environment &environment, GlobalOptions &options) const {
+      cout << "[DFA "  << _dfa_name << "]" << endl;
+      cout << "Declaring DFA... "  << ToString() << endl;
+      // TODO
+   }
+   virtual ~DeclareDFACommand() {
+      delete _dfa;
+   }
+};
 
 class QuitCommand : public Command {
    public:
@@ -79,6 +100,31 @@ class NullCommand : public Command {
          return "";
       }
       virtual void Execute(Environment &environment, GlobalOptions &options) const {
+      }
+};
+
+class ShowCommand : public Command {
+   private:
+      string _identifier;
+   public:
+      ShowCommand(string identifier) : _identifier(identifier) { }
+      virtual string ToString() const {
+         string s = ":show(";
+         return s + _identifier + ")" ;
+      }
+      virtual void Execute(Environment &environment, GlobalOptions &options) const {
+
+      }
+};
+
+class DeclareRegexCommand : public Command {
+   public:
+      DeclareRegexCommand(string name, dfa_ref dfa) { } // TODO
+      virtual string ToString() const {
+         return "REGEX [blah]";
+      }
+      virtual void Execute(Environment &environment, GlobalOptions &options) const {
+         cout << "TODO" << endl;
       }
 };
 #endif

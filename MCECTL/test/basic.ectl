@@ -1,16 +1,23 @@
 
-DFA test_dfa (
-   PROPOSITIONS ( hungry, toast )
-   STATE ( empty: hungry )
-   STATE ( toast_ready: hungry, toast )
-   STATE ( fulfilled: )
-   ACTION ( make_toast: empty -> toast_ready )
-   ACTION ( eat_toast: toast_ready -> fulfilled )
-);
+#DFA test_dfa {
+#   PROPOSITIONS ( hungry, toast )
+#   STATE ( empty: hungry )
+#   STATE ( toast_ready: hungry, toast )
+#   STATE ( fulfilled: )
+#   ACTION ( make_toast: empty -> toast_ready )
+#   ACTION ( eat_toast: toast_ready -> fulfilled )
+#};
 
-REGULAR eat_nonexistent_toast := .* eat_toast .* make_toast
+REGULAR eat_nonexistent_toast {
+   .* eat_toast .* make_toast
+}
 
-FORMULA not_always_hungry := !E( 0 R hungry )
-FORMULA dont_eat_future_toast := !E( 1 U 1 )[eat_nonexistent_toast]
+FORMULA not_always_hungry {
+   !E( 0 R hungry )
+}
+
+FORMULA dont_eat_future_toast {
+   !E( 1 U 1 )[eat_nonexistent_toast]
+}
 
 #FORMULA no_wasteful_toast

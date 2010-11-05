@@ -22,20 +22,14 @@ extern "C"
       return 1;
    }
 }
-/*
-   int yylex(void);  
-   YY_BUFFER_STATE yy_scan_string ( const char *str );
-}*/
+
 void yyerror(const char *error)
 {
    throw ParseException(error);
-   //cerr << "Error: " << error << endl;
 }
 
 // In which the result of the parse is stored
 command_ref temporary_command = NULL;
-
-//formula_ref top_formula;
 
 boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 
@@ -56,13 +50,14 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 
 %error-verbose
 
-%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION LOAD SHOW QUIT EMPTY ASSIGNMENT
+%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION REGEX_DECLARATION LOAD SHOW QUIT EMPTY ASSIGNMENT LBRACE RBRACE ASTERISK FULLSTOP
 
 %union 
 {
    char *string;
    struct formula* formula_ref;
    struct Command* command_ref;
+   struct DFABasic* dfa_ref;
 }
 
 %token <string> IDENTIFIER 
@@ -82,14 +77,25 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 %type <command_ref> declare_formula;
 %type <command_ref> declare_dfa;
 %type <command_ref> declare_pda;
+%type <command_ref> declare_regex;
 %type <string> formula_name;
 %type <string> dfa_name;
 %type <string> pda_name;
 
+%type <dfa_ref> rule_dfa;
+
+%type <command_ref> null_command;
 %type <command_ref> load_command;
 %type <command_ref> quit_command;
+%type <command_ref> show_command;
 %token <string> QUOTED;
 %type <string> filename; 
+
+%type <dfa_ref> rule_regex;
+%type <dfa_ref> regex_kleene;
+%type <dfa_ref> regex_seq;
+%type <dfa_ref> regex_or;
+%type <dfa_ref> regex_identifier;
 
 %%
 
@@ -101,9 +107,15 @@ top:
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda | load_command | quit_command | show_command
+   declare_formula | declare_dfa | declare_pda | declare_regex | load_command | quit_command | show_command | null_command
    {
    };
+
+null_command:
+   EMPTY
+   {
+      $$ = new NullCommand();
+   }
 
 load_command:
    LOAD LPAREN filename RPAREN
@@ -114,7 +126,7 @@ load_command:
 show_command:
    SHOW LPAREN IDENTIFIER RPAREN
    {
-      //. TODO
+      $$ = new ShowCommand($3);
    }
 
 quit_command:
@@ -130,7 +142,7 @@ filename:
    };
 
 declare_formula:
-   FORMULA_DECLARATION formula_name ASSIGNMENT rule_formula
+   FORMULA_DECLARATION formula_name LBRACE rule_formula RBRACE
    {
       $$ = new DeclareFormulaCommand($2, $4);
    };
@@ -142,8 +154,51 @@ formula_name:
    };
 
 declare_dfa:
-   DFA_DECLARATION dfa_name LPAREN rule_dfa RPAREN
+   DFA_DECLARATION dfa_name LBRACE rule_dfa RBRACE
    {
+      $$ = new DeclareDFACommand($2, $4);
+   };
+
+declare_regex:
+   REGEX_DECLARATION dfa_name LBRACE rule_regex RBRACE
+   {
+      $$ = new DeclareDFACommand($2, $4);
+   };
+
+rule_regex:
+   regex_seq | regex_or | regex_kleene | regex_identifier
+   {
+   };
+
+regex_seq:
+   rule_regex rule_regex
+   {
+      dfa_ref dfa($1);
+      dfa->Seq($2);
+      $$ = dfa;
+   };
+
+regex_or:
+   LPAREN rule_regex OR rule_regex RPAREN
+   {
+      dfa_ref dfa($2);
+      dfa->Or($4);
+      $$ = dfa;
+   };
+
+regex_kleene:
+   rule_regex ASTERISK
+   {
+      dfa_ref dfa($1);
+      dfa->Kleene();
+      $$ = dfa;
+   };
+
+regex_identifier:
+   IDENTIFIER 
+   { 
+      string action($1);
+      $$ = new DFABasic(action);
    };
 
 dfa_name:
