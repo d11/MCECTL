@@ -10,12 +10,16 @@
 #include "Command.h"
 #include <boost/shared_ptr.hpp>
 #include "ParseException.h"
+#include "AST_Regex.h"
 
 using namespace std;
+using namespace AST::Regex;
+
+typedef AST::Regex::Base *regex_reference;
 
 extern "C"
 {
-#include "Lex.h"
+   #include "Lex.h"
    int yyparse(void);
    int yywrap()
    {
@@ -50,52 +54,45 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 
 %error-verbose
 
-%token FALSE TRUE NOT AND OR LPAREN RPAREN A E U R G X FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION REGEX_DECLARATION LOAD SHOW QUIT EMPTY ASSIGNMENT LBRACE RBRACE ASTERISK FULLSTOP
-
 %union 
 {
    char *string;
    struct formula* formula_ref;
    struct Command* command_ref;
+   struct Base* regex_ref;
    struct DFABasic* dfa_ref;
 }
 
+%token FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION REGEX_DECLARATION LOAD SHOW QUIT
+%token EMPTY LBRACE RBRACE LPAREN RPAREN
 %token <string> IDENTIFIER 
-%type <formula_ref> false;
-%type <formula_ref> true;
-%type <formula_ref> pvar;
-%type <formula_ref> not;
-%type <formula_ref> and;
-%type <formula_ref> or;
-%type <formula_ref> until;
-%type <formula_ref> release;
-%type <formula_ref> ax;
-%type <formula_ref> rule_formula;
 
-%type <command_ref> top;
-%type <command_ref> rule_command;
-%type <command_ref> declare_formula;
-%type <command_ref> declare_dfa;
-%type <command_ref> declare_pda;
-%type <command_ref> declare_regex;
-%type <string> formula_name;
-%type <string> dfa_name;
-%type <string> pda_name;
+%token FORMULA_FALSE FORMULA_TRUE
+%token FORMULA_LPAREN FORMULA_RPAREN
+%token FORMULA_NOT FORMULA_AND FORMULA_OR FORMULA_IMPLICATION
+%token FORMULA_A FORMULA_E FORMULA_U FORMULA_R FORMULA_G FORMULA_X 
+%token <string> FORMULA_PVAR
 
-%type <dfa_ref> rule_dfa;
+%left REGEX_OR
+%left REGEX_SEQ
+%left REGEX_KLEENE
+%left REGEX_ANY
+%left REGEX_ACTION
+%left REGEX_LPAREN 
+%right REGEX_RPAREN 
 
-%type <command_ref> null_command;
-%type <command_ref> load_command;
-%type <command_ref> quit_command;
-%type <command_ref> show_command;
-%token <string> QUOTED;
-%type <string> filename; 
+%type <formula_ref> false true pvar not and or until release ax rule_formula
 
-%type <dfa_ref> rule_regex;
-%type <dfa_ref> regex_kleene;
-%type <dfa_ref> regex_seq;
-%type <dfa_ref> regex_or;
-%type <dfa_ref> regex_identifier;
+%type <command_ref> top rule_command declare_formula declare_dfa declare_pda declare_regex
+%type <string> formula_name dfa_name pda_name 
+%type <dfa_ref> rule_dfa
+
+%type <command_ref> null_command load_command quit_command show_command
+%token <string> QUOTED
+%type <string> filename
+
+%token <string> REGEX_ACTION
+%type <regex_ref> rule_regex  parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
 
 %%
 
@@ -105,6 +102,8 @@ top:
    {
       temporary_command = $$;
    };
+
+// COMMANDS
 
 rule_command:
    declare_formula | declare_dfa | declare_pda | declare_regex | load_command | quit_command | show_command | null_command
@@ -141,16 +140,12 @@ filename:
       $$ = $1;
    };
 
+// DECLARATIONS
+
 declare_formula:
    FORMULA_DECLARATION formula_name LBRACE rule_formula RBRACE
    {
       $$ = new DeclareFormulaCommand($2, $4);
-   };
-
-formula_name:
-   IDENTIFIER
-   {
-      $$ = $1;
    };
 
 declare_dfa:
@@ -162,44 +157,66 @@ declare_dfa:
 declare_regex:
    REGEX_DECLARATION dfa_name LBRACE rule_regex RBRACE
    {
-      $$ = new DeclareDFACommand($2, $4);
+      $$ = new DeclareRegexCommand($2, $4);
    };
 
-rule_regex:
-   regex_seq | regex_or | regex_kleene | regex_identifier
+declare_pda:
+   PDA_DECLARATION pda_name LBRACE rule_pda RBRACE
    {
+   };
+
+// REGULAR EXPRESSIONS
+
+rule_regex:
+   regex_seq | regex_or | regex_kleene | regex_action | regex_any | parenthesised_regex
+   {
+   };
+
+
+parenthesised_regex:
+   REGEX_LPAREN rule_regex REGEX_RPAREN %prec REGEX_LPAREN
+   {
+      cout << "Parenthesised" << endl;
+      $$ = $2;
    };
 
 regex_seq:
-   rule_regex rule_regex
+   rule_regex rule_regex %prec REGEX_SEQ
    {
-      dfa_ref dfa($1);
-      dfa->Seq($2);
-      $$ = dfa;
+      cout << "Seq" << endl;
+      $$ = new AST::Regex::Concat($1, $2);
    };
 
 regex_or:
-   LPAREN rule_regex OR rule_regex RPAREN
+   rule_regex REGEX_OR rule_regex
    {
-      dfa_ref dfa($2);
-      dfa->Or($4);
-      $$ = dfa;
+      cout << "Or" << endl;
+      $$ = new AST::Regex::Union($1, $3);
    };
 
 regex_kleene:
-   rule_regex ASTERISK
+   rule_regex REGEX_KLEENE %prec REGEX_KLEENE
    {
-      dfa_ref dfa($1);
-      dfa->Kleene();
-      $$ = dfa;
+      cout << "Kleene" << endl;
+      $$ = new AST::Regex::Kleene($1);
    };
 
-regex_identifier:
-   IDENTIFIER 
+regex_action:
+   REGEX_ACTION
    { 
+      cout << "Action " << $1 << endl;
       string action($1);
-      $$ = new DFABasic(action);
+      $$ = new AST::Regex::Action(action);
    };
+
+regex_any:
+   REGEX_ANY 
+   { 
+      cout << "Any " << endl;
+      $$ = new AST::Regex::Any();
+   };
+
+// DFA
 
 dfa_name:
    IDENTIFIER
@@ -212,12 +229,7 @@ rule_dfa:
    {
    };
    
-
-declare_pda:
-   PDA_DECLARATION pda_name LPAREN rule_pda RPAREN
-   {
-
-   };
+// PUSHDOWN SYSTEMS
 
 pda_name:
    IDENTIFIER
@@ -229,6 +241,14 @@ rule_pda:
    {
    };
 
+// ECTL FORMULA
+
+formula_name:
+   IDENTIFIER
+   {
+      $$ = $1;
+   };
+
 rule_formula:
    not | and | or | ax | until | release | false | true | pvar 
    {
@@ -236,62 +256,62 @@ rule_formula:
    ;
 
 false:
-   FALSE
+   FORMULA_FALSE
    {
       $$ = new formula_false();
    }
    ;
 
 true:
-   TRUE 
+   FORMULA_TRUE 
    {
       $$ = new formula_true();
    }
    ;
 
 pvar:
-   IDENTIFIER 
+   FORMULA_PVAR
    {
       $$ = new formula_pvar($1);
    }
    ;
 
 not:
-   NOT rule_formula
+   FORMULA_NOT rule_formula
    {
      $$ = new formula_not($2);
    }
    ;
 
 and:
-   LPAREN rule_formula AND rule_formula RPAREN
+   FORMULA_LPAREN rule_formula FORMULA_AND rule_formula FORMULA_RPAREN
    {
      $$ = new formula_and($2, $4);
    }
    ;
 
 or:
-   LPAREN rule_formula OR rule_formula RPAREN
+   FORMULA_LPAREN rule_formula FORMULA_OR rule_formula FORMULA_RPAREN
    {
      $$ = new formula_or($2, $4);
    }
    ;
 
 ax:
-   A X rule_formula
+   FORMULA_A FORMULA_X rule_formula
    {
      $$ = new formula_ax($3);
    }
    ;
 
 until:
-   E LPAREN rule_formula U rule_formula RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U rule_formula FORMULA_RPAREN
    {
      $$ = new formula_until($3, $5);
    };
 
 release:
-   E LPAREN rule_formula R rule_formula RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R rule_formula FORMULA_RPAREN
    {
      $$ = new formula_release($3, $5);
    };

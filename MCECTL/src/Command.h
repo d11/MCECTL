@@ -19,6 +19,7 @@
 #include "ctl_ast.h"
 #include "LTS.h"
 #include "Automata.h"
+#include "AST_Regex.h"
 
 using namespace std;
 
@@ -118,13 +119,20 @@ class ShowCommand : public Command {
 };
 
 class DeclareRegexCommand : public Command {
+   private:
+      string _identifier;
+      AST::Regex::Base *_regex;
    public:
-      DeclareRegexCommand(string name, dfa_ref dfa) { } // TODO
+      DeclareRegexCommand(string name, AST::Regex::Base *regex)
+         : _identifier(name), _regex(regex) {
+      } // TODO
       virtual string ToString() const {
          return "REGEX [blah]";
       }
       virtual void Execute(Environment &environment, GlobalOptions &options) const {
          cout << "TODO" << endl;
+         cout << "Declare regex: " << _identifier << endl;
+         cout << _regex->ToString() << endl;
       }
 };
 #endif

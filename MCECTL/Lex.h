@@ -208,6 +208,10 @@ extern char *yytext;
 #ifdef YY_HEADER_EXPORT_START_CONDITIONS
 #define INITIAL 0
 #define comment 1
+#define regex 2
+#define formula 3
+#define dfa 4
+#define pda 5
 
 #endif
 
@@ -311,9 +315,9 @@ extern int yylex (void);
 #undef YY_DECL
 #endif
 
-#line 67 "src/CTL.l"
+#line 137 "src/CTL.l"
 
 
-#line 318 "Lex.h"
+#line 322 "Lex.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */
