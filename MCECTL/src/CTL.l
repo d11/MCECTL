@@ -115,11 +115,24 @@ REGULAR           {
 <regex>\.         return REGEX_ANY;
 <regex>\*         return REGEX_KLEENE;
 <regex>;          return REGEX_SEQ;
-<regex>[a-z_]+           {
+<regex>[a-z_]+    {
    yylval.string=strdup(yytext); 
    return REGEX_ACTION;
 }
-<regex>[\s]+    /* Ignore whitespace */
+<regex>[ \t\n]+    /* Ignore whitespace */
+
+<dfa>\(           return DFA_LPAREN; /* Deterministic finite automata */
+<dfa>\)           return DFA_RPAREN;
+<dfa>STATE        return DFA_STATE;
+<dfa>:            return DFA_COLON;
+<dfa>,            return DFA_COMMA;
+<dfa>ACTION       return DFA_ACTION;
+<dfa>->           return DFA_TRANSITION;
+<dfa>[a-z_]+      {
+   yylval.string=strdup(yytext); 
+   return DFA_IDENTIFIER;
+}
+<dfa>[ \t\n]+    /* Ignore whitespace */
 
 #                 BEGIN(comment); /* Comment start */
 <comment>[^\n]*                   /* Comment body */

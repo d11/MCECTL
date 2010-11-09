@@ -22,13 +22,14 @@
 #include "ParseException.h"
 
 using namespace std;
+
 class CommandProcessor {
 private:
    Environment &_environment;
    GlobalOptions &_global_options;
 public:
    CommandProcessor(Environment &env, GlobalOptions &options) : _environment(env), _global_options(options) { }
-   void ExecuteCommand( const Command &command ) {
+   void ExecuteCommand( const Command::Command &command ) {
       cout << "Executing command: " << command.ToString() << endl;
       command.Execute(_environment, _global_options);
    }
@@ -58,7 +59,7 @@ public:
       InitMessage();
    }
 
-   void SendCommand( const Command &command ) {
+   void SendCommand( const Command::Command &command ) {
       //cout << "REPL recieved command: " << command.ToString() << endl;
       cout << Prompt() << command.ToString() << endl;
       _command_processor.ExecuteCommand(command);
@@ -70,10 +71,10 @@ public:
 
          char *line = readline( Prompt() );
 
-         boost::shared_ptr<Command> command;
+         boost::shared_ptr<Command::Command> command;
          if (!line) {
-            cout << ":quit" << endl;
-            command = boost::shared_ptr<Command>(new QuitCommand());
+            command = boost::shared_ptr<Command::Command>(new Command::QuitCommand());
+            cout << command->ToString() << endl;
          }
          else {
             string input(line);

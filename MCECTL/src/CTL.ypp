@@ -4,18 +4,18 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <boost/shared_ptr.hpp>
 
-#include "ctl_ast.h"
+#include "AST/Formula.h"
+#include "AST/Regex.h"
 #include "CTL.h"
 #include "Command.h"
-#include <boost/shared_ptr.hpp>
 #include "ParseException.h"
-#include "AST_Regex.h"
 
 using namespace std;
 using namespace AST::Regex;
-
-typedef AST::Regex::Base *regex_reference;
+using namespace AST::Formula;
+using namespace Command;
 
 extern "C"
 {
@@ -33,9 +33,9 @@ void yyerror(const char *error)
 }
 
 // In which the result of the parse is stored
-command_ref temporary_command = NULL;
+CommandRef temporary_command = NULL;
 
-boost::shared_ptr<Command> CommandParser::ParseString(string input) {
+boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
 
    yy_scan_string( input.c_str() );
    try {
@@ -46,7 +46,7 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
    }
    yylex_destroy();
 
-   return boost::shared_ptr<Command>(temporary_command);
+   return boost::shared_ptr<Command::Command>(temporary_command);
 }
 
 
@@ -57,9 +57,9 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 %union 
 {
    char *string;
-   struct formula* formula_ref;
+   struct Formula* formula_ref;
    struct Command* command_ref;
-   struct Base* regex_ref;
+   struct Regex* regex_ref;
    struct DFABasic* dfa_ref;
 }
 
@@ -81,7 +81,7 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 %left REGEX_LPAREN 
 %right REGEX_RPAREN 
 
-%type <formula_ref> false true pvar not and or until release ax rule_formula
+%type <formula_ref> false true pvar not and or implication until release ax rule_formula
 
 %type <command_ref> top rule_command declare_formula declare_dfa declare_pda declare_regex
 %type <string> formula_name dfa_name pda_name 
@@ -92,7 +92,10 @@ boost::shared_ptr<Command> CommandParser::ParseString(string input) {
 %type <string> filename
 
 %token <string> REGEX_ACTION
-%type <regex_ref> rule_regex  parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
+%type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
+
+%token DFA_LPAREN DFA_RPAREN DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
+%token <string> DFA_IDENTIFIER
 
 %%
 
@@ -176,43 +179,38 @@ rule_regex:
 parenthesised_regex:
    REGEX_LPAREN rule_regex REGEX_RPAREN %prec REGEX_LPAREN
    {
-      cout << "Parenthesised" << endl;
       $$ = $2;
    };
 
 regex_seq:
    rule_regex rule_regex %prec REGEX_SEQ
    {
-      cout << "Seq" << endl;
       $$ = new AST::Regex::Concat($1, $2);
    };
 
 regex_or:
    rule_regex REGEX_OR rule_regex
    {
-      cout << "Or" << endl;
       $$ = new AST::Regex::Union($1, $3);
    };
 
 regex_kleene:
    rule_regex REGEX_KLEENE %prec REGEX_KLEENE
    {
-      cout << "Kleene" << endl;
       $$ = new AST::Regex::Kleene($1);
    };
 
 regex_action:
    REGEX_ACTION
    { 
-      cout << "Action " << $1 << endl;
       string action($1);
       $$ = new AST::Regex::Action(action);
+      free($1);
    };
 
 regex_any:
    REGEX_ANY 
    { 
-      cout << "Any " << endl;
       $$ = new AST::Regex::Any();
    };
 
@@ -225,10 +223,48 @@ dfa_name:
    };
 
 rule_dfa:
-// TODO
+   rule_dfa dfa_component | dfa_component
    {
    };
-   
+
+dfa_component:
+   dfa_state | dfa_action
+   {
+   };
+
+dfa_state:
+   DFA_STATE DFA_LPAREN dfa_state_name DFA_COLON dfa_proposition_list DFA_RPAREN
+   {
+   };
+
+dfa_proposition_list:
+   dfa_single_proposition | dfa_proposition_list DFA_COMMA dfa_single_proposition
+   {
+   };
+
+dfa_single_proposition:
+   DFA_IDENTIFIER
+   {
+      string name($1);
+      free($1);
+      // TODO $$ 
+   };
+
+dfa_action:
+   DFA_ACTION DFA_LPAREN dfa_action_name DFA_COLON dfa_state_name DFA_TRANSITION dfa_state_name DFA_RPAREN
+   {
+   };
+
+dfa_action_name:
+   DFA_IDENTIFIER
+   {
+   };
+
+dfa_state_name:
+   DFA_IDENTIFIER
+   {
+   };
+
 // PUSHDOWN SYSTEMS
 
 pda_name:
@@ -250,7 +286,7 @@ formula_name:
    };
 
 rule_formula:
-   not | and | or | ax | until | release | false | true | pvar 
+   not | and | or | implication | ax | until | release | false | true | pvar 
    {
    }
    ;
@@ -258,62 +294,71 @@ rule_formula:
 false:
    FORMULA_FALSE
    {
-      $$ = new formula_false();
+      $$ = new AST::Formula::False();
    }
    ;
 
 true:
    FORMULA_TRUE 
    {
-      $$ = new formula_true();
+      $$ = new AST::Formula::True();
    }
    ;
 
 pvar:
    FORMULA_PVAR
    {
-      $$ = new formula_pvar($1);
+      string name($1);
+      $$ = new AST::Formula::PVar(name);
+      free($1);
    }
    ;
 
 not:
    FORMULA_NOT rule_formula
    {
-     $$ = new formula_not($2);
+     $$ = new AST::Formula::Negation($2);
    }
    ;
 
 and:
    FORMULA_LPAREN rule_formula FORMULA_AND rule_formula FORMULA_RPAREN
    {
-     $$ = new formula_and($2, $4);
+     $$ = new AST::Formula::Conjunction($2, $4);
    }
    ;
 
 or:
    FORMULA_LPAREN rule_formula FORMULA_OR rule_formula FORMULA_RPAREN
    {
-     $$ = new formula_or($2, $4);
+     $$ = new AST::Formula::Disjunction($2, $4);
+   }
+   ;
+
+implication:
+   FORMULA_LPAREN rule_formula FORMULA_IMPLICATION rule_formula FORMULA_RPAREN
+   {
+     $$ = new AST::Formula::Implication($2, $4);
    }
    ;
 
 ax:
    FORMULA_A FORMULA_X rule_formula
    {
-     $$ = new formula_ax($3);
+     $$ = new AST::Formula::AX($3);
    }
    ;
 
 until:
    FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U rule_formula FORMULA_RPAREN
    {
-     $$ = new formula_until($3, $5);
+     $$ = new AST::Formula::Until($3, $5);
    };
 
 release:
    FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R rule_formula FORMULA_RPAREN
    {
-     $$ = new formula_release($3, $5);
+     $$ = new AST::Formula::Release($3, $5);
    };
 
 

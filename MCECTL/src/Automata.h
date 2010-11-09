@@ -26,6 +26,9 @@
 #include <map>
 #include <sstream>
 
+#include <iterator>
+#include <algorithm>
+
 using namespace std;
 class Automaton {
 
@@ -92,6 +95,8 @@ public:
    }
    vector< RegularAction<T> > _actions;
    AutomatonIterator< RegularAction<T> > &initialState();
+
+   // Messy - temporary
    string ToString() const {
       stringstream s;
       s << "DFA {\n";
@@ -106,11 +111,13 @@ public:
          map<string, node_ref> successors((*iter)->GetSuccessors());
          for (jter = successors.begin(); jter != successors.end(); ++jter) {
             s << jter->first + " -> ?, ";
+            int index = distance(_nodes.begin(), find(_nodes.begin(), _nodes.end(), jter->second));
+            s << index;
          }
          s << " )\n";
       }
       s << "}\n";
-      // TODO
+      // TODO swizzle
       return s.str();
    }
 

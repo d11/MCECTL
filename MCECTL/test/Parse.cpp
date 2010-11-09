@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
    CommandParser parser;
 
    const char *test_cases[] = {
-      "FORMULA foo { ( a & b) }",
+      // Regex
       "REGULAR foo { toast }",
       "REGULAR foo { (toast) }",
       "REGULAR foo { ( toast ) }",
@@ -41,6 +41,14 @@ int main(int argc, char *argv[]) {
       "REGULAR foo { toast*  (eat|dance) }",
       "REGULAR foo { toast*  (eat|dance)* }",
       "REGULAR foo { toast*  ((party|sing*)eat|dance)* }",
+
+      // Formula
+      "FORMULA foo { a }",
+      "FORMULA foo { (a & b) }",
+      "FORMULA foo { (toast & jam) }",
+      "FORMULA foo { (toast |jam) }",
+      "FORMULA foo { (jam -> jam) }",
+      "FORMULA foo { E(hungry U eat) }",
    };
 
    int count = sizeof(test_cases)/sizeof(char*);
@@ -50,7 +58,7 @@ int main(int argc, char *argv[]) {
       cout << i << ". " << test_cases[i] << " ........................... ";
       try {
          string input = test_cases[i];
-         boost::shared_ptr<Command> command = parser.ParseString(input + "\n");
+         boost::shared_ptr<Command::Command> command = parser.ParseString(input + "\n");
          string cmd_string = command->ToString();
          if (cmd_string.compare(test_cases[i]) == 0) {
             cout << "OK" << endl;

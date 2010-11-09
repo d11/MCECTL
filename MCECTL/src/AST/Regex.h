@@ -28,13 +28,13 @@ namespace AST {
 
    namespace Regex {
 
-      class Base {
+      class Regex {
          public:
             virtual string ToString() = 0;
-            virtual ~Base() {}
+            virtual ~Regex() {}
       };
 
-      class Any : public Base {
+      class Any : public Regex {
          public:
             virtual string ToString() {
                string tmp("[ANY]");
@@ -43,7 +43,7 @@ namespace AST {
             virtual ~Any() {}
       };
 
-      class Action : public Base {
+      class Action : public Regex {
          private:
             string _action_name;
          public:
@@ -52,14 +52,14 @@ namespace AST {
                string tmp("[ACTION ");
                return tmp + _action_name + "]";
             }
-            virtual ~Action() {}
+            virtual ~Action() { }
       };
 
-      class Kleene : public Base {
+      class Kleene : public Regex {
          private:
-            Base *_sub_regex;
+            Regex *_sub_regex;
          public:
-            Kleene(Base *sub_regex) : _sub_regex(sub_regex) { }
+            Kleene(Regex *sub_regex) : _sub_regex(sub_regex) { }
             virtual string ToString() {
                string tmp("[KLEENE ");
                return tmp + _sub_regex->ToString() + "]";
@@ -69,12 +69,12 @@ namespace AST {
             }
       };
 
-      class Concat : public Base {
+      class Concat : public Regex {
          private:
-            Base *_sub_regex_1;
-            Base *_sub_regex_2;
+            Regex *_sub_regex_1;
+            Regex *_sub_regex_2;
          public:
-            Concat(Base *sub_regex_1, Base *sub_regex_2)
+            Concat(Regex *sub_regex_1, Regex *sub_regex_2)
                : _sub_regex_1(sub_regex_1), _sub_regex_2(sub_regex_2) { }
             virtual string ToString() {
                string tmp("[");
@@ -85,12 +85,12 @@ namespace AST {
                delete _sub_regex_2;
             }
       };
-      class Union : public Base {
+      class Union : public Regex {
          private:
-            Base *_sub_regex_1;
-            Base *_sub_regex_2;
+            Regex *_sub_regex_1;
+            Regex *_sub_regex_2;
          public:
-            Union(Base *sub_regex_1, Base *sub_regex_2)
+            Union(Regex *sub_regex_1, Regex *sub_regex_2)
                : _sub_regex_1(sub_regex_1), _sub_regex_2(sub_regex_2) { }
             virtual string ToString() {
                string tmp("[");
@@ -102,6 +102,6 @@ namespace AST {
             }
       };
    }
-};
+}
 
 #endif

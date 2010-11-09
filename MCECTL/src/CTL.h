@@ -28,7 +28,7 @@ private:
 public:
    CommandParser() { }
 
-   boost::shared_ptr<Command> ParseString(string input);
+   boost::shared_ptr<Command::Command> ParseString(string input);
 };
 
 #endif

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
    iter = options.find("file");
    if(iter != options.end()) {
     //  cout << "File option found" << endl;
-      LoadFileCommand command(iter->second);
+      Command::LoadFileCommand command(iter->second);
       repl.SendCommand(command);
    }
    else {
