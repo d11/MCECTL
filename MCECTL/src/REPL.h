@@ -19,21 +19,12 @@
 #include "Environment.h"
 #include "CTL.h"
 #include "GlobalOptions.h"
-#include "ParseException.h"
+#include "exception/ParseException.h"
+#include "exception/CommandFailed.h"
+#include "command/CommandProcessor.h"
 
 using namespace std;
-
-class CommandProcessor {
-private:
-   Environment &_environment;
-   GlobalOptions &_global_options;
-public:
-   CommandProcessor(Environment &env, GlobalOptions &options) : _environment(env), _global_options(options) { }
-   void ExecuteCommand( const Command::Command &command ) {
-      cout << "Executing command: " << command.ToString() << endl;
-      command.Execute(_environment, _global_options);
-   }
-};
+using namespace Command;
 
 class REPL {
    private:
@@ -62,7 +53,11 @@ public:
    void SendCommand( const Command::Command &command ) {
       //cout << "REPL recieved command: " << command.ToString() << endl;
       cout << Prompt() << command.ToString() << endl;
-      _command_processor.ExecuteCommand(command);
+      try {
+         _command_processor.ExecuteCommand(command);
+      } catch (CommandFailed e) {
+         cout << e.what() << endl;
+      }
    }
 
    void Run() {
@@ -71,10 +66,10 @@ public:
 
          char *line = readline( Prompt() );
 
-         boost::shared_ptr<Command::Command> command;
+         vector<CommandRef> commands;
          if (!line) {
-            command = boost::shared_ptr<Command::Command>(new Command::QuitCommand());
-            cout << command->ToString() << endl;
+            commands.push_back( CommandRef(new Command::QuitCommand()) );
+            cout << ":quit" << endl;
          }
          else {
             string input(line);
@@ -82,13 +77,18 @@ public:
             free(line);
 
             try {
-               command = _command_parser.ParseString( input );
+               commands = _command_parser.ParseString( input );
             } catch (ParseException e) {
                cout << e.what() << endl;
                continue;
             }
          }
-         _command_processor.ExecuteCommand(*command);
+         try {
+         _command_processor.ExecuteCommandList(commands);
+         } catch (CommandFailed e) {
+            cout << e.what() << endl;
+            continue;
+         }
 
       }
    }

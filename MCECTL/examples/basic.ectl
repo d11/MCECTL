@@ -15,9 +15,9 @@ REGULAR eat_nonexistent_toast {
 FORMULA not_always_hungry {
    !E( 0 R hungry )
 }
-
+#
 FORMULA dont_eat_future_toast {
-   !E( 1 U 1 )[eat_nonexistent_toast]
+   !E( 1 U 1 )
 }
-
+#[eat_nonexistent_toast]#
 #FORMULA no_wasteful_toast

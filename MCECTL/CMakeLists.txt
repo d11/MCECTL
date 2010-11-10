@@ -12,7 +12,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 find_package(BISON)
 find_package(FLEX)
 BISON_TARGET(MyParser src/CTL.ypp ${CMAKE_CURRENT_BINARY_DIR}/CTL_Parse.cc COMPILE_FLAGS "-d -v")
-FLEX_TARGET(MyScanner src/CTL.l  ${CMAKE_CURRENT_BINARY_DIR}/CTL_Lex.c COMPILE_FLAGS "--header-file=Lex.h")
+FLEX_TARGET(MyScanner src/CTL.l  ${CMAKE_CURRENT_BINARY_DIR}/CTL_Lex.cc COMPILE_FLAGS "--header-file=Lex.h")
 ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 
 # READLINE

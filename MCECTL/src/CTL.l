@@ -1,13 +1,16 @@
 %{
-//#include <stdio.h>
+#include <vector>
+using namespace std;
+#include "Command.h"
+
 #include "CTL_Parse.hh"
 #include <string.h>
 
 //extern YYLTYPE yylloc;
 //#define YY_USER_INIT yylloc.first_line=1;
 
-enum {
-   NONE, FORMULA, DFA, PDA, REGEX
+enum LexModes {
+   LEX_NONE, LEX_FORMULA, LEX_DFA, LEX_PDA, LEX_REGEX
 } expect;
 
 %}
@@ -18,34 +21,34 @@ enum {
 %%
 
 FORMULA           { /* Declaration commands */
-   expect = FORMULA;
+   expect = LEX_FORMULA;
    return FORMULA_DECLARATION;
 }
 DFA               {
-   expect = DFA;
+   expect = LEX_DFA;
    return DFA_DECLARATION;
 }
 PDA               {
-   expect = PDA;
+   expect = LEX_PDA;
    return PDA_DECLARATION;
 }
 REGULAR           { 
-   expect = REGEX;
+   expect = LEX_REGEX;
    return REGEX_DECLARATION;
 }
 
 \{[ \t\n]*        {
    switch(expect) {
-      case REGEX:
+      case LEX_REGEX:
          BEGIN(regex);
          break;
-      case FORMULA:
+      case LEX_FORMULA:
          BEGIN(formula);
          break;
-      case DFA:
+      case LEX_DFA:
          BEGIN(dfa);
          break;
-      case PDA:
+      case LEX_PDA:
          BEGIN(pda);
          break;
       default:
@@ -55,22 +58,22 @@ REGULAR           {
    return LBRACE;
 }
 <regex>\}                {
-   expect = NONE;
+   expect = LEX_NONE;
    BEGIN(INITIAL);
    return RBRACE;
 }
 <formula>\}                {
-   expect = NONE;
+   expect = LEX_NONE;
    BEGIN(INITIAL);
    return RBRACE;
 }
 <dfa>\}                {
-   expect = NONE;
+   expect = LEX_NONE;
    BEGIN(INITIAL);
    return RBRACE;
 }
 <pda>\}                {
-   expect = NONE;
+   expect = LEX_NONE;
    BEGIN(INITIAL);
    return RBRACE;
 }
@@ -140,8 +143,9 @@ REGULAR           {
 
 \"(\\.|[^\"])*\"  { /* Quoted strings */
    int length = strlen(yytext) - 2;
-   char *buf = malloc(length*sizeof(char));
-   yylval.string = strncpy(buf, yytext+1, length);
+   char *buf = (char*)malloc((length+1)*sizeof(char)); // TODO use new 
+   yylval.string = strncpy(buf, yytext+sizeof(char), length);
+   yylval.string[length] = '\0';
    return QUOTED;
 }
 

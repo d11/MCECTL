@@ -24,6 +24,7 @@
 #include "LTS.h"
 #include "Automata.h"
 
+
 using namespace std;
 
 namespace Command {
@@ -36,21 +37,6 @@ namespace Command {
    };
 
    typedef Command *CommandRef;
-
-   class LoadFileCommand : public Command {
-      private:
-         string _filename;
-      public:
-         LoadFileCommand(string filename) : _filename(filename) { };
-         virtual string ToString() const { string s = ":load(\""; return s + _filename + "\")"; };
-         virtual void Execute(Environment &environment, GlobalOptions &options) const {
-            cout << "Loading file: " << _filename << endl;
-            cout << "TODO" << endl;
-            // TODO
-            //CommandProcessor command_processor(environment);
-            //
-         }
-   };
 
    class DeclareFormulaCommand : public Command {
       private:

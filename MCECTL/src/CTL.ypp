@@ -5,26 +5,23 @@
 #include <iostream>
 #include <memory>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 #include "AST/Formula.h"
 #include "AST/Regex.h"
 #include "CTL.h"
 #include "Command.h"
-#include "ParseException.h"
+#include "command/LoadFile.h"
+#include "exception/ParseException.h"
 
 using namespace std;
-using namespace AST::Regex;
-using namespace AST::Formula;
 using namespace Command;
 
-extern "C"
+#include "Lex.h"
+int yyparse(void);
+int yywrap()
 {
-   #include "Lex.h"
-   int yyparse(void);
-   int yywrap()
-   {
-      return 1;
-   }
+   return 1;
 }
 
 void yyerror(const char *error)
@@ -33,9 +30,9 @@ void yyerror(const char *error)
 }
 
 // In which the result of the parse is stored
-CommandRef temporary_command = NULL;
+vector<Command::Command*> *commands_read = NULL;
 
-boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
+std::vector<Command::Command*> CommandParser::ParseString(string input) {
 
    yy_scan_string( input.c_str() );
    try {
@@ -46,9 +43,25 @@ boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
    }
    yylex_destroy();
 
-   return boost::shared_ptr<Command::Command>(temporary_command);
+   return *commands_read;
 }
 
+std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
+
+   YY_BUFFER_STATE buffer = yy_create_buffer ( input, YY_BUF_SIZE );
+   yy_switch_to_buffer ( buffer );
+
+   try {
+      yyparse();
+   } catch (ParseException e) {
+      yylex_destroy();
+      throw;
+   }
+   yylex_destroy(); // TODO .. ??
+
+   //yy_delete_buffer ( buffer );
+   return *commands_read;
+}
 
 %}
 
@@ -57,10 +70,11 @@ boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
 %union 
 {
    char *string;
-   struct Formula* formula_ref;
-   struct Command* command_ref;
-   struct Regex* regex_ref;
+   AST::Formula::Formula* formula_ref;
+   Command::Command* command_ref;
+   AST::Regex::Regex* regex_ref;
    struct DFABasic* dfa_ref;
+   vector<Command::Command*> *command_list;
 }
 
 %token FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION REGEX_DECLARATION LOAD SHOW QUIT
@@ -83,7 +97,7 @@ boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
 
 %type <formula_ref> false true pvar not and or implication until release ax rule_formula
 
-%type <command_ref> top rule_command declare_formula declare_dfa declare_pda declare_regex
+%type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_regex
 %type <string> formula_name dfa_name pda_name 
 %type <dfa_ref> rule_dfa
 
@@ -97,16 +111,41 @@ boost::shared_ptr<Command::Command> CommandParser::ParseString(string input) {
 %token DFA_LPAREN DFA_RPAREN DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
 %token <string> DFA_IDENTIFIER
 
+%type <command_list> top rule_command_list unit_command_list cons_command_list
+
 %%
 
 
 top:
-   rule_command
+   rule_command_list
    {
-      temporary_command = $$;
+      commands_read = $$;
    };
 
 // COMMANDS
+
+rule_command_list:
+   unit_command_list | cons_command_list
+   {
+      $$ = $1;
+   };
+
+unit_command_list:
+   rule_command
+   {
+      //CommandRef command($1);
+      $$ = new vector<CommandRef>();
+      $$->push_back($1);
+   };
+
+cons_command_list:
+   rule_command_list rule_command
+   {
+      vector<Command::Command*> *xs = $1;
+      Command::Command *x = $2;
+      xs->push_back(x);
+      $$ = xs;
+   };
 
 rule_command:
    declare_formula | declare_dfa | declare_pda | declare_regex | load_command | quit_command | show_command | null_command
@@ -122,7 +161,7 @@ null_command:
 load_command:
    LOAD LPAREN filename RPAREN
    {
-      $$ = new LoadFileCommand($3);
+      $$ = new LoadFile($3);
    };
 
 show_command:

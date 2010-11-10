@@ -17,7 +17,9 @@
  */
 
 #include "CTL.h"
-#include "ParseException.h"
+#include "exception/ParseException.h"
+#include "Command.h"
+using namespace Command;
 
 #include <iostream>
 using namespace std;
@@ -58,7 +60,10 @@ int main(int argc, char *argv[]) {
       cout << i << ". " << test_cases[i] << " ........................... ";
       try {
          string input = test_cases[i];
-         boost::shared_ptr<Command::Command> command = parser.ParseString(input + "\n");
+         vector<CommandRef> commands(parser.ParseString(input + "\n"));
+
+         CommandRef command(*commands.begin());
+
          string cmd_string = command->ToString();
          if (cmd_string.compare(test_cases[i]) == 0) {
             cout << "OK" << endl;

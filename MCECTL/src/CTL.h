@@ -28,7 +28,8 @@ private:
 public:
    CommandParser() { }
 
-   boost::shared_ptr<Command::Command> ParseString(string input);
+   std::vector<Command::Command*> ParseString(string input);
+   std::vector<Command::Command*> ParseFile(FILE *input);
 };
 
 #endif

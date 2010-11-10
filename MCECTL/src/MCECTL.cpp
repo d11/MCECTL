@@ -26,6 +26,8 @@
 #include "REPL.h"
 
 #include "CTL.h"
+#include "Command.h"
+#include "command/LoadFile.h"
 
 using namespace std;
 
@@ -94,8 +96,7 @@ int main(int argc, char *argv[]) {
 
    iter = options.find("file");
    if(iter != options.end()) {
-    //  cout << "File option found" << endl;
-      Command::LoadFileCommand command(iter->second);
+      Command::LoadFile command(iter->second);
       repl.SendCommand(command);
    }
    else {
