@@ -12,6 +12,12 @@
 #include "CTL.h"
 #include "Command.h"
 #include "command/LoadFile.h"
+#include "command/Null.h"
+#include "command/Show.h"
+#include "command/Quit.h"
+#include "command/DeclareFormula.h"
+#include "command/DeclareDFA.h"
+#include "command/DeclareRegex.h"
 #include "exception/ParseException.h"
 
 using namespace std;

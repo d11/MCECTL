@@ -1,7 +1,20 @@
 %{
+/*
+ * =====================================================================================
+ *
+ *       Filename:  CTL.l
+ *
+ *    Description:  Lexer input file
+ *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *
+ * =====================================================================================
+ */
+
 #include <vector>
 using namespace std;
 #include "Command.h"
+#include "AST/Formula.h"
+#include "AST/Regex.h"
 
 #include "CTL_Parse.hh"
 #include <string.h>

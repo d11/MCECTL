@@ -11,6 +11,7 @@
  */
 
 #include <string>
+#include <vector>
 #include <iostream>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -22,6 +23,8 @@
 #include "exception/ParseException.h"
 #include "exception/CommandFailed.h"
 #include "command/CommandProcessor.h"
+#include "command/Quit.h"
+#include "Command.h"
 
 using namespace std;
 using namespace Command;

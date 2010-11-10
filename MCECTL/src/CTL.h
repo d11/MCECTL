@@ -15,12 +15,16 @@
  *
  * =====================================================================================
  */
-#ifndef CTL_H
-#define CTL_H
+#ifndef _CTL_H_
+#define _CTL_H_
+
+#include <string>
+#include <vector>
+#include <boost/shared_ptr.hpp>
 
 #include "Command.h"
-#include <string>
-#include <boost/shared_ptr.hpp>
+
+using namespace std;
 
 class CommandParser {
 private:
@@ -28,8 +32,8 @@ private:
 public:
    CommandParser() { }
 
-   std::vector<Command::Command*> ParseString(string input);
-   std::vector<Command::Command*> ParseFile(FILE *input);
+   vector<Command::Command*> ParseString(string input);
+   vector<Command::Command*> ParseFile(FILE *input);
 };
 
 #endif
