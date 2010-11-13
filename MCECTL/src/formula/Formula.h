@@ -32,7 +32,7 @@ namespace Formula {
       virtual void Accept(Visitor &visitor) const;
    };
 
-   class AutomatonFormula {
+   class AutomatonFormula : public Formula {
    private:
       Formula::const_reference _before;
       Formula::const_reference _after;

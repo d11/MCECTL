@@ -31,7 +31,7 @@ Formula::Formula::const_reference Environment::GetFormula(const string &identifi
    return *(iter->second);
 };
 
-Automaton::const_reference Environment::GetAutomata(const string &identifier) const {
+Automaton::const_reference Environment::GetAutomaton(const string &identifier) const {
    map<string, const Automaton*>::const_iterator iter(_automata.find(identifier));
    if (iter == _automata.end()) {
       throw "TODO: no such automaton";

@@ -89,6 +89,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 
 %token FORMULA_FALSE FORMULA_TRUE
 %token FORMULA_LPAREN FORMULA_RPAREN
+%token FORMULA_LBRACKET FORMULA_RBRACKET
 %token FORMULA_NOT FORMULA_AND FORMULA_OR FORMULA_IMPLICATION
 %token FORMULA_A FORMULA_E FORMULA_U FORMULA_R FORMULA_G FORMULA_X 
 %token <string> FORMULA_PVAR
@@ -102,6 +103,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %right REGEX_RPAREN 
 
 %type <formula_ref> false true pvar not and or implication until release ax rule_formula
+%type <string> formula_automaton_name
 
 %type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_regex
 %type <string> formula_name dfa_name pda_name 
@@ -193,7 +195,7 @@ filename:
 declare_formula:
    FORMULA_DECLARATION formula_name LBRACE rule_formula RBRACE
    {
-      $$ = new DeclareFormulaCommand($2, $4);
+      $$ = new DeclareFormulaCommand($2, *$4);
    };
 
 declare_dfa:
@@ -394,16 +396,25 @@ ax:
    }
    ;
 
+formula_automaton_name:
+   FORMULA_PVAR
+   { // TODO ^ (change this?)
+      //string name($1);
+      $$ = $1;
+      //free($1);
+   }
+   ;
+
 until:
-   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U rule_formula FORMULA_RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Until($3, $5);
+     $$ = new AST::Formula::Until($3, $8, $6);
    };
 
 release:
-   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R rule_formula FORMULA_RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Release($3, $5);
+     $$ = new AST::Formula::Release($3, $8, $6);
    };
 
 

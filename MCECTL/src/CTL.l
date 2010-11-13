@@ -116,6 +116,8 @@ REGULAR           {
 <formula>->                return FORMULA_IMPLICATION;
 <formula>\(                return FORMULA_LPAREN;
 <formula>\)                return FORMULA_RPAREN;
+<formula>\[                return FORMULA_LBRACKET;
+<formula>\]                return FORMULA_RBRACKET;
 
 <formula>A                 return FORMULA_A; /* CTL specific syntax */
 <formula>E                 return FORMULA_E;

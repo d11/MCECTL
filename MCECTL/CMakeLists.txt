@@ -25,6 +25,7 @@ set(CPPFILES
    src/ModelChecker.cpp
    src/formula/Formula.cpp
    src/Environment.cpp
+	src/AST/Formula.cpp
 )
 
 add_executable(

@@ -87,8 +87,8 @@ test_case_t const test_cases[] = {
    test_case_t("FORMULA foo { ( jam-> jam) }",
                "FORMULA foo { [[PVAR jam] IMPLIES [PVAR jam]] }"),
 
-   test_case_t("FORMULA foo { E(hungry U eat) }",
-               "FORMULA foo { [[PVAR hungry] UNTIL [PVAR eat]] }"),
+   test_case_t("FORMULA foo { E(hungry U[dfa] eat) }",
+               "FORMULA foo { [[PVAR hungry] UNTIL {AUTOMATA dfa} [PVAR eat]] }"),
 
 };
 

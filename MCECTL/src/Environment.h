@@ -34,7 +34,7 @@ public:
    Environment();
    ResultsTable &GetCheckResults(const TransitionSystem &transition_system)  const;
    Formula::Formula::const_reference GetFormula(const string &identifier)    const;
-   Automaton::const_reference GetAutomata(const string &identifier)          const;
+   Automaton::const_reference GetAutomaton(const string &identifier)          const;
    TransitionSystem::const_reference GetSystem(const string &identifier)     const;
 
    void SetFormula( const string &identifier, Formula::Formula::const_reference formula );
