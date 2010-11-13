@@ -14,6 +14,8 @@
 
 #include <string>
 
+#include "Showable.h"
+
 struct Environment;
 struct GlobalOptions;
 
@@ -21,9 +23,8 @@ using namespace std;
 
 namespace Command {
 
-   class Command {
+   class Command : public Showable {
       public:
-         virtual string ToString() const = 0;
          virtual void Execute(Environment &environment, GlobalOptions &options) const = 0;
          virtual ~Command() { };
    };

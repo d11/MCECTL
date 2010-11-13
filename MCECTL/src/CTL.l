@@ -151,6 +151,10 @@ REGULAR           {
 <dfa>[ \t\n]+    /* Ignore whitespace */
 
 #                 BEGIN(comment); /* Comment start */
+<regex>#          BEGIN(comment); /* Comment start */
+<formula>#        BEGIN(comment); /* Comment start */
+<dfa>#            BEGIN(comment); /* Comment start */
+<pda>#            BEGIN(comment); /* Comment start */
 <comment>[^\n]*                   /* Comment body */
 <comment>\n       BEGIN(INITIAL); /* Comment end */
 

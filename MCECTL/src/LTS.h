@@ -16,7 +16,9 @@
 #include <vector>
 #include "Automata.h"
 
-typedef std::set<std::string> Valuation;
+using namespace std;
+
+typedef set<string> Valuation;
 
 //class Valuation {
 //private:
@@ -26,10 +28,12 @@ typedef std::set<std::string> Valuation;
 //
 //};
 
-struct State {
+class State {
+private:
    Valuation _valuation;
-   std::string toString() const {
-      std::string tmp;
+public:
+   string ToString() const {
+      string tmp;
       Valuation::const_iterator iter;
       for ( iter = _valuation.begin(); iter != _valuation.end(); iter++ )
       {
@@ -43,5 +47,22 @@ struct State {
       return tmp;
    }
 };
+
+class TransitionSystem {
+public:
+	typedef TransitionSystem &reference;
+	typedef const TransitionSystem &const_reference;
+
+	TransitionSystem() {};
+
+   set<State> GetStates() const;
+   State GetInitialState() const;
+};
+
+class PushDownSystem {
+
+};
+
+typedef set<State>::const_iterator StateIterator;
 
 #endif

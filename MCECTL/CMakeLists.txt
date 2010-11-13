@@ -20,9 +20,16 @@ find_package(Readline REQUIRED)
 include_directories(${READLINE_INCLUDE_DIR})
 
 # MAIN PROGRAM
-FILE (GLOB CPPFILES src/*.cpp)
+#FILE (GLOB_RECURSE CPPFILES src/*.cpp)
+set(CPPFILES
+   src/ModelChecker.cpp
+   src/formula/Formula.cpp
+   src/Environment.cpp
+)
+
 add_executable(
    MCECTL
+   src/MCECTL.cpp
    ${CPPFILES}
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
@@ -30,10 +37,12 @@ add_executable(
 target_link_libraries(MCECTL ${READLINE_LIBRARY})
 
 # TEST HARNESS
-FILE (GLOB TESTCPP test/*.cpp)
+#FILE (GLOB TESTCPP test/*.cpp)
 add_executable(
-   Tests 
-   ${TESTCPP}
+   Test
+   test/Tests.cpp
+   ${CPPFILES}
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
 )
+target_link_libraries(Test boost_unit_test_framework)

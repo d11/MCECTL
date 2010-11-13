@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  Automata.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  04/11/10 10:28:52
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -25,13 +17,16 @@
 #include <string>
 #include <map>
 #include <sstream>
-
+#include <iostream>
 #include <iterator>
 #include <algorithm>
 
 using namespace std;
 class Automaton {
-
+public:
+   typedef Automaton &reference;
+   typedef const Automaton &const_reference;
+   virtual ~Automaton();
 };
 
 template <class T>
@@ -39,15 +34,23 @@ class AutomatonIterator {
 
 };
 
+class Action {
+
+};
+
+class EpsilonAction : public Action {
+
+};
+
 template <class T>
-struct RegularAction {
+struct RegularAction : public Action {
    boost::weak_ptr<T> predecessor;
    boost::weak_ptr<T> successor;
    string action_name;
 };
 
 struct DummyState {
-   string ToString() {
+   string ToString() const {
       return "[Node]";
    }
 };
@@ -135,6 +138,10 @@ class DFABasic : public DFA<DummyState> {
 typedef DFABasic *dfa_ref;
 
 class RegexBuilder {
+
+};
+
+class NFA : public Automaton {
 
 };
 

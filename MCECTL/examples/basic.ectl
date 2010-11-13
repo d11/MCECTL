@@ -1,6 +1,5 @@
 
 DFA test_dfa {
-#   PROPOSITIONS ( hungry, toast )
    STATE ( empty: hungry )
    STATE ( toast_ready: hungry, toast )
    STATE ( fulfilled: )

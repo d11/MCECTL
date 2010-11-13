@@ -22,21 +22,23 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
+#include "Showable.h"
+
 using namespace std;
 
 namespace AST {
 
    namespace Regex {
 
-      class Regex {
+      class Regex : public Showable {
          public:
-            virtual string ToString() = 0;
+
             virtual ~Regex() {}
       };
 
       class Any : public Regex {
          public:
-            virtual string ToString() {
+            virtual string ToString() const {
                string tmp("[ANY]");
                return tmp;
             }
@@ -48,7 +50,7 @@ namespace AST {
             string _action_name;
          public:
             Action(string action_name) : _action_name(action_name) { }
-            virtual string ToString() {
+            virtual string ToString() const {
                string tmp("[ACTION ");
                return tmp + _action_name + "]";
             }
@@ -60,7 +62,7 @@ namespace AST {
             Regex *_sub_regex;
          public:
             Kleene(Regex *sub_regex) : _sub_regex(sub_regex) { }
-            virtual string ToString() {
+            virtual string ToString() const {
                string tmp("[KLEENE ");
                return tmp + _sub_regex->ToString() + "]";
             }
@@ -76,7 +78,7 @@ namespace AST {
          public:
             Concat(Regex *sub_regex_1, Regex *sub_regex_2)
                : _sub_regex_1(sub_regex_1), _sub_regex_2(sub_regex_2) { }
-            virtual string ToString() {
+            virtual string ToString() const {
                string tmp("[");
                return tmp + _sub_regex_1->ToString() + " CONCAT " + _sub_regex_2->ToString() + "]";
             }
@@ -92,7 +94,7 @@ namespace AST {
          public:
             Union(Regex *sub_regex_1, Regex *sub_regex_2)
                : _sub_regex_1(sub_regex_1), _sub_regex_2(sub_regex_2) { }
-            virtual string ToString() {
+            virtual string ToString() const {
                string tmp("[");
                return tmp + _sub_regex_1->ToString() + " UNION " + _sub_regex_2->ToString() + "]";
             }

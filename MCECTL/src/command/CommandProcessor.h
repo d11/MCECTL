@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  CommandProcessor.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  09/11/10 20:32:46
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */

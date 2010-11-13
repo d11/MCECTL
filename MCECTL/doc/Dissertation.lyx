@@ -1,0 +1,195 @@
+#LyX file created by tex2lyx 1.6.7
+\lyxformat 264
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+
+\usepackage{cite}
+
+
+\end_preamble
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\paperfontsize 11
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+Model Checking Extended Computation Tree Logic
+\end_layout
+
+\begin_layout Author
+
+Daniel Horgan
+\end_layout
+
+\begin_layout Date
+
+Today
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+
+[scratch] Blablabla said Nobody \InsetSpace ~
+
+\begin_inset LatexCommand cite
+after ""
+key "Nobody06"
+
+\end_inset
+
+. 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Abstract
+
+TODO abstract
+\end_layout
+
+\begin_layout Section
+
+Introduction
+\end_layout
+
+\begin_layout Standard
+
+Computation Tree Logic (CTL) is an effective way of modelling the behaviour of simple systems over time, but there are properties which are beyond its power to describe. More powerful logics such as CTL* (and ultimately the modal mu-calculus) have the disadvantage that their model-checking problems are intractable (EXPTIME as opposed to PTIME). A recent approach by Kreutzer et al 
+\begin_inset LatexCommand cite
+after ""
+key "Kreutzer10"
+
+\end_inset
+
+ introduces the 'Extended CTL' family of logics, in which CTL is parameterised by various classes of automata. This increases the expressive power of the logic, whilst (in some cases) preserving the tractability of model-checking. This project aims to implement a model checker for the PTIME extensions of CTL described in 
+\begin_inset LatexCommand cite
+after ""
+key "Kreutzer10"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+
+Background
+\end_layout
+
+\begin_layout Section
+
+Requirements
+\end_layout
+
+\begin_layout Section
+
+Design
+\end_layout
+
+\begin_layout Section
+
+Testing
+\end_layout
+
+\begin_layout Section
+
+Conclusions
+\end_layout
+
+\begin_layout Section
+
+References
+\end_layout
+
+\begin_layout Section
+
+Acknowledgements
+\end_layout
+
+\begin_layout Standard
+
+I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, in which capacity he ... TODO
+\end_layout
+
+\begin_layout Standard
+
+TODO
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset LatexCommand bibtex
+bibfiles "mybib"
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+{}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+bibliographystyle{plain}
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\end_body
+\end_document

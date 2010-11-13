@@ -39,7 +39,7 @@ namespace AST {
          PVar(const string &name) : _name(name) { }
          string ToString() {
             stringstream output;
-            output << "[PVAR '" << _name << "']";
+            output << "[PVAR " << _name << "]";
             return output.str();
          }
          virtual ~PVar() { }
