@@ -32,6 +32,8 @@
 #include "GlobalOptions.h"
 #include "formula/Formula.h"
 
+#include "exception/FormulaBuilder.h"
+
 namespace Command {
    class DeclareFormulaCommand : public Command {
       private:
@@ -48,20 +50,36 @@ namespace Command {
                : _builder_input(builder_input), _current_formula(NULL), _environment(environment) {
             }
             // TODO
-            virtual void Visit(const AST::Formula::False &formula_false)     { } 
-            virtual void Visit(const AST::Formula::True &formula_true)       { } 
-            virtual void Visit(const AST::Formula::PVar &pvar)               { } 
-            virtual void Visit(const AST::Formula::Negation &negation)       { } 
-            virtual void Visit(const AST::Formula::Conjunction &conjunction) { } 
-            virtual void Visit(const AST::Formula::Disjunction &disjunction) { } 
-            virtual void Visit(const AST::Formula::Implication &implication) { } 
-            virtual void Visit(const AST::Formula::AX &ax)                   { } 
+            virtual void Visit(const AST::Formula::False &formula_false)     {
+               _current_formula = new Formula::False();
+            } 
+            virtual void Visit(const AST::Formula::True &formula_true)       {
+               _current_formula = new Formula::True();
+            } 
+            virtual void Visit(const AST::Formula::PVar &pvar)               {
+               _current_formula = new Formula::PVar(pvar.GetName());
+            } 
+            virtual void Visit(const AST::Formula::Negation &negation)       {
+               negation.GetSubFormula().Accept(*this);
+               _current_formula = new Formula::Negation(*_current_formula);
+            } 
+            virtual void Visit(const AST::Formula::Conjunction &conjunction) {
+               conjunction.GetSubFormula1().Accept(*this);
+               Formula::Formula::reference left(*_current_formula);
+               conjunction.GetSubFormula2().Accept(*this);
+               Formula::Formula::reference right(*_current_formula);
+               _current_formula = new Formula::Conjunction( left, right );
+            } 
+
+            virtual void Visit(const AST::Formula::Disjunction &disjunction) { throw runtime_error("TODO"); } 
+            virtual void Visit(const AST::Formula::Implication &implication) { throw runtime_error("TODO"); } 
+            virtual void Visit(const AST::Formula::AX &ax)                   { throw runtime_error("TODO"); } 
             virtual void Visit(const AST::Formula::Until &until)             {
                until.GetSubFormula1().Accept(*this);
                Formula::Formula::reference before(*_current_formula);
                until.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               Automaton::const_reference automaton(_environment.GetAutomaton(until.GetAutomatonName()));
+               PDA::const_reference automaton(_environment.GetAutomaton(until.GetAutomatonName()));
                _current_formula = new Formula::Until( before, after, automaton );
             } 
             virtual void Visit(const AST::Formula::Release &release)         {
@@ -69,15 +87,15 @@ namespace Command {
                Formula::Formula::reference before(*_current_formula);
                release.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               Automaton::const_reference automaton(_environment.GetAutomaton(release.GetAutomatonName()));
+               PDA::const_reference automaton(_environment.GetAutomaton(release.GetAutomatonName()));
                _current_formula = new Formula::Until( before, after, automaton );
             } 
 
             Formula::Formula::reference Build() {
                _builder_input.Accept(*this);
                if (NULL == _current_formula) {
-                  // should never happen
-                  throw "TODO: haven't built formula yet [exception]";
+                  // Should never happen:
+                  throw FormulaBuilderException();
                }
                return *_current_formula;
             };

@@ -50,6 +50,9 @@ namespace AST {
             output << "[PVAR " << _name << "]";
             return output.str();
          }
+			string GetName() const {
+				return _name;
+			}
          virtual ~PVar() { }
 			virtual void Accept(Visitor &visitor) const;
       };
@@ -67,7 +70,7 @@ namespace AST {
          virtual ~Unary() {
             delete _sub_formula;
          }
-         Formula::reference GetSubFormula() { return *_sub_formula; }
+         Formula::reference GetSubFormula() const { return *_sub_formula; }
 			virtual void Accept(Visitor &visitor) const = 0;
       };
 

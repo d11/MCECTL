@@ -14,35 +14,43 @@
 #include "Environment.h"
 #include "ModelChecker.h"
 #include "Automata.h"
-#include "LTS.h"
+#include "TransitionSystem.h"
+#include "exception/NonExistentFormula.h"
+#include "exception/NonExistentAutomaton.h"
+#include "exception/NonExistentTransitionSystem.h"
 
 Environment::Environment() { }
 
-ResultsTable &Environment::GetCheckResults(const TransitionSystem &transition_system) const {
+const ResultsTable &Environment::GetCheckResults(const KripkeStructure &transition_system) const {
    // TODO
    return *new ResultsTable();
+}
+
+void Environment::SetCheckResults(const KripkeStructure &transition_system, const CheckResults &results) {
+ //  _computed_results.find( system )(SetEntry( results ));
+ // TODO
 }
 
 Formula::Formula::const_reference Environment::GetFormula(const string &identifier) const {
    map<string, const Formula::Formula*>::const_iterator iter(_formulas.find(identifier));
    if (iter == _formulas.end()) {
-      throw "TODO: no such formula";
+      throw NonExistentFormulaException(identifier);
    }
    return *(iter->second);
 };
 
-Automaton::const_reference Environment::GetAutomaton(const string &identifier) const {
-   map<string, const Automaton*>::const_iterator iter(_automata.find(identifier));
+PDA::const_reference Environment::GetAutomaton(const string &identifier) const {
+   map<string, const PDA*>::const_iterator iter(_automata.find(identifier));
    if (iter == _automata.end()) {
-      throw "TODO: no such automaton";
+      throw NonExistentAutomatonException(identifier);
    }
    return *(iter->second);
 };
 
-TransitionSystem::const_reference Environment::GetSystem(const string &identifier) const {
-   map<string, const TransitionSystem*>::const_iterator iter(_systems.find(identifier));
+KripkeStructure::const_reference Environment::GetSystem(const string &identifier) const {
+   map<string, const KripkeStructure*>::const_iterator iter(_systems.find(identifier));
    if (iter == _systems.end()) {
-      throw "TODO: no such transition system";
+      throw NonExistentTransitionSystemException(identifier);
    }
    return *(iter->second);
 };
@@ -54,14 +62,14 @@ void Environment::SetFormula( const string &identifier, Formula::Formula::const_
    }
 }
 
-void Environment::SetAutomata( const string &identifier, Automaton::const_reference automaton ) {
+void Environment::SetAutomata( const string &identifier, PDA::const_reference automaton ) {
    bool result = _automata.insert(make_pair(identifier, &automaton)).second;
    if (!result) {
       throw "TODO: automaton already exists";
    }
 }
 
-void Environment::SetSystem( const string &identifier, TransitionSystem::const_reference transition_system) {
+void Environment::SetSystem( const string &identifier, KripkeStructure::const_reference transition_system) {
    bool result = _systems.insert(make_pair(identifier, &transition_system)).second;
    if (!result) {
       throw "TODO: system already exists";

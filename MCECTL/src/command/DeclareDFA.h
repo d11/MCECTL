@@ -19,9 +19,9 @@ namespace Command {
    class DeclareDFACommand : public Command {
       private:
          string _dfa_name;
-         dfa_ref _dfa;
+         const DFA *_dfa;
       public:
-         DeclareDFACommand(string name, dfa_ref dfa) : _dfa_name(name), _dfa(dfa) { }
+         DeclareDFACommand(string name, const DFA *dfa) : _dfa_name(name), _dfa(dfa) { }
          virtual string ToString() const {
             stringstream s;
             s << "DFA " << _dfa_name << " { " << _dfa->ToString() << " }";

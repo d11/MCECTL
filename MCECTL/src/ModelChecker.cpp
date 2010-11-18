@@ -9,12 +9,19 @@
  */
 
 #include <set>
+#include <vector>
+#include <map>
 
+#include <boost/numeric/ublas/matrix_sparse.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
+#include "TransitionSystem.h"
 #include "ModelChecker.h"
+using namespace std;
 
 // RESULT
 
-Result::Result(const State &state, bool result) {
+Result::Result(const KripkeState &state, bool result) {
    // TODO
 }
 
@@ -28,21 +35,10 @@ void CheckResults::AddResult(const Result &result) {
    // TODO
 }
 
-// TRANSITION SYSTEM
-
-set<State> TransitionSystem::GetStates() const {
-   // TODO
-   return set<State>();
-}
-
-State TransitionSystem::GetInitialState() const {
-   // TODO
-   return State();
-}
-
 // PREDECESSOR CONFIGURATIONS
 
-bool PredecessorConfigurations::Contains( State state_1, State state_2, Action action) const {
+template <class A>
+bool PredecessorConfigurations<A>::Contains( const KripkeState *state_1, const KripkeState *state_2, const A *action) const {
    // TODO
    return false;
 }
@@ -51,12 +47,12 @@ bool PredecessorConfigurations::Contains( State state_1, State state_2, Action a
 
 ResultsTable::ResultsTable() { }
 
-bool ResultsTable::HasEntry( Formula::Formula::const_reference formula ) {
+bool ResultsTable::HasEntry( Formula::Formula::const_reference formula ) const {
    // TODO
    return false;
 }
 
-CheckResults ResultsTable::GetEntry( Formula::Formula::const_reference formula ) {
+CheckResults ResultsTable::GetEntry( Formula::Formula::const_reference formula ) const {
    // TODO
    return CheckResults();
 }
@@ -69,46 +65,62 @@ void ResultsTable::SetEntry(const CheckResults &check_results) {
 // MODEL CHECKER
 
 ModelChecker::ModelChecker(
-   const Environment &environment,
-   const TransitionSystem &transition_system
+   Environment &environment,
+   const KripkeStructure &transition_system
 ) : _environment(environment), _system(transition_system) { }
 
 // combine _system and automata
 boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
-   const Automaton &automaton,
+   const PDA &automaton,
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
-   // TODO
-   return boost::shared_ptr<PushDownSystem>(new PushDownSystem());
+
+   vector<KripkeState*> product_states;
+   KripkeState *k = new KripkeState(Valuation()); // Temp
+   product_states.push_back(k); // TEMP! 
+
+   vector<KripkeState> system_states = _system.GetStates();
+   vector<DummyState>  automaton_states = automaton.GetStates();
+
+   vector<KripkeState>::const_iterator system_state_iter;
+   vector<DummyState >::const_iterator  dummy_state_iter;
+   for ( system_state_iter = system_states.begin(); system_state_iter != system_states.end(); ++system_state_iter ) {
+      for ( dummy_state_iter = automaton_states.begin(); dummy_state_iter != automaton_states.end(); ++dummy_state_iter) {
+         // TODO
+      }
+   }
+
+   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, k));
 }
 
 void ModelChecker::Visit(const Formula::Until &until) {
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
-   const Automaton &automaton = until.GetAutomaton();
+   const PDA &automaton = until.GetAutomaton();
    // automata is a PDA
 
    boost::shared_ptr<PushDownSystem> pds(ConstructProductSystem(automaton, before, after)); 
 
    CheckResults results;
 
-   StateIterator iter;
+   vector<KripkeState>::const_iterator iter;
    for (iter = _system.GetStates().begin(); iter != _system.GetStates().end(); ++iter) {
-      PredecessorConfigurations pc; // Compute predecessor configurations
-      if ( pc.Contains(_system.GetInitialState(), *iter, EpsilonAction()) ) {
-         // Here, *iter |= E( before U[automata] after )
-         Result result(*iter, true);
-         results.AddResult( result );
-      }
-      else {
-         Result result(*iter, false); // TODO: counterexample
-         results.AddResult( result );
-      }
+      //PredecessorConfigurations<NondeterministicPushDownAction> pc; // Compute predecessor configurations
+
+      // TODOO!!
+      //if ( pc.Contains(_system.GetInitialState(), *iter, new PushDownEpsilonAction()) ) {
+      //   // Here, *iter |= E( before U[automata] after )
+      //   Result result(*iter, true);
+      //   results.AddResult( result );
+      //}
+      //else {
+      //   Result result(*iter, false); // TODO: counterexample
+      //   results.AddResult( result );
+      //}
    }
 
-   ResultsTable &results_table = _environment.GetCheckResults(_system);
-   results_table.SetEntry( results );
+   _environment.SetCheckResults(_system, results);
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {
@@ -117,14 +129,25 @@ void ModelChecker::Visit(const Formula::Release &release) {
 void ModelChecker::Visit(const Formula::PVar &release) {
    // TODO
 }
+void ModelChecker::Visit(const Formula::False &formula_false) {
+   // TODO
+}
+void ModelChecker::Visit(const Formula::True &formula_true) {
+   // TODO
+}
+void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
+   // TODO
+}
+void ModelChecker::Visit(const Formula::Negation &negation) {
+   // TODO
+}
 
 CheckResults ModelChecker::Check( Formula::Formula::const_reference formula ) {
-   ResultsTable &results_table = _environment.GetCheckResults(_system);
+   const ResultsTable &results_table = _environment.GetCheckResults(_system);
    if ( results_table.HasEntry( formula ) ) {
       return results_table.GetEntry( formula );
    }
 
-   //CheckResults results = CheckFormula( formula );
    formula.Accept(*this);
 
    return results_table.GetEntry( formula );

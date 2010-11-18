@@ -26,6 +26,8 @@ set(CPPFILES
    src/formula/Formula.cpp
    src/Environment.cpp
 	src/AST/Formula.cpp
+   src/TransitionSystem.cpp
+   src/Automata.cpp
 )
 
 add_executable(

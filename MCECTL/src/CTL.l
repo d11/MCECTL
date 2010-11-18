@@ -15,6 +15,7 @@ using namespace std;
 #include "Command.h"
 #include "AST/Formula.h"
 #include "AST/Regex.h"
+#include "Automata.h"
 
 #include "CTL_Parse.hh"
 #include <string.h>

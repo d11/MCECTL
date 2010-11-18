@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  MCECTL.cpp
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  27/10/10 15:45:19
- *       Revision:  none
- *       Compiler:  gcc
- *
+ *    Description:  Main entry point
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */

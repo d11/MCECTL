@@ -9,6 +9,7 @@
 
 #include "AST/Formula.h"
 #include "AST/Regex.h"
+#include "Automata.h"
 #include "CTL.h"
 #include "Command.h"
 #include "command/LoadFile.h"
@@ -79,7 +80,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
    AST::Formula::Formula* formula_ref;
    Command::Command* command_ref;
    AST::Regex::Regex* regex_ref;
-   struct DFABasic* dfa_ref;
+   FiniteAutomaton<RegularAction,DummyState>* dfa_ref;
    vector<Command::Command*> *command_list;
 }
 
