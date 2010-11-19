@@ -9,6 +9,7 @@
 
 #include "AST/Formula.h"
 #include "AST/Regex.h"
+#include "AST/TransitionSystem.h"
 #include "Automata.h"
 #include "CTL.h"
 #include "Command.h"
@@ -80,7 +81,8 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
    AST::Formula::Formula* formula_ref;
    Command::Command* command_ref;
    AST::Regex::Regex* regex_ref;
-   FiniteAutomaton<RegularAction,DummyState>* dfa_ref;
+   AST::DFA* dfa_ref;
+   vector<std::string> *string_list;
    vector<Command::Command*> *command_list;
 }
 
@@ -108,7 +110,10 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 
 %type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_regex
 %type <string> formula_name dfa_name pda_name 
-%type <dfa_ref> rule_dfa
+
+%type <string> dfa_single_proposition dfa_action_name dfa_state_name
+%type <string_list> dfa_proposition_list
+%type <dfa_ref> rule_dfa dfa_component dfa_state dfa_action
 
 %type <command_ref> null_command load_command quit_command show_command
 %token <string> QUOTED
@@ -270,47 +275,80 @@ dfa_name:
       $$ = $1;
    };
 
-rule_dfa:
-   rule_dfa dfa_component | dfa_component
+rule_dfa: dfa_component
+   { 
+      $$ = $1;
+   };
+
+rule_dfa: rule_dfa dfa_component
    {
+      AST::DFA *main_dfa = $1;
+      AST::DFA *to_add = $2;
+      main_dfa->Assimilate(to_add);
+      $$ = main_dfa;
    };
 
 dfa_component:
    dfa_state | dfa_action
-   {
+   { // nothing
    };
 
 dfa_state:
    DFA_STATE DFA_LPAREN dfa_state_name DFA_COLON dfa_proposition_list DFA_RPAREN
    {
+      string state_name($3);
+      free($3);
+      AST::DummyState state(state_name);
+      $$ = new AST::DFA(state);
    };
 
-dfa_proposition_list:
-   dfa_single_proposition | dfa_proposition_list DFA_COMMA dfa_single_proposition
+dfa_proposition_list: dfa_single_proposition 
    {
+      vector<string> *proposition_list = new vector<string>();
+      proposition_list->push_back(string($1));
+      free($1);
+      $$ = proposition_list;
+   };
+
+dfa_proposition_list: dfa_proposition_list DFA_COMMA dfa_single_proposition
+   {
+      vector<string> *proposition_list = $1;
+      proposition_list->push_back(string($3));
+      free($3);
+      $$ = proposition_list;
    };
 
 dfa_single_proposition:
    DFA_IDENTIFIER
    {
-      string name($1);
-      free($1);
-      // TODO $$ 
+      $$ = $1;
    };
 
 dfa_action:
    DFA_ACTION DFA_LPAREN dfa_action_name DFA_COLON dfa_state_name DFA_TRANSITION dfa_state_name DFA_RPAREN
    {
+      string action_name($3);
+      string state1_name($5);
+      string state2_name($7);
+      free($3);
+      free($5);
+      free($7);
+      AST::DummyState state1(state1_name);
+      AST::DummyState state2(state2_name);
+      AST::RegularAction action(action_name);
+      $$ = new AST::DFA(state1, action, state2);
    };
 
 dfa_action_name:
    DFA_IDENTIFIER
    {
+      $$ = $1;
    };
 
 dfa_state_name:
    DFA_IDENTIFIER
    {
+      $$ = $1;
    };
 
 // PUSHDOWN SYSTEMS

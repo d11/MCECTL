@@ -97,8 +97,9 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
 void ModelChecker::Visit(const Formula::Until &until) {
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
-   const PDA &automaton = until.GetAutomaton();
-   // automata is a PDA
+   const Automaton &a(until.GetAutomaton());
+   const PDA &automaton = static_cast<const PDA &>(a); // temp
+   // automata is a PDA - - TODO
 
    boost::shared_ptr<PushDownSystem> pds(ConstructProductSystem(automaton, before, after)); 
 

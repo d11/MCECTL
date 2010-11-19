@@ -18,6 +18,7 @@
 #include "exception/NonExistentFormula.h"
 #include "exception/NonExistentAutomaton.h"
 #include "exception/NonExistentTransitionSystem.h"
+#include "exception/AlreadyExistsException.h"
 
 Environment::Environment() { }
 
@@ -39,8 +40,8 @@ Formula::Formula::const_reference Environment::GetFormula(const string &identifi
    return *(iter->second);
 };
 
-PDA::const_reference Environment::GetAutomaton(const string &identifier) const {
-   map<string, const PDA*>::const_iterator iter(_automata.find(identifier));
+Automaton::const_reference Environment::GetAutomaton(const string &identifier) const {
+   map<string, const Automaton*>::const_iterator iter(_automata.find(identifier));
    if (iter == _automata.end()) {
       throw NonExistentAutomatonException(identifier);
    }
@@ -58,21 +59,21 @@ KripkeStructure::const_reference Environment::GetSystem(const string &identifier
 void Environment::SetFormula( const string &identifier, Formula::Formula::const_reference formula ) {
    bool result = _formulas.insert(make_pair(identifier, &formula)).second;
    if (!result) {
-      throw "TODO: formula already exists";
+      throw AlreadyExistsException(identifier);
    }
 }
 
-void Environment::SetAutomata( const string &identifier, PDA::const_reference automaton ) {
+void Environment::SetAutomaton( const string &identifier, Automaton::const_reference automaton ) {
    bool result = _automata.insert(make_pair(identifier, &automaton)).second;
    if (!result) {
-      throw "TODO: automaton already exists";
+      throw AlreadyExistsException(identifier);
    }
 }
 
 void Environment::SetSystem( const string &identifier, KripkeStructure::const_reference transition_system) {
    bool result = _systems.insert(make_pair(identifier, &transition_system)).second;
    if (!result) {
-      throw "TODO: system already exists";
+      throw AlreadyExistsException(identifier);
    }
 }
 

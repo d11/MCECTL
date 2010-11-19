@@ -61,6 +61,7 @@ private:
    string _action_name;
 public:
    RegularAction(const string &action_name) : _action_name(action_name) {}
+   const string &GetName() const { return _action_name; }
    string ToString() const {
       return _action_name;
    }
@@ -125,18 +126,33 @@ public:
    string ToString() const;
 };
 
-struct DummyState {
+class DummyState {
+private:
+   string _name;
+public:
+   DummyState(const string &name) : _name(name) {}
+   const string &GetName() const { return _name; }
    string ToString() const {
-      return "[Node]";
+      stringstream s;
+      s << "[" << _name << "]";
+      return s.str();
    }
 };
 
 template <class A, class S>
 class RuleBook : public Showable {
+public:
+   struct Rule {
+      const S *state1;
+      const A *action;
+      const S *state2;
+      Rule(const S *s1, const A *a, const S *s2) : state1(s1), action(a), state2(s2) {}
+   };
 private:
    map<const S*, size_t> _index_lookup;
    typedef boost::numeric::ublas::matrix< vector< A* > > TransitionTable;
    TransitionTable *_transition_table;
+   vector<Rule> _rule_list;
 public:
    RuleBook( const vector<S*> &states ) {
       typename vector<S*>::const_iterator iter;
@@ -153,8 +169,12 @@ public:
       size_t j = _index_lookup.find(state2)->second;
       TransitionTable &tt = *_transition_table;
       tt(i, j).push_back(action);
+      _rule_list.push_back(Rule(state1, action, state2));
    }
 
+   const vector<Rule> &GetRules() const {
+      return _rule_list;
+   }
 
    vector< pair<typename A::const_ptr, S* > > GetSuccessors( S* state );
 
@@ -190,7 +210,8 @@ public:
          row++;
       }
       return s.str();
-   };
+   }
+
 };
 
 template <class A, class S>
@@ -206,6 +227,14 @@ public:
    FiniteAutomaton(const vector<S*> &states, S *initial_state)
       : _states(states), _initial_state(initial_state), _rules(states) 
    { }
+
+   FiniteAutomaton(const FiniteAutomaton<A,S> &automaton) {
+      // TODO - needed ?
+      _states = automaton._states;
+      _initial_state = automaton._initial_state;
+      _rules = automaton._rules;
+   }
+
    virtual ~FiniteAutomaton() {
       typename vector<S*>::iterator iter;
       for ( iter = _states.begin(); iter != _states.end(); ++iter ) {
@@ -243,7 +272,47 @@ public:
 
       s << "RULES:" << endl << _rules.ToString() << endl;
       return s.str();
-   };
+   }
+
+
+   string ToDot() const {
+      /*
+         digraph finite_state_machine {
+         rankdir=LR;
+         size="8,5"
+         node [shape = doublecircle]; LR_0 LR_3 LR_4 LR_8;
+         node [shape = circle];
+         LR_0 -> LR_2 [ label = "SS(B)" ];
+         LR_0 -> LR_1 [ label = "SS(S)" ];
+         */
+
+      stringstream s;
+      s << "digraph automaton { " << endl
+        << "rankdir=LR;"          << endl
+        << "size=\"8,5\""         << endl;
+
+      typename vector<S*>::const_iterator state_iter;
+      for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
+         s << "node [shape = circle]; " << (*state_iter)->GetName() << endl;
+      }
+
+      typedef typename RuleBook<A,S>::Rule Rule;
+      const vector<Rule> &rules(_rules.GetRules());
+
+      typename vector<Rule>::const_iterator rule_iter;
+      for (rule_iter = rules.begin(); rule_iter != rules.end(); ++rule_iter) {
+         s << rule_iter->state1->GetName()
+           << " -> "
+           << rule_iter->state2->GetName()
+           << "[ label = \""
+           << rule_iter->action->ToString()
+           << "\" ];"
+           << endl;
+      }
+
+      return s.str();
+   }
+
 };
 
 class RegexBuilder {

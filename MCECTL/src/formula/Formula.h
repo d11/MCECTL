@@ -81,18 +81,18 @@ namespace Formula {
    // Abstract
    class AutomatonFormula : public BinaryFormula {
    private:
-      PDA::const_reference _automaton;
+      Automaton::const_reference _automaton;
    public:
       AutomatonFormula(
          Formula::const_reference before,
          Formula::const_reference after,
-         PDA::const_reference automaton
+         Automaton::const_reference automaton
       ) : BinaryFormula(before, after), _automaton(automaton) { }
       virtual ~AutomatonFormula() {};
 
       Formula::const_reference GetBefore() const { return GetLeft(); }
       Formula::const_reference GetAfter()  const { return GetRight(); }
-      PDA::const_reference GetAutomaton() const { return _automaton; }
+      Automaton::const_reference GetAutomaton() const { return _automaton; }
       virtual void Accept(Visitor &visitor) const = 0;
    };
 
@@ -101,7 +101,7 @@ namespace Formula {
       Until(
          Formula::const_reference before,
          Formula::const_reference after,
-         PDA::const_reference automaton
+         Automaton::const_reference automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
@@ -112,7 +112,7 @@ namespace Formula {
       Release(
          Formula::const_reference before,
          Formula::const_reference after,
-         PDA::const_reference automaton
+         Automaton::const_reference automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;

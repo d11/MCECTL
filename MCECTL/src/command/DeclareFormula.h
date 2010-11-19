@@ -79,7 +79,7 @@ namespace Command {
                Formula::Formula::reference before(*_current_formula);
                until.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               PDA::const_reference automaton(_environment.GetAutomaton(until.GetAutomatonName()));
+               Automaton::const_reference automaton(_environment.GetAutomaton(until.GetAutomatonName()));
                _current_formula = new Formula::Until( before, after, automaton );
             } 
             virtual void Visit(const AST::Formula::Release &release)         {
@@ -87,7 +87,7 @@ namespace Command {
                Formula::Formula::reference before(*_current_formula);
                release.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               PDA::const_reference automaton(_environment.GetAutomaton(release.GetAutomatonName()));
+               Automaton::const_reference automaton(_environment.GetAutomaton(release.GetAutomatonName()));
                _current_formula = new Formula::Until( before, after, automaton );
             } 
 

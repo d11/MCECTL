@@ -11,10 +11,12 @@
  */
 
 #include <vector>
+#include <string>
 using namespace std;
 #include "Command.h"
 #include "AST/Formula.h"
 #include "AST/Regex.h"
+#include "AST/TransitionSystem.h"
 #include "Automata.h"
 
 #include "CTL_Parse.hh"
