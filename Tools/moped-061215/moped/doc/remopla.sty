@@ -1,0 +1,418 @@
+\NeedsTeXFormat{LaTeX2e}[1996/06/01]
+\ProvidesPackage{remopla}
+
+\makeatletter
+
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{float}
+
+
+%% 
+%% This package contains:
+%% - backup of the original meaning of TeX characters
+%% - command sequences for Remopla operators
+%% - the 'bnfgrammar' environment and typesetting of non-terminals
+%% - the 'RemoplaSnippet' and 'RemoplaCode' verbatim environments
+%% - the 'SampleCode' floating environment
+%% - new special meaning of some characters
+%% 
+
+
+%%
+%% Tokens Backup
+%% 
+%% Special features of verbatim environments defined here require access to
+%% various categories of a single character at the same tine. Thus we have
+%% to backup the tokens into command sequences.
+%%
+
+\let\ogrp={             % category 1    open group
+\let\cgrp=}             % category 2    close group
+\catcode`\{=12
+\catcode`\}=12
+\let\lbrc={             % category 12   left brace
+\let\rbrc=}             % category 12   right brace
+\catcode`\{=1
+\catcode`\}=2
+
+\let\lbrk=[             % category 12   left bracket
+\let\rbrk=]             % category 12   right bracket
+\let\bar=|              % category 12   bar
+
+
+%%
+%% Remopla Operators 
+%% 
+%% Remopla Operators consist of characters that are asigned a special
+%% meaning in various environments of the document's source code. That is
+%% why command sequences for Remopla operators are defined which can safely
+%% be used in any context.
+%%
+%% The command sequences include space after the operators to avoid
+%% unnecessary space escaping.
+%%
+\begingroup
+    \catcode`\&=12
+    \catcode`\^=12
+    \gdef\bitlsh{{\tt <<} }%             'bitwise shift left' operator
+    \gdef\bitrsh{{\tt >>} }%             'bitwise shift right' operator
+    \gdef\bitor{{\tt |} }%               'bitwise or' operator
+    \gdef\bitxor{{\tt ^} }%              'bitwise exclusive or' operator
+    \gdef\bitand{{\tt &} }%              'bitwise and' operator
+    \gdef\boolor{{\tt ||} }%             'boolean or' operator
+    \gdef\boolxor{{\tt ^{}^} }%          'boolean xor' operator
+    \gdef\booland{{\tt &&} }%            'boolean and' operator
+    \gdef\booleq{{\tt <=>} }%            'boolean equivalence' operator
+    \gdef\remlt{{\tt <} }%               'less than' integer relation
+    \gdef\remle{{\tt <=} }%              'less than or equal' integer relation
+    \gdef\remeq{{\tt ==} }%              'equal' integer relation
+    \gdef\remne{{\tt !=} }%              'not equal' integer relation
+    \gdef\remge{{\tt >=} }%              'greater than or equal' integer relation
+    \gdef\remgt{{\tt >} }%               'greater than' integer relation
+\endgroup
+
+
+%%
+%% The 'bnfgrammar' Environment and Non-Terminals
+%% 
+%% The definition of the 'bnfgrammar' environment exploits low-level
+%% mechanisms of LaTeX. The environment definition is accomplished by
+%% definitions of two low-level macros: \bnfgrammar and \endbnfgammar. The
+%% environment is supported by several other macros all of which have
+%% a common prefix \bfn@.
+%% 
+%% Definitions of most macros must take place in a context with modified
+%% character categories. The story of character categories is as follows.
+%%
+%% Each LaTeX environment 'bnfgrammar' contains a list of rules. Each rule
+%% has one of the following two forms:
+%% 
+%% [non-terminal] \is right side with <non-terminals>\\
+%% <non-terminal> \is right side with <non-terminals>\\
+%%
+%% The first form represents a "primary" rule. The non-terminal in brackets
+%% defines a destination for hypertext links that are produced by
+%% non-terminals in angle brackets. Non-terminals in brackets must be
+%% document-wide unique.
+%%
+%% The second form represents a "secondary" rule. The idea behind secondary
+%% rules is to repeat rules for frequently used non-terminals so that
+%% a reader that cannot benefit from the hypertext structure would not have
+%% to look the corresponding rules up in the document by hand.
+%%
+%% The right side of a rule is treated as an ordinary text with some
+%% verbatim features. End of lines are obeyed and literal text is set in
+%% typewriter face. Braces are typeset by escaped characters \{ and \} and
+%% cause extra indentation of lines between the braces. The lower-than and
+%% greater-than signs are typeset by escaped characters \< and \>, too,
+%% because the plain use denotes a non-terminal. The right side can safely
+%% contain commands with arguments, namely the BNF opertors \zeromore,
+%% \onemore and \optional.
+%% 
+
+\newdimen\bnfgrammar@ntwidth
+
+% Color for Non-Terminals
+\definecolor{bnf}{rgb}{0,0,1}
+
+%% Handling active end of line character (^^M).
+\begingroup
+    \catcode`\^^M=13%
+    \gdef\bnf@obeylines{\catcode`\^^M=13\def^^M{\leavevmode\par}}%
+    \gdef\bnf@endrule#1^^M{\par}%
+    \gdef\bnf@discardline#1^^M{}%
+\endgroup
+
+%% Typesetting BNF expressions.
+\def\zeromore#1{$\hbox{#1}^\ast$}
+\def\onemore#1{$\hbox{#1}^+$}
+\def\optional#1{%
+    $\,\hbox{\normalfont\itshape\lbrk}\,$%
+    \hbox{#1}%
+    $\hbox{\normalfont\itshape\rbrk}\,$%
+}
+
+\begingroup
+    \catcode`\[=13
+    \catcode`\]=13
+    \catcode`\<=13
+    \catcode`\>=13
+
+    %% \begin{bnfgrammar}
+    \gdef\bnfgrammar{%
+        \par \medskip
+        \begingroup
+            % active characters (some are already; they're here for sure)
+            \catcode`\[=13
+            \catcode`\]=13
+            \catcode`\<=13
+            \catcode`\>=13
+            \bnf@obeylines
+            % meaning of active characters
+            \let[=\bnf@rule@primary
+            \let<=\bnf@rule@secondary
+            % typographical settings
+            \parindent=0pt\tt\frenchspacing
+            % discards the first active end of line
+            \bnf@discardline
+    }
+
+    %% \end{bnfgrammar}
+    \gdef\endbnfgrammar{%
+        \endgroup\vskip\baselineskip
+    }
+
+    %% Primary Grammar Rule (destination for links)
+    \gdef\bnf@rule@primary#1\is#2\\{%
+        \begingroup
+            \let[=\lbrk
+            \let]=\rbrk
+            \def\{{\leavevmode\advance\parindent by 2em\lbrc}%
+            \def\}{\advance\parindent by -2em\rbrc}%
+            \let<=\bnf@nonterminal
+            \let\or=\bnfor
+            % create link destination (#1 is terminated with ']')
+            \bnf@destination#1%
+            % typeset the left side of the rule
+            \leavevmode \bnf@left@primary#1#2\relax
+        \endgroup
+        \bnf@endrule
+    }
+    
+    %% Secondary Grammar Rule (repetition of a rule for transparency)
+    \gdef\bnf@rule@secondary#1\is#2\\{%
+        \begingroup
+            \let[=\lbrk
+            \let]=\rbrk
+            \def\{{\leavevmode\advance\parindent by 2em\lbrc}%
+            \def\}{\advance\parindent by -2em\rbrc}%
+            \let<=\bnf@nonterminal
+            \let\or=\bnfor
+            % typeset the left side of the rule
+            \leavevmode \bnf@left@secondary#1#2\relax
+        \endgroup
+        \bnf@endrule
+    }
+    
+    %% Hypertext Link Destination
+    \gdef\bnf@destination#1]{%
+        \pdfdest name {#1} fith\ignorespaces
+    }
+    
+    %% The Left Side of a Primary Rule
+    \gdef\bnf@left@primary#1]{%
+        \setbox0=\hbox{%
+            $\langle$%
+            {\rm #1}%
+            $\rangle$
+            $\rightarrow$
+        }%
+        \parindent=\wd0\relax
+        \box0\relax
+        \ignorespaces
+    }
+    
+    \catcode`\[=12
+    \catcode`\]=12
+    
+    %% The Left Side of a Secondary Rule
+    \gdef\bnf@left@secondary#1>{%
+        \setbox0=\hbox{%
+            $\langle$%
+            \pdfstartlink attr {/Border [0 0 0]} goto name{#1}%
+            \textcolor{bnf}{\rm #1}%
+            \pdfendlink
+            $\rangle$
+            $\rightarrow$
+        }%
+        \parindent=\wd0\relax
+        \box0\relax
+        \ignorespaces
+    }
+    
+    %% Non-Terminal
+    \gdef\bnf@nonterminal#1>{%
+        $\langle$%
+        \pdfstartlink attr {/Border [0 0 0]} goto name{#1}%
+        \textcolor{bnf}{\rm #1}%
+        \pdfendlink
+        $\rangle$%
+    }
+    
+    %% Rule Separator
+    \gdef\bnfor{%
+        \ifvmode
+            % \or at the beginning of a line - indents the line
+            \leavevmode\hbox{}\hskip-\parindent\hbox to 3em{\hfil\bnf@or@symbol}%
+            \parindent=3em
+        \else
+            % \or in the middle of a line - produces '| '
+            \bnf@or@symbol
+        \fi
+    }%
+    
+    %% Rule Separator Symbol
+    \gdef\bnf@or@symbol{\vrule height 1.7ex depth 0.4ex width 0.4pt\ }
+\endgroup
+
+
+%%
+%% Verbatim Environments
+%% 
+%% There are two verbatims environments. The 'RemoplaSnippet' envirnonment
+%% is meant for short pieces of code. Lines are not numbered in this
+%% envirnonment. The 'RemoplaCode' environment is meant for complex
+%% examples. This one should preferably be used in the 'SampleCode'
+%% floating environment.
+%%
+%% Both environments work as common verbatim environments with several
+%% exceptions. The '#' character has its Remopla meaning. Everything that
+%% follows this character up to the end of the line is considered a comment
+%% and set in italic. The '"' characters must be well-paired. They delimit
+%% statement labels.
+%%
+%% The '$' character has no special meaning in Remopla. So it keeps it
+%% common TeX meaning and delimits math mode. It might be of some use
+%% especially in comments.
+%%
+%% The backslash has a special meaning in Remopla neither. It keeps its
+%% common TeX meaning making it possible to use commands to format the
+%% code. However, braces cannot be used to delimit groups and arguments in
+%% verbatim environments. Only commands without arguments can safely be
+%% used.
+%%
+%% The \label command is redefined in the 'RemoplaCode' environment so that
+%% is can be used to label a line of code for further reference as usual.
+%%
+%% Unlike in the rest of the document, the '<' and '>' characters have no
+%% special meaning in verbatim environments. They just typeset the
+%% corresponding character.
+%% 
+
+%% Typesetting Comments
+\catcode`\#=12
+\let\hash=#
+\catcode`\#=13
+\def#{\hash\normalfont\itshape}
+\catcode`\#=6
+
+%% Setting Up the 'fancyverb' package
+\renewcommand\FancyVerbFormatLine[1]{\hskip4em#1}
+
+%% Verbatim Environment for Short Pieces of Code
+%% (lines are not numbered)
+\CustomVerbatimEnvironment{RemoplaSnippet}{Verbatim}
+    {baselinestretch=1.0,fontsize=\normalsize,%
+    codes={\catcode`\#=13\catcode`\$=3},%
+    gobble=4,numbersep=-2em}
+
+%% Verbatim Environment for Ready-to-Run Examples
+%% (lines are numbered)
+\CustomVerbatimEnvironment{RemoplaCode}{Verbatim}
+    {numbers=left,baselinestretch=0.8,fontsize=\small,%
+    codes={\catcode`\#=13\catcode`\$=3\catcode`\\=0},%
+    gobble=4,numbersep=-2em}
+
+%% Labeling Lines in the 'RemoplaCode' Environment
+\begingroup
+    \catcode`\{=12
+    \catcode`\}=12
+    \catcode`\[=1
+    \catcode`\]=2
+    \global\let\latex@label=\label
+    \gdef\verbatimlabel{#1}[\latex@label[#1]]
+\endgroup
+%% Labeling requires a bit of low-level magic because there is no clean way
+%% to redefine a command at the begining of a fancyverb environment. Well,
+%% it's not clean to redefine a LaTeX command anyway. :)
+\let\latex@RemoplaCode=\RemoplaCode
+\let\latex@endRemoplaCode=\endRemoplaCode
+\def\RemoplaCode{%
+    \begingroup
+    \let\label=\verbatimlabel
+    \latex@RemoplaCode
+}
+\def\endRemoplaCode{%
+    \latex@endRemoplaCode
+    \endgroup
+}
+
+
+%%
+%% Float Environment for Large Examples
+%% 
+%% We use the 'float' package to define a new floating environment
+%% 'SampleCodeFloat' based on which we define the final 'SampleCode'
+%% environment with adjusted spacing.
+
+\floatstyle{boxed}
+\newfloat{SampleCodeFloat}{htp}{lor}
+\floatname{SampleCodeFloat}{Sample Code}
+
+\newenvironment{SampleCode}{
+    \begin{SampleCodeFloat}
+    \medskip
+}{
+    \kern-\medskipamount
+    \end{SampleCodeFloat}
+}
+
+
+%%
+%% Active Characters
+%%
+
+%% Typesetting Labels
+%%
+%% Labels are enclosed in double quotation marks which must be well paired.
+%% This notation can be used in any context.
+%% 
+\catcode`\"=13
+\def"#1"{{\normalfont\tt\itshape #1}}
+
+%% Typesetting Non-Terminals
+%% 
+%% A nonterminal of the BNF grammar is always enclosed in lower-than and
+%% greater-than characters. Both characters are active and can be used with
+%% their common meaning in math mode only. If you need them elsewhere,
+%% escape them with backslash. If you need them in a tabbing environment,
+%% you are out of luck.
+%% 
+\let\<=<
+\let\>=>
+\catcode`\<=13
+\catcode`\>=13
+\def<{\ifmmode\<\else\expandafter\bnf@nonterminal\fi}
+\def>{\ifmmode\>\fi}
+
+%% Underscore vs. Subscript Constructor
+%%
+%% The '_' character constructs a subscript in TeX usually. We must allow
+%% it to occur in Remopla identifiers. The character is hence made active
+%% and constructs a subscript in the math mode and expands to the
+%% underscore elsewhere.
+%% 
+\let\usc@sub=_
+\catcode`\_=12
+\let\usc@char=_
+\catcode`\_=13
+\def_{\ifmmode\usc@sub\else\usc@char\fi}
+
+%% Caret vs. Superscript Constructor
+%%
+%% The '^' behaves exactly the same as the '_' character described above
+%% but constructs a superscript. This is not essential because carets form
+%% the XOR operators and Remopla and these operators should be typeset by
+%% dedicated command sequences anyway.
+%% 
+\let\crt@sup=^
+\catcode`\^=12
+\let\crt@char=^
+\catcode`\^=13
+\def^{\ifmmode\crt@sup\else\crt@char\fi}
+
+
+\makeatother
+\endinput
+%% end of package

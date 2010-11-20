@@ -77,14 +77,14 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
 ) {
 
    vector<KripkeState*> product_states;
-   KripkeState *k = new KripkeState(Valuation()); // Temp
+   KripkeState *k = new KripkeState("temp", Valuation()); // Temp
    product_states.push_back(k); // TEMP! 
 
    vector<KripkeState> system_states = _system.GetStates();
-   vector<DummyState>  automaton_states = automaton.GetStates();
+   vector<State>  automaton_states = automaton.GetStates();
 
    vector<KripkeState>::const_iterator system_state_iter;
-   vector<DummyState >::const_iterator  dummy_state_iter;
+   vector<State >::const_iterator  dummy_state_iter;
    for ( system_state_iter = system_states.begin(); system_state_iter != system_states.end(); ++system_state_iter ) {
       for ( dummy_state_iter = automaton_states.begin(); dummy_state_iter != automaton_states.end(); ++dummy_state_iter) {
          // TODO
@@ -97,8 +97,8 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
 void ModelChecker::Visit(const Formula::Until &until) {
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
-   const Automaton &a(until.GetAutomaton());
-   const PDA &automaton = static_cast<const PDA &>(a); // temp
+   const Automaton *a(until.GetAutomaton());
+   const PDA &automaton = *static_cast<const PDA *>(a); // temp
    // automata is a PDA - - TODO
 
    boost::shared_ptr<PushDownSystem> pds(ConstructProductSystem(automaton, before, after)); 

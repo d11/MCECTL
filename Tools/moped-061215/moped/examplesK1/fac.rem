@@ -1,0 +1,24 @@
+define DEFAULT_INT_BITS 5
+
+init main;
+
+module int fac(int n) {
+	
+	int n_1;
+	
+	if
+	:: n==1	->	return 1;
+	:: else	->	n_1 = fac(n-1);
+			return n*n_1;
+	fi;
+}
+
+module void main() {
+	
+	int r;
+	r = fac(4);
+	if
+	:: r==24	->	ok: goto ok;
+	:: else		->	error: goto error;
+	fi;
+}

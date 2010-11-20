@@ -24,13 +24,13 @@ using namespace std;
 
 typedef set<string> Valuation;
 
-class KripkeState : public Showable {
+class KripkeState : public State, Showable {
 private:
    Valuation _valuation;
 public:
    typedef const KripkeState &const_reference;
    typedef const KripkeState *const_ptr;
-   KripkeState(const Valuation &valuation) : _valuation(valuation) { }
+   KripkeState(const string &name, const Valuation &valuation) : State(name), _valuation(valuation) { }
 
    string ToString() const;
 };

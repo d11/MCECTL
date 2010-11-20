@@ -1,0 +1,39 @@
+# (expected answer is YES).
+
+
+define B 3		# number of bits used to represent integer variables
+define n 4		# number of elements in the array -- should be < 2^B
+define K 4		# size of array elements
+
+int a[1,n](K);
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void main() {
+	int w(B), j(B);
+
+	w = 1, j = 1;
+	do
+	:: (w == n) -> break;
+	:: ((w < n) && (j == n-w+1)) -> w = w+1, j = 1;
+	:: ((w < n) && (j != n-w+1)) -> if 
+		 	                 :: (a[j] > a[j+1]) -> a[j] = a[j+1], a[j+1] = a[j];
+		 			 :: (a[j] <=a[j+1]) -> break;
+    	             	 	         fi;
+					 j = j+1;
+ 	od;
+	if
+	:: (E s (1,n-1) a[s] > a[s+1]) -> goto error;
+	:: else			       -> goto ok;
+	fi;
+}
+	
+	
+// Corresponding procedure in pseudo syntax:
+// for i = 1 to n-1
+// 	for j = 1 to n-i
+//		if a[j] > a[j+1] swap
+

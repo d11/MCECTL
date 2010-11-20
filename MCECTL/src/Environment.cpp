@@ -40,12 +40,12 @@ Formula::Formula::const_reference Environment::GetFormula(const string &identifi
    return *(iter->second);
 };
 
-Automaton::const_reference Environment::GetAutomaton(const string &identifier) const {
+const Automaton *Environment::GetAutomaton(const string &identifier) const {
    map<string, const Automaton*>::const_iterator iter(_automata.find(identifier));
    if (iter == _automata.end()) {
       throw NonExistentAutomatonException(identifier);
    }
-   return *(iter->second);
+   return iter->second;
 };
 
 KripkeStructure::const_reference Environment::GetSystem(const string &identifier) const {
@@ -63,8 +63,8 @@ void Environment::SetFormula( const string &identifier, Formula::Formula::const_
    }
 }
 
-void Environment::SetAutomaton( const string &identifier, Automaton::const_reference automaton ) {
-   bool result = _automata.insert(make_pair(identifier, &automaton)).second;
+void Environment::SetAutomaton( const string &identifier, const Automaton *automaton ) {
+   bool result = _automata.insert(make_pair(identifier, automaton)).second;
    if (!result) {
       throw AlreadyExistsException(identifier);
    }
@@ -78,5 +78,18 @@ void Environment::SetSystem( const string &identifier, KripkeStructure::const_re
 }
 
 string Environment::ToString() const {
-   return "TODO";
+   stringstream s;
+   s << "AUTOMATA:" << endl;
+   map<string, const Automaton*>::const_iterator iter;
+   for( iter = _automata.begin(); iter != _automata.end(); ++iter ) {
+      s << "[" << iter->first << "]" << endl;
+   }
+   s << "FORMULAS:" << endl;
+   map<string, const Formula::Formula*>::const_iterator formula_iter;
+   for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
+      s << "[" << formula_iter->first << "]" << endl;
+   }
+   // TODO ?
+
+   return s.str();
 }

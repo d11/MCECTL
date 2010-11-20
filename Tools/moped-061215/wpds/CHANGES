@@ -1,0 +1,4 @@
+sat.c: wsUpdate
+wpdsInt.h: wWitnessNode
+	   wSat->special hinzugefuegt
+witness.c: wWNCreate

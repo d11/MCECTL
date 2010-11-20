@@ -37,11 +37,11 @@ public:
 	void  SetCheckResults(const KripkeStructure &transition_system, const CheckResults &results);
 
    Formula::Formula::const_reference GetFormula(const string &identifier)   const;
-   Automaton::const_reference			 GetAutomaton(const string &identifier) const;
+   const Automaton *GetAutomaton(const string &identifier) const;
    KripkeStructure::const_reference GetSystem(const string &identifier)    const;
 
    void SetFormula(  const string &identifier, Formula::Formula::const_reference formula );
-   void SetAutomaton( const string &identifier, Automaton::const_reference automaton );
+   void SetAutomaton( const string &identifier, const Automaton *automaton );
    void SetSystem(   const string &identifier, KripkeStructure::const_reference transition_system);
 
    virtual string ToString() const;

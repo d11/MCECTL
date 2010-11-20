@@ -1,0 +1,44 @@
+#!/bin/bash
+
+check ()
+{
+	if [ "$1" -eq "$2" ]
+	then
+		echo -n "" #  passed   "
+	else
+		echo -n " failed   "
+		exit 0
+	fi
+	return
+}
+
+func ()
+{
+	echo -n "$1 checking for error ... "
+	Start=`date +"%s"`.`date +"%N"`
+	./moped -A "$1" error >/dev/null
+        check $? 112
+	End=`date +"%s"`.`date +"%N"`
+	echo # "`echo "$End - $Start" | bc`"
+
+	echo -n "$1 checking for ok ... "
+	Start=`date +"%s"`.`date +"%N"`
+	./moped -A "$1" ok    >/dev/null
+	check $? 111
+	End=`date +"%s"`.`date +"%N"`
+	echo # "`echo "$End - $Start" | bc`"
+
+	return
+}
+st=`date +"%s"`
+for i in ./examplesK1/*.rem
+do
+	func $i
+done
+
+for i in ./examplesK2/*.rem
+do
+	func $i
+done
+en=`date +"%s"`
+echo "Total time: `echo "$en - $st" | bc` seconds"

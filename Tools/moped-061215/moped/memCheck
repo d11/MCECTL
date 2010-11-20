@@ -1,0 +1,36 @@
+#!/bin/bash
+
+check ()
+{
+	if [ "$1" -eq "$2" ]
+	then
+		echo "passed"
+	else
+		echo "failed"
+		exit 0
+	fi
+	return
+}
+
+func ()
+{
+	echo -n "$1" checking for error ...
+	./nm -A "$1" error | misc/chkmem.pl 0
+        check $? 0
+
+	echo -n "$1" checking for ok ...
+	./nm -A "$1" ok    | misc/chkmem.pl 0
+	check $? 0
+
+	return
+}
+
+for i in ./examplesK1/*.rem
+do
+	func $i
+done
+
+for i in ./examplesK2/*.rem
+do
+	func $i
+done

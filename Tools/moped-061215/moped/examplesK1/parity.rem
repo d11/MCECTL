@@ -1,0 +1,41 @@
+define K 5
+define DEFAULT_INT_BITS K
+define L 1
+define M (1<<K)-2
+
+init main;
+
+error: goto error;
+ok   : goto ok;
+
+module int par (int n) {
+	
+	int n_1, n_2;
+	int res1(L), res2(L), res3(L), result(L);
+	
+	if
+	:: n==0 -> return 0;
+	:: n==1 -> return 1;
+	:: else -> skip (n_1' + n_2' == n);
+		   res1   = par(n_1);
+		   res2   = par(n_2);
+	           if
+                   :: (res1 == 0) -> result = res2;
+		   :: else        -> result = 1-res2;
+		   fi;
+		   #res3   = res1+res2;
+		   #result = par(res3);
+		   #result = (res1+res2) - 2 * ((res1 + res2)/2);
+		   return result;
+	fi;
+}
+
+module void main() {
+	
+	int r(L);
+	r = par(M);
+	if
+	:: r==0	->	goto ok;
+	:: else	->	goto error;
+	fi;
+}

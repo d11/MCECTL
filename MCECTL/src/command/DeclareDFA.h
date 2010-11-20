@@ -15,59 +15,84 @@
 #include "Automata.h"
 #include "AST/TransitionSystem.h"
 
+#include <exception>
+
 namespace Command {
 
-   class DeclareDFACommand : public Command {
+   class DeclareAutomatonCommand : public Command {
       private:
          string _dfa_name;
-         const AST::DFA *_dfa;
+         const AST::Automaton *_dfa;
       public:
-         DeclareDFACommand(string name, const AST::DFA *dfa) : _dfa_name(name), _dfa(dfa) { }
+         DeclareAutomatonCommand(string name, const AST::Automaton *dfa) : _dfa_name(name), _dfa(dfa) { }
          virtual string ToString() const {
             stringstream s;
-            //s << "DFA " << _dfa_name << " { " << _dfa->ToString() << " }";
+
+            s << "Automaton " << _dfa_name << " { " << _dfa->ToString() << " }";
             return s.str();
          }
-         virtual void Execute(Environment &environment, GlobalOptions &options) const {
-            cout << "[DFA "  << _dfa_name << "]" << endl;
-            cout << "Declaring DFA... "  << ToString() << endl;
-            cout << "TODO" << endl;
+         Automaton *CreateDFA() const {
+            map<string, State*> state_map;
 
-            map<string, DummyState*> state_map;
+            const vector<const AST::State *> &ast_states(_dfa->GetStates());
+            vector<State*> states;
 
-            const vector<AST::DummyState> &ast_states(_dfa->GetStates());
-            vector<DummyState*> states;
-
-            vector<AST::DummyState>::const_iterator state_iter;
+            vector<const AST::State*>::const_iterator state_iter;
             for (state_iter = ast_states.begin(); state_iter != ast_states.end(); ++state_iter) {
-               const AST::DummyState &ast_state(*state_iter);
-               string name(ast_state.GetName());
-               DummyState *state(new DummyState(name));
-               state_map.insert( make_pair<string, DummyState*>(name, state) );
+               const AST::State *ast_state(*state_iter);
+               string name(ast_state->GetName());
+               State *state(new State(name));
+               state_map.insert( make_pair<string, State*>(name, state) );
                states.push_back(state);
             }
 
-            DummyState *initial_state = state_map.begin()->second; // TODO
+            State *initial_state = state_map.begin()->second; // TODO
 
-            DFA dfa(states, initial_state);
+            DFA *dfa = new DFA(states, initial_state);
 
-            const vector<AST::DFA::Rule> &ast_rules(_dfa->GetRules());
-            vector<AST::DFA::Rule>::const_iterator rule_iter;
+            const vector<AST::Automaton::Rule> &ast_rules(_dfa->GetRules());
+            vector<AST::Automaton::Rule>::const_iterator rule_iter;
             for (rule_iter = ast_rules.begin(); rule_iter != ast_rules.end(); ++rule_iter) {
-               const AST::DummyState    &ast_state1(rule_iter->state1);
-               const AST::DummyState    &ast_state2(rule_iter->state2);
-               const AST::RegularAction &ast_action(rule_iter->action);
-               DummyState *state1(state_map.find(ast_state1.GetName())->second);
-               DummyState *state2(state_map.find(ast_state2.GetName())->second);
-               RegularAction *action(new RegularAction(ast_action.GetName()));
-               dfa.AddRule(state1, action, state2);
+               const AST::State         *ast_state1(rule_iter->state1);
+               const AST::State         *ast_state2(rule_iter->state2);
+               // TODO unhack!!!
+               const AST::RegularAction *ast_action(static_cast<const AST::RegularAction *>(rule_iter->action));
+               State *state1(state_map.find(ast_state1->GetName())->second);
+               State *state2(state_map.find(ast_state2->GetName())->second);
+               RegularAction *action(new RegularAction(ast_action->GetName()));
+               dfa->AddRule(state1, action, state2);
+            }
+            return dfa;
+         }
+         virtual void Execute(Environment &environment, GlobalOptions &options) const {
+            cout << "[Automaton "  << _dfa_name << "]" << endl;
+            cout << "Declaring ... "  << ToString() << endl;
+
+            Automaton *automaton;
+
+            switch (_dfa->GetType()) {
+
+               case AST::Automaton::DFA:
+                  automaton = CreateDFA();
+                  break;
+               case AST::Automaton::LTS:
+                  throw runtime_error("not implemented");
+                  break;
+               case AST::Automaton::PDA:
+                  throw runtime_error("not implemented");
+                  break;
+               case AST::Automaton::PDS:
+                  throw runtime_error("not implemented");
+                  break;
+               default:
+                  throw runtime_error("Bad automaton type");
+                  break;
             }
 
-            environment.SetAutomaton( _dfa_name, dfa );
-            cout << dfa.ToString() << endl;
-            cout << dfa.ToDot() << endl;
+            environment.SetAutomaton( _dfa_name, automaton );
+            cout << automaton->ToString() << endl;
          }
-         virtual ~DeclareDFACommand() {
+         virtual ~DeclareAutomatonCommand() {
             delete _dfa;
          }
    };

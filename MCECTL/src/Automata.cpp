@@ -14,7 +14,7 @@
 #include "Automata.h"
 
 string EpsilonAction::ToString() const {
-   return "ê";
+   return "ε";
 }
 
 Automaton::~Automaton() { }

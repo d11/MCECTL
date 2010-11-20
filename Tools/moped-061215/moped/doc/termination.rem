@@ -1,0 +1,8 @@
+init main;
+
+module void main () {
+    int n(4);
+    n = 16;
+    not_reachable: skip; # this line is not reachable
+}
+

@@ -1,0 +1,47 @@
+define N 4
+define DEFAULT_INT_BITS N
+define M (1<<N) - 2
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void foo()
+{
+	int a[8];
+	int i, j;
+	
+	a[0] = 0,
+	a[1] = 1,
+	a[2] = 2,
+	a[3] = 3,
+	a[4] = 4,
+	a[5] = 5,
+	a[6] = 6,
+	a[7] = 7 ;
+#	a[8] = 8,
+#	a[9] = 9;
+
+	do
+	:: true -> skip (i'<8);
+		   skip (j'<8);
+		   a[i] = a[j] + 1;
+	:: true -> break;
+	od;
+}
+	
+
+module void main()
+{
+	int r1, r2;
+	r1 = 0, r2 = 0;
+
+	foo();
+
+	if
+	:: (r1 == r2)	-> goto ok;
+	:: else		-> goto error;
+	fi;
+}
+	

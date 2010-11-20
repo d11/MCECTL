@@ -1,0 +1,61 @@
+// the SLAM example from "Automatically Validating Temporal Safety Properties of Interfaces"
+
+define N 5
+
+define DEFAULT_INT_BITS N
+
+int lck;
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+
+module void AcquireSpinLock()
+{
+	if
+	:: lck == 0 -> lck = 1;
+	:: else     -> goto error;
+	fi;
+}
+
+module void ReleaseSpinLock()
+{
+	if
+	:: lck == 1 -> lck = 0;
+	:: else     -> goto error;
+	fi;
+}
+
+module void start()
+{
+	int nPackets, nPacketsOld;
+	lck = 0;	
+
+	loop:
+	AcquireSpinLock();
+	nPacketsOld = nPackets;
+	skip;
+	if
+	:: true -> skip;
+	           ReleaseSpinLock();
+	           skip;
+		   if
+	           :: true -> skip;
+		   :: true -> skip;
+		   fi;
+	           skip;
+		   nPackets = nPackets+1;
+	:: true -> skip;
+	fi;
+	if
+	:: nPackets != nPacketsOld -> goto loop;
+	:: else 		   -> skip;
+	fi;
+	ReleaseSpinLock();
+	goto ok;
+}
+
+main: 	start();
+	

@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  Show.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  10/11/10 14:04:54
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -38,6 +30,11 @@ namespace Command {
             return s + _identifier + ")" ;
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) const {
+				// :show() prints whole environment info
+				if (_identifier.empty()) {
+					cout << environment.ToString() << endl;
+					return;
+				}
             cout << "TODO" << endl;
          }
    };

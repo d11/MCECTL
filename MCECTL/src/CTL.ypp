@@ -16,6 +16,7 @@
 #include "command/LoadFile.h"
 #include "command/Null.h"
 #include "command/Show.h"
+#include "command/XShow.h"
 #include "command/Quit.h"
 #include "command/DeclareFormula.h"
 #include "command/DeclareDFA.h"
@@ -81,15 +82,24 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
    AST::Formula::Formula* formula_ref;
    Command::Command* command_ref;
    AST::Regex::Regex* regex_ref;
-   AST::DFA* dfa_ref;
+   AST::Automaton* automaton_ref;
    vector<std::string> *string_list;
    vector<Command::Command*> *command_list;
 }
 
-%token FORMULA_DECLARATION DFA_DECLARATION PDA_DECLARATION REGEX_DECLARATION LOAD SHOW QUIT
+// Declaration tokens
+%token FORMULA_DECLARATION 
+%token DFA_DECLARATION PDA_DECLARATION LTS_DECLARATION PDS_DECLARATION
+%token REGEX_DECLARATION 
+
+// Other command tokens
+%token LOAD SHOW XSHOW QUIT
 %token EMPTY LBRACE RBRACE LPAREN RPAREN
+
+// General identifier
 %token <string> IDENTIFIER 
 
+// Formula tokens
 %token FORMULA_FALSE FORMULA_TRUE
 %token FORMULA_LPAREN FORMULA_RPAREN
 %token FORMULA_LBRACKET FORMULA_RBRACKET
@@ -97,25 +107,27 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token FORMULA_A FORMULA_E FORMULA_U FORMULA_R FORMULA_G FORMULA_X 
 %token <string> FORMULA_PVAR
 
-%left REGEX_OR
-%left REGEX_SEQ
-%left REGEX_KLEENE
-%left REGEX_ANY
-%left REGEX_ACTION
-%left REGEX_LPAREN 
+// Regex tokens
+%left  REGEX_OR
+%left  REGEX_SEQ
+%left  REGEX_KLEENE
+%left  REGEX_ANY
+%left  REGEX_ACTION
+%left  REGEX_LPAREN 
 %right REGEX_RPAREN 
 
 %type <formula_ref> false true pvar not and or implication until release ax rule_formula
 %type <string> formula_automaton_name
 
-%type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_regex
-%type <string> formula_name dfa_name pda_name 
+%type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_lts declare_pds declare_regex
+%type <string> formula_name automaton_name
 
-%type <string> dfa_single_proposition dfa_action_name dfa_state_name
-%type <string_list> dfa_proposition_list
-%type <dfa_ref> rule_dfa dfa_component dfa_state dfa_action
+%type <string> single_proposition action_name state_name
+%type <string_list> proposition_list
+%type <automaton_ref> rule_dfa rule_lts rule_pda rule_pds rule_automaton
+%type <automaton_ref> automaton_component state kripke_state regular_action pushdown_action
 
-%type <command_ref> null_command load_command quit_command show_command
+%type <command_ref> null_command load_command quit_command show_command xshow_command
 %token <string> QUOTED
 %type <string> filename
 
@@ -162,7 +174,7 @@ cons_command_list:
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda | declare_regex | load_command | quit_command | show_command | null_command
+   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | null_command
    {
    };
 
@@ -182,6 +194,12 @@ show_command:
    SHOW LPAREN IDENTIFIER RPAREN
    {
       $$ = new ShowCommand($3);
+   }
+
+xshow_command:
+   XSHOW LPAREN IDENTIFIER RPAREN
+   {
+      $$ = new XShowCommand($3);
    }
 
 quit_command:
@@ -205,29 +223,45 @@ declare_formula:
    };
 
 declare_dfa:
-   DFA_DECLARATION dfa_name LBRACE rule_dfa RBRACE
+   DFA_DECLARATION automaton_name LBRACE rule_dfa RBRACE
    {
-      $$ = new DeclareDFACommand($2, $4);
-   };
-
-declare_regex:
-   REGEX_DECLARATION dfa_name LBRACE rule_regex RBRACE
-   {
-      $$ = new DeclareRegexCommand($2, $4);
+      string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(name, $4);
    };
 
 declare_pda:
-   PDA_DECLARATION pda_name LBRACE rule_pda RBRACE
+   PDA_DECLARATION automaton_name LBRACE rule_pda RBRACE
    {
+      string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(name, $4);
+   };
+
+declare_lts:
+   LTS_DECLARATION automaton_name LBRACE rule_lts RBRACE
+   {
+      string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(name, $4);
+   };
+
+declare_pds:
+   PDS_DECLARATION automaton_name LBRACE rule_pds RBRACE
+   {
+      string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(name, $4);
+   };
+
+declare_regex:
+   REGEX_DECLARATION automaton_name LBRACE rule_regex RBRACE
+   {
+      //string name($2); free($2);
+      $$ = new DeclareRegexCommand($2, $4);
+      free($2)
    };
 
 // REGULAR EXPRESSIONS
 
 rule_regex:
    regex_seq | regex_or | regex_kleene | regex_action | regex_any | parenthesised_regex
-   {
-   };
-
 
 parenthesised_regex:
    REGEX_LPAREN rule_regex REGEX_RPAREN %prec REGEX_LPAREN
@@ -267,42 +301,59 @@ regex_any:
       $$ = new AST::Regex::Any();
    };
 
-// DFA
+// AUTOMATA
 
-dfa_name:
+automaton_name:
    IDENTIFIER
+   { $$ = $1; };
+
+rule_dfa: rule_automaton
+   { $$ = $1; $$->SetType(AST::Automaton::DFA); };
+
+rule_lts: rule_automaton
+   { $$ = $1; $$->SetType(AST::Automaton::LTS); };
+
+rule_pda: rule_automaton
+   { $$ = $1; $$->SetType(AST::Automaton::PDA); };
+
+rule_pds: rule_automaton
+   { $$ = $1; $$->SetType(AST::Automaton::PDS); };
+
+rule_automaton: automaton_component
+   { $$ = $1; };
+
+rule_automaton: rule_automaton automaton_component
    {
-      $$ = $1;
+      AST::Automaton *main_automaton = $1;
+      AST::Automaton *to_add = $2;
+      main_automaton->Assimilate(to_add);
+      $$ = main_automaton;
    };
 
-rule_dfa: dfa_component
-   { 
-      $$ = $1;
-   };
+automaton_component:
+   state | kripke_state | regular_action | pushdown_action
+   { };
 
-rule_dfa: rule_dfa dfa_component
-   {
-      AST::DFA *main_dfa = $1;
-      AST::DFA *to_add = $2;
-      main_dfa->Assimilate(to_add);
-      $$ = main_dfa;
-   };
-
-dfa_component:
-   dfa_state | dfa_action
-   { // nothing
-   };
-
-dfa_state:
-   DFA_STATE DFA_LPAREN dfa_state_name DFA_COLON dfa_proposition_list DFA_RPAREN
+state:
+   DFA_STATE DFA_LPAREN state_name DFA_RPAREN
    {
       string state_name($3);
       free($3);
-      AST::DummyState state(state_name);
-      $$ = new AST::DFA(state);
+      AST::State *state = new AST::State(state_name);
+      $$ = new AST::Automaton(state);
    };
 
-dfa_proposition_list: dfa_single_proposition 
+kripke_state:
+   DFA_STATE DFA_LPAREN state_name DFA_COLON proposition_list DFA_RPAREN
+   {
+      string state_name($3);
+      free($3);
+      AST::KripkeState *state = new AST::KripkeState(state_name, *$5);
+      delete $5;
+      $$ = new AST::Automaton(state);
+   };
+
+proposition_list: single_proposition 
    {
       vector<string> *proposition_list = new vector<string>();
       proposition_list->push_back(string($1));
@@ -310,7 +361,7 @@ dfa_proposition_list: dfa_single_proposition
       $$ = proposition_list;
    };
 
-dfa_proposition_list: dfa_proposition_list DFA_COMMA dfa_single_proposition
+proposition_list: proposition_list DFA_COMMA single_proposition
    {
       vector<string> *proposition_list = $1;
       proposition_list->push_back(string($3));
@@ -318,14 +369,14 @@ dfa_proposition_list: dfa_proposition_list DFA_COMMA dfa_single_proposition
       $$ = proposition_list;
    };
 
-dfa_single_proposition:
+single_proposition:
    DFA_IDENTIFIER
    {
       $$ = $1;
    };
 
-dfa_action:
-   DFA_ACTION DFA_LPAREN dfa_action_name DFA_COLON dfa_state_name DFA_TRANSITION dfa_state_name DFA_RPAREN
+regular_action:
+   DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
    {
       string action_name($3);
       string state1_name($5);
@@ -333,31 +384,31 @@ dfa_action:
       free($3);
       free($5);
       free($7);
-      AST::DummyState state1(state1_name);
-      AST::DummyState state2(state2_name);
-      AST::RegularAction action(action_name);
-      $$ = new AST::DFA(state1, action, state2);
+      AST::State *state1 = new AST::State(state1_name);
+      AST::State *state2 = new AST::State(state2_name);
+      AST::RegularAction *action = new AST::RegularAction(action_name);
+      $$ = new AST::Automaton(state1, action, state2);
    };
 
-dfa_action_name:
+pushdown_action:
+   DFA_ACTION DFA_LPAREN action_name DFA_COLON DFA_RPAREN
+   {
+      // TODO!!
+   };
+
+action_name:
    DFA_IDENTIFIER
    {
       $$ = $1;
    };
 
-dfa_state_name:
+state_name:
    DFA_IDENTIFIER
    {
       $$ = $1;
    };
 
 // PUSHDOWN SYSTEMS
-
-pda_name:
-   IDENTIFIER
-   {
-      $$ = $1;
-   };
 
 rule_pda:
    {

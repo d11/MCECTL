@@ -1,0 +1,56 @@
+define N 7
+define DEFAULT_INT_BITS N
+define LIMIT 1<<N - 2
+
+int nc, crit;
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void alloc(int n, bool b)
+{
+	if
+	:: (!b) -> nc = nc+n;
+	:: else ->
+		if
+		:: (crit+n > LIMIT) -> goto error;
+		:: else -> crit = crit+n;
+		fi;
+	fi;
+}
+
+module void dealloc(int n, bool b)
+{
+	if
+	:: (!b) -> nc = nc-n;
+	:: else -> crit = crit-n;
+	fi;
+}
+
+module void main()
+{
+	int n1, n2;
+	crit = 0;
+	nc = 0;
+
+	do
+	:: true -> break;
+	:: true ->
+		skip (n1' == 1);
+		alloc(n1,true);
+		do
+		:: true -> break;
+		:: true ->
+			skip (n2' == 1);
+			alloc (n2,false);
+			if
+			:: true -> dealloc(n2,true);
+			:: true -> skip;
+			fi;
+		od;
+		dealloc(n1,true);
+	od;
+}
+	

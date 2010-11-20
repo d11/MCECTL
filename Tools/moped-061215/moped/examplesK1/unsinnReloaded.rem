@@ -1,0 +1,94 @@
+// the quicksort part is irrelevant for the property to be checked
+
+define N 3
+define M 4#(1<<N) - 2
+define DEFAULT_INT_BITS N
+
+int a[1,M];
+int b[1,M];
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void qsA(int left, int right)
+{
+	int eq, lo, hi, piv;
+	if
+	:: (left >= right) -> return;
+	:: else		   -> eq = left, lo = left, hi = right, piv = a[right];
+	fi;
+
+	do
+	:: ((lo <= hi) && (a[hi] > piv))	-> hi = hi - 1;
+	:: ((lo <= hi) && (a[hi] < piv))	-> eq = eq + 1,
+						   lo = lo + 1,
+						   a[eq] = a[hi],
+						   a[lo] = a[eq],
+						   a[hi] = a[lo];
+	:: ((lo <= hi) && (a[hi] == piv))	-> lo = lo + 1,
+						   a[lo] = a[hi],
+						   a[hi] = a[lo];
+	:: (lo == hi + 1) 			-> qsA(left, eq-1);
+						   break;
+	od;
+
+	qsA(lo, right);
+
+	return;
+}
+
+module void qsB(int left, int right)
+{
+	int eq, lo, hi, piv;
+	if
+	:: (left >= right) -> return;
+	:: else		   -> eq = left, lo = left, hi = right, piv = b[right];
+	fi;
+
+	do
+	:: ((lo <= hi) && (b[hi] > piv))	-> hi = hi - 1;
+	:: ((lo <= hi) && (b[hi] < piv))	-> eq = eq + 1,
+						   lo = lo + 1,
+						   b[eq] = b[hi],
+						   b[lo] = b[eq],
+						   b[hi] = b[lo];
+	:: ((lo <= hi) && (b[hi] == piv))	-> lo = lo + 1,
+						   b[lo] = b[hi],
+						   b[hi] = b[lo];
+	:: (lo == hi + 1) 			-> qsB(left, eq-1);
+						   break;
+	od;
+
+	qsB(lo, right);
+
+	return;
+}
+
+module int one()
+{
+	int n;
+	int eins;
+	eins = 1;
+	#n = 1<<N - 2;
+	do
+	:: (n>0)  -> n = n-1;
+	:: (n==0) -> break;
+	od;
+	return eins;
+}
+
+module void start()
+{
+	int bit(1);
+	qsA(1,M);
+	bit = one();
+	qsB(1,M);
+	if
+	:: (bit == 1) 	-> goto ok;
+	:: else		-> goto error;
+	fi;
+}
+main: 	start();
+	

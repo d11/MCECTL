@@ -1,0 +1,75 @@
+define N  7
+define DEFAULT_INT_BITS N
+define EOF 1<<N - 2
+
+struct file {
+	bool opened;
+	int position;
+};
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module struct file open(struct file f)
+{
+	if
+	:: (f.opened) -> goto error;
+	:: else       -> skip;
+	fi;
+	f.opened = true;
+	f.position = 0;
+	return f;
+}
+
+module struct file close(struct file f)
+{
+	if
+	:: (!f.opened) -> goto error;
+	:: else        -> skip;
+	fi;
+	f.opened = false;
+	return f;
+}
+
+module struct file write(struct file f)
+{
+	if
+	:: (!f.opened) -> goto error;
+	:: else        -> skip;
+	fi;
+	skip;
+	f.position = f.position + 1;
+	return f;
+}
+
+module struct file read(struct file f)
+{
+	if
+	:: (!f.opened) -> goto error;
+	:: else        -> skip;
+	fi;
+	skip;
+	f.position = f.position + 1;
+	return f;
+}
+
+module void main()
+{
+	struct file f1,f2;
+	f1.opened = false;
+	f2.opened = false;
+	f1 = open(f1);
+	do
+	:: true -> break;
+	:: true -> f2 = open(f2);
+		   do
+		   :: (f2.position == EOF) -> break;
+		   :: else -> f2 = read(f2); f1 = write(f1);
+		   od;
+		   f2 = close(f2);
+	od;
+	f1 = close(f1);
+	goto ok;
+}
+	

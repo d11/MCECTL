@@ -31,6 +31,7 @@ class Automaton : public Showable {
 public:
    typedef Automaton &reference;
    typedef const Automaton &const_reference;
+   virtual string ToDot() const = 0;
    virtual ~Automaton() = 0;
 };
 
@@ -126,11 +127,11 @@ public:
    string ToString() const;
 };
 
-class DummyState {
+class State {
 private:
    string _name;
 public:
-   DummyState(const string &name) : _name(name) {}
+   State(const string &name) : _name(name) {}
    const string &GetName() const { return _name; }
    string ToString() const {
       stringstream s;
@@ -276,15 +277,6 @@ public:
 
 
    string ToDot() const {
-      /*
-         digraph finite_state_machine {
-         rankdir=LR;
-         size="8,5"
-         node [shape = doublecircle]; LR_0 LR_3 LR_4 LR_8;
-         node [shape = circle];
-         LR_0 -> LR_2 [ label = "SS(B)" ];
-         LR_0 -> LR_1 [ label = "SS(S)" ];
-         */
 
       stringstream s;
       s << "digraph automaton { " << endl
@@ -293,7 +285,13 @@ public:
 
       typename vector<S*>::const_iterator state_iter;
       for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
-         s << "node [shape = circle]; " << (*state_iter)->GetName() << endl;
+         s << "node [shape = circle"; //s << "doublecircle";
+         s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
+         s << (*state_iter)->GetName() << endl;
+         if (*state_iter == _initial_state) {
+            s << "null [shape = plaintext label=\"\"]" << endl
+              << "null -> " << (*state_iter)->GetName() << endl;
+         }
       }
 
       typedef typename RuleBook<A,S>::Rule Rule;
@@ -310,6 +308,7 @@ public:
            << endl;
       }
 
+      s << "}" << endl;
       return s.str();
    }
 
@@ -320,13 +319,13 @@ class RegexBuilder {
 };
 
 // Deterministic Finite Automaton
-typedef FiniteAutomaton<RegularAction,           DummyState>  DFA;
+typedef FiniteAutomaton<RegularAction,           State>  DFA;
 
 // Non-determinic Finite Automaton
-typedef FiniteAutomaton<NondeterministicAction,  DummyState>  NFA;
+typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
 
 // Deterministic Push Down Automaton
-typedef FiniteAutomaton<PushDownAction,          DummyState>  PDA;
+typedef FiniteAutomaton<PushDownAction,          State>  PDA;
 
 //template <class T>
 //class DFA {
@@ -402,13 +401,7 @@ typedef FiniteAutomaton<PushDownAction,          DummyState>  PDA;
 //   void Kleene() { }
 //};
 //
-//class DFABasic : public DFA<DummyState> {
-//
-//   public:
-//   DFABasic(string &action) : DFA<DummyState>(action) { }
-//};
 
-//typedef DFABasic *dfa_ref;
 
 
 #endif

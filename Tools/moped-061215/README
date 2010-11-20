@@ -1,0 +1,131 @@
+This archive contains the source code for the model-checker Moped,
+version 2.0. Moped is a reachability checker for pushdown systems.
+
+Version 2.0 of Moped is a complete re-implementation of Moped, based
+on the weighted pushdown library. It features a new input language
+called Remopla (similar to Promela) comprising explicit procedures.
+Moreover, a scheme for automatic abstraction can be employed, following
+the CEGAR paradigm (CounterExample-Guided Abstraction Refinement).
+
+While Moped version 1 had both reachability and LTL model checking,
+version 2 contains only reachability checking as of now. LTL model
+checking will be added later, and until then version 1 will still
+be made available.
+
+This document will tell you how to compile the checker (see the sections
+"Prerequisites" and "Building"), and how to use it (see the "Usage" and
+"Input format" section).
+
+
+** Required libraries **
+
+Moped requires the CUDD library by Fabio Somenzi. The latest release
+(at the time of writing) is included in this package. However, you
+might want to check CUDD's homepage for later versions:
+
+	http://vlsi.colorado.edu/~fabio/
+
+Moped also requires the Weighted Pushdown Library (wpds), also included
+in this package. The wpds homepage is at
+
+	http://www.fmi.uni-stuttgart.de/szs/tools/wpds
+
+
+** Building **
+
+To compile, use the following instructions:
+1) type "tar xvzf cudd-2.4.1.tar.gz"
+2) type "make" in cudd-2.4.1
+3) type "mkdir lib" in cudd-2.4.1
+4) type "cp */lib* lib" in cudd-2.4.1
+5) type "make" in wpds
+6) type "make" in moped
+
+After these steps, you should obtain an executable called "moped"
+in the moped directory.
+
+** Usage **
+
+The usage of the checker is as follows:
+
+	moped [-<options>] <modelfile> <label>
+
+<modelfile> should be a pushdown system in Remopla (see the .rem files
+in examples) or a boolean program.
+
+<label> is a label inside the <modelfile> that is checked for
+reachability.
+
+The options of Moped are as follows:
+ 
+-A: enable abstraction according to a CEGAR approach. This option is
+    described in
+
+    Stefan Kiefer. Abstraction refinement for pushdown
+    systems. Master's thesis, Universität Stuttgart, 2005.
+    http://www.fmi.uni-stuttgart.de/szs/publications/info/kiefersn.Kie05.shtml
+
+    and in
+
+    Javier Esparza, Stefan Kiefer, and Stefan Schwoon. Abstraction
+    refinement with Craig interpolation and symbolic pushdown systems.
+    In Holger Hermanns and Jens Palsberg, editors, Proceedings of the 12th
+    International Conference on Tools and Algorithms for the Construction
+    and Analysis of Systems (TACAS), volume 3920 of Lecture Notes in
+    Computer Science, pages 489-503, Vienna, Austria, 2006.
+    http://www.fmi.uni-stuttgart.de/szs/publications/info/kiefersn.EKS06b.shtml
+
+-b: check a boolean program (<label> may be omitted if this option is given)
+-B: use pre* method (backwards)
+-T: Uses a different method for generating counterexamples that may lead
+    to shorter counterexamples at some memory cost.
+
+
+** Input format **
+
+Moped model-checks Remopla programs and boolean programs. See the
+example directory for examples of Remopla programs.
+
+
+** History **
+
+29.07.2005:
+	Initial release
+
+16.05.2006: 
+	Added pre* method (-B) and boolean programs (-b)
+	New method for generating shorter counterexamples (-T)
+	Some functionality for DPNs
+
+17.05.2006:
+	Fixed a referencing bug in bddTrace.c.
+	(Thanks to Jan Holecek for the report.)
+
+31.05.2006:
+	pre* (the -B option) returned false counterexamples; fixed.
+	(Thanks to Jonathon Giffin for the report).
+
+28.09.2006:
+	Fixed a bug that caused incorrect hash insertions.
+	(Thanks to Akash Lal for report and bugfix!)
+
+15.12.2006:
+	Maintenance release with some bugfixes.
+	Added options -B2 and -F2 for faster pre*/post* computations
+		in some cases (preliminary).
+	Procedures can now be called with undef as parameters.
+
+** Contact **
+
+The Moped homepage is at
+
+	http://www.fmi.uni-stuttgart.de/szs/tools/moped/
+
+Moped is currently maintained by the following people:
+
+	Stefan Schwoon (schwoosn@fmi.uni-stuttgart.de)
+		- model-checking algorithms
+	Stefan Kiefer (kiefersn@fmi.uni-stuttgart.de)
+		- abstraction refinement
+	Dejvuth Suwimonteerabuth (suwimodh@fmi.uni-stuttgart.de)
+		- Remopla language

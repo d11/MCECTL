@@ -30,7 +30,7 @@ namespace Command {
          string _identifier;
          AST::Regex::Regex *_regex;
       public:
-         DeclareRegexCommand(string name, AST::Regex::Regex *regex)
+         DeclareRegexCommand(const string &name, AST::Regex::Regex *regex)
             : _identifier(name), _regex(regex) { } 
          virtual string ToString() const {
             stringstream s;

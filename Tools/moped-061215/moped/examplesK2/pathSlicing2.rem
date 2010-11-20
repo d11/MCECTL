@@ -1,0 +1,41 @@
+# (expected answer is YES).
+
+define N 7
+define DEFAULT_INT_BITS N
+define K 50
+define L 10
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void main() {
+	int i,j,k,c,d,e;
+
+	c = 0;
+	i = 0;
+loop1:	do
+	:: (i < K) -> skip; c = c+1; l1: i = i+1;
+	:: (i >=K) -> break;
+	od;
+
+setd:	d = 0;
+setj:	j = 0;
+loop2:	do
+	:: (j < L) -> skip; l21: d = d+1; l22: j = j+1;
+	:: (j >=L) -> break;
+	od;
+
+	e = 0;
+	k = 0;
+loop3:	do
+	:: (k < K) -> skip; e = e+1; l3: k = k+1;
+	:: (k >=K) -> break;
+	od;
+
+	if
+	:: (d != L) ->  goto error;
+	:: else -> goto ok;
+	fi;
+}

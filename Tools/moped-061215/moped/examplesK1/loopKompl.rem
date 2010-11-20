@@ -1,0 +1,28 @@
+define DEFAULT_INT_BITS 5
+
+init main;
+
+ok:	goto ok;
+error:	goto error;
+
+
+module void main() {
+	int i;
+	int j;
+	int g;
+
+	i = 0;
+	j = g;
+	do
+	:: (i+j != g)   -> goto error;
+	:: (i >=g)	-> break;
+	:: (i < g)	-> i = i+1; j = j-1;
+	od;
+
+	if
+	:: (j != 0)	-> goto error;
+	:: else		-> goto ok;
+	fi;
+
+}
+	

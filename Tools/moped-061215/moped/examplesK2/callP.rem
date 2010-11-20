@@ -1,0 +1,28 @@
+define N 5
+define DEFAULT_INT_BITS N
+define M (1<<N) - 2
+
+init main;
+
+error:	goto error;
+ok:	goto ok;
+
+module void foo(int x)
+{
+	do
+	:: (x>0)	-> x = x-1;
+	:: else		-> break;
+	od;
+
+	if
+	:: (x == 0)	-> goto ok;
+	:: else		-> goto error;
+	fi;
+}
+	
+
+module void main()
+{
+	foo(M);
+}
+	

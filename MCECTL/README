@@ -3,13 +3,11 @@ by Dan Horgan
 
 1. Dependencies
 
-   Build:
-      * CMake
-      * Flex, Bison
-      * boost::shared_ptr
-
-   Runtime:
-      * GNU Readline
+   * CMake (>= 2.8 ?)
+   * Flex, Bison
+   * GNU Readline
+   * boost::shared_ptr
+   * boost::numeric::ublas
 
 2. Compilation
 

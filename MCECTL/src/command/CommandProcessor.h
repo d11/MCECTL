@@ -26,6 +26,7 @@ public:
    void ExecuteCommand( const Command::Command &command ) {
       cout << "Executing command: " << command.ToString() << endl;
       command.Execute(_environment, _global_options);
+      delete &command;
    }
    void ExecuteCommandList( const vector<Command::CommandRef> &commands) {
       vector<Command::CommandRef>::const_iterator iter;

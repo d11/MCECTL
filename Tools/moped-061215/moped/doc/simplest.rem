@@ -1,0 +1,16 @@
+# constant definitions
+define DEFAULT_INT_BITS 4
+
+# global declarations
+module void main();
+
+# initial configuration
+init main;
+
+# model body
+
+ok: goto ok;
+
+module void main () {
+    goto ok;
+}
