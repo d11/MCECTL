@@ -49,7 +49,7 @@ namespace AST {
          private:
             string _action_name;
          public:
-            Action(string action_name) : _action_name(action_name) { }
+            Action(const string &action_name) : _action_name(action_name) { }
             virtual string ToString() const {
                string tmp("[ACTION ");
                return tmp + _action_name + "]";

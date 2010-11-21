@@ -93,3 +93,16 @@ string Environment::ToString() const {
 
    return s.str();
 }
+
+Environment::~Environment() {
+
+   map<string, const Automaton*>::const_iterator iter;
+   for( iter = _automata.begin(); iter != _automata.end(); ++iter ) {
+      delete iter->second;
+   }
+   map<string, const Formula::Formula*>::const_iterator formula_iter;
+   for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
+      delete formula_iter->second;
+   }
+   // TODO ?
+}

@@ -21,20 +21,20 @@ namespace Command {
 
    class DeclareAutomatonCommand : public Command {
       private:
-         string _dfa_name;
-         const AST::Automaton *_dfa;
+         string _automaton_name;
+         const AST::Automaton *_ast_automaton;
       public:
-         DeclareAutomatonCommand(string name, const AST::Automaton *dfa) : _dfa_name(name), _dfa(dfa) { }
+         DeclareAutomatonCommand(const string &name, const AST::Automaton *dfa) : _automaton_name(name), _ast_automaton(dfa) { }
          virtual string ToString() const {
             stringstream s;
 
-            s << "Automaton " << _dfa_name << " { " << _dfa->ToString() << " }";
+            s << "Automaton " << _automaton_name << " { " << _ast_automaton->ToString() << " }";
             return s.str();
          }
          Automaton *CreateDFA() const {
             map<string, State*> state_map;
 
-            const vector<const AST::State *> &ast_states(_dfa->GetStates());
+            const vector<const AST::State *> &ast_states(_ast_automaton->GetStates());
             vector<State*> states;
 
             vector<const AST::State*>::const_iterator state_iter;
@@ -50,7 +50,7 @@ namespace Command {
 
             DFA *dfa = new DFA(states, initial_state);
 
-            const vector<AST::Automaton::Rule> &ast_rules(_dfa->GetRules());
+            const vector<AST::Automaton::Rule> &ast_rules(_ast_automaton->GetRules());
             vector<AST::Automaton::Rule>::const_iterator rule_iter;
             for (rule_iter = ast_rules.begin(); rule_iter != ast_rules.end(); ++rule_iter) {
                const AST::State         *ast_state1(rule_iter->state1);
@@ -65,12 +65,12 @@ namespace Command {
             return dfa;
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) const {
-            cout << "[Automaton "  << _dfa_name << "]" << endl;
+            cout << "[Automaton "  << _automaton_name << "]" << endl;
             cout << "Declaring ... "  << ToString() << endl;
 
             Automaton *automaton;
 
-            switch (_dfa->GetType()) {
+            switch (_ast_automaton->GetType()) {
 
                case AST::Automaton::DFA:
                   automaton = CreateDFA();
@@ -89,11 +89,11 @@ namespace Command {
                   break;
             }
 
-            environment.SetAutomaton( _dfa_name, automaton );
+            environment.SetAutomaton( _automaton_name, automaton );
             cout << automaton->ToString() << endl;
          }
          virtual ~DeclareAutomatonCommand() {
-            delete _dfa;
+            delete _ast_automaton;
          }
    };
 

@@ -20,7 +20,7 @@ using namespace std;
 #include "Automata.h"
 
 #include "CTL_Parse.hh"
-#include <string.h>
+//#include <string.h>
 
 //extern YYLTYPE yylloc;
 //#define YY_USER_INIT yylloc.first_line=1;
@@ -68,15 +68,15 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 \(          return LPAREN;
 \)          return RPAREN;
 
-[a-z_]+      {
-   yylval.string=strdup(yytext); 
+[a-z_][a-z_1-9]*      {
+   yylval.string=new string(yytext); 
    return IDENTIFIER;
 }
 
 <formula>0        return FORMULA_FALSE; /* Propositional syntax */
 <formula>1        return FORMULA_TRUE;
 
-<formula>[a-z_]+  { yylval.string=strdup(yytext); return FORMULA_PVAR; }
+<formula>[a-z_][a-z_1-9]*  { yylval.string=new string(yytext); return FORMULA_PVAR; }
 <formula>!        return FORMULA_NOT;
 <formula>\&       return FORMULA_AND;
 <formula>\|       return FORMULA_OR;
@@ -100,8 +100,8 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <regex>\.         return REGEX_ANY;
 <regex>\*         return REGEX_KLEENE;
 <regex>;          return REGEX_SEQ;
-<regex>[a-z_]+    {
-   yylval.string=strdup(yytext); 
+<regex>[a-z_][a-z_1-9]*    {
+   yylval.string=new string(yytext); 
    return REGEX_ACTION;
 }
 <regex>[ \t\n]+    /* Ignore whitespace */
@@ -113,8 +113,8 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <automaton>,            return DFA_COMMA;
 <automaton>ACTION       return DFA_ACTION;
 <automaton>->           return DFA_TRANSITION;
-<automaton>[a-z_]+      {
-   yylval.string=strdup(yytext); 
+<automaton>[a-z_][a-z_1-9]*      {
+   yylval.string= new string (yytext); 
    return DFA_IDENTIFIER;
 }
 <automaton>[ \t\n]+    /* Ignore whitespace */
@@ -136,10 +136,9 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 BEGIN(INITIAL); /* Comment end */
 
 \"(\\.|[^\"])*\"  { /* Quoted strings */
-   int length = strlen(yytext) - 2;
-   char *buf = (char*)malloc((length+1)*sizeof(char)); // TODO use new 
-   yylval.string = strncpy(buf, yytext+sizeof(char), length);
-   yylval.string[length] = '\0';
+   string s(yytext);
+   size_t length = strlen(yytext) - 2;
+   yylval.string = new string(s.substr(1,length));
    return QUOTED;
 }
 

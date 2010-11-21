@@ -78,7 +78,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 
 %union 
 {
-   char *string;
+   std::string *string;
    AST::Formula::Formula* formula_ref;
    Command::Command* command_ref;
    AST::Regex::Regex* regex_ref;
@@ -130,6 +130,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %type <command_ref> null_command load_command quit_command show_command xshow_command
 %token <string> QUOTED
 %type <string> filename
+%type <string> show_item 
 
 %token <string> REGEX_ACTION
 %type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
@@ -187,19 +188,32 @@ null_command:
 load_command:
    LOAD LPAREN filename RPAREN
    {
-      $$ = new LoadFile($3);
+      $$ = new LoadFile(*$3);
+      delete $3;
    };
 
 show_command:
-   SHOW LPAREN IDENTIFIER RPAREN
+   SHOW LPAREN show_item RPAREN
    {
-      $$ = new ShowCommand($3);
+      $$ = new ShowCommand(*$3);
+      delete $3;
+   }
+
+show_item: IDENTIFIER
+   {
+      $$ = $1;
+   }
+
+show_item: 
+   {
+      $$ = new string("");
    }
 
 xshow_command:
    XSHOW LPAREN IDENTIFIER RPAREN
    {
-      $$ = new XShowCommand($3);
+      $$ = new XShowCommand(*$3);
+      delete $3;
    }
 
 quit_command:
@@ -219,43 +233,49 @@ filename:
 declare_formula:
    FORMULA_DECLARATION formula_name LBRACE rule_formula RBRACE
    {
-      $$ = new DeclareFormulaCommand($2, *$4);
+      $$ = new DeclareFormulaCommand(*$2, *$4);
+      delete $2;
    };
 
 declare_dfa:
    DFA_DECLARATION automaton_name LBRACE rule_dfa RBRACE
    {
-      string name($2); free($2);
-      $$ = new DeclareAutomatonCommand(name, $4);
+      //string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(*$2, $4);
+      delete $2;
    };
 
 declare_pda:
    PDA_DECLARATION automaton_name LBRACE rule_pda RBRACE
    {
-      string name($2); free($2);
-      $$ = new DeclareAutomatonCommand(name, $4);
+      //.string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(*$2, $4);
+      delete $2;
    };
 
 declare_lts:
    LTS_DECLARATION automaton_name LBRACE rule_lts RBRACE
    {
-      string name($2); free($2);
-      $$ = new DeclareAutomatonCommand(name, $4);
+      //.string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(*$2, $4);
+      delete $2;
    };
 
 declare_pds:
    PDS_DECLARATION automaton_name LBRACE rule_pds RBRACE
    {
-      string name($2); free($2);
-      $$ = new DeclareAutomatonCommand(name, $4);
+      //.string name($2); free($2);
+      $$ = new DeclareAutomatonCommand(*$2, $4);
+      delete $2;
    };
 
 declare_regex:
    REGEX_DECLARATION automaton_name LBRACE rule_regex RBRACE
    {
       //string name($2); free($2);
-      $$ = new DeclareRegexCommand($2, $4);
-      free($2)
+      $$ = new DeclareRegexCommand(*$2, $4);
+      delete $2;
+      //free($2)
    };
 
 // REGULAR EXPRESSIONS
@@ -290,9 +310,10 @@ regex_kleene:
 regex_action:
    REGEX_ACTION
    { 
-      string action($1);
-      $$ = new AST::Regex::Action(action);
-      free($1);
+      //string action($1);
+      $$ = new AST::Regex::Action(*$1);
+      delete $1;
+      //free($1);
    };
 
 regex_any:
@@ -337,18 +358,19 @@ automaton_component:
 state:
    DFA_STATE DFA_LPAREN state_name DFA_RPAREN
    {
-      string state_name($3);
-      free($3);
-      AST::State *state = new AST::State(state_name);
+      //string state_name($3);
+      //free($3);
+      AST::State *state = new AST::State(*$3);
       $$ = new AST::Automaton(state);
    };
 
 kripke_state:
    DFA_STATE DFA_LPAREN state_name DFA_COLON proposition_list DFA_RPAREN
    {
-      string state_name($3);
-      free($3);
-      AST::KripkeState *state = new AST::KripkeState(state_name, *$5);
+      //string state_name($3);
+      //free($3);
+      AST::KripkeState *state = new AST::KripkeState(*$3, *$5);
+      delete $3;
       delete $5;
       $$ = new AST::Automaton(state);
    };
@@ -356,16 +378,18 @@ kripke_state:
 proposition_list: single_proposition 
    {
       vector<string> *proposition_list = new vector<string>();
-      proposition_list->push_back(string($1));
-      free($1);
+      proposition_list->push_back(*$1);
+      delete $1;
+     // free($1);
       $$ = proposition_list;
    };
 
 proposition_list: proposition_list DFA_COMMA single_proposition
    {
       vector<string> *proposition_list = $1;
-      proposition_list->push_back(string($3));
-      free($3);
+      proposition_list->push_back(*$3);
+      delete $3;
+      //free($3);
       $$ = proposition_list;
    };
 
@@ -378,15 +402,18 @@ single_proposition:
 regular_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
    {
-      string action_name($3);
-      string state1_name($5);
-      string state2_name($7);
-      free($3);
-      free($5);
-      free($7);
-      AST::State *state1 = new AST::State(state1_name);
-      AST::State *state2 = new AST::State(state2_name);
-      AST::RegularAction *action = new AST::RegularAction(action_name);
+      //string action_name($3);
+      //string state1_name($5);
+      //string state2_name($7);
+      //free($3);
+      //free($5);
+      //free($7);
+      AST::State *state1 = new AST::State(*$5);
+      AST::State *state2 = new AST::State(*$7);
+      AST::RegularAction *action = new AST::RegularAction(*$5);
+      delete($3);
+      delete($5);
+      delete($7);
       $$ = new AST::Automaton(state1, action, state2);
    };
 
@@ -445,9 +472,10 @@ true:
 pvar:
    FORMULA_PVAR
    {
-      string name($1);
-      $$ = new AST::Formula::PVar(name);
-      free($1);
+      //string name($1);
+      $$ = new AST::Formula::PVar(*$1);
+      //free($1);
+      delete $1;
    }
    ;
 
@@ -498,13 +526,15 @@ formula_automaton_name:
 until:
    FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Until($3, $8, $6);
+     $$ = new AST::Formula::Until($3, $8, *$6);
+     delete $6;
    };
 
 release:
    FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Release($3, $8, $6);
+     $$ = new AST::Formula::Release($3, $8, *$6);
+     delete $6;
    };
 
 

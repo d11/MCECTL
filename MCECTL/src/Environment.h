@@ -32,6 +32,7 @@ private:
 
 public:
    Environment();
+   ~Environment();
 
    const ResultsTable &GetCheckResults(const KripkeStructure &transition_system)     const;
 	void  SetCheckResults(const KripkeStructure &transition_system, const CheckResults &results);

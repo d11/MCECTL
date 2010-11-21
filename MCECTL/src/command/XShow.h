@@ -27,7 +27,7 @@ namespace Command {
       private:
          string _identifier;
       public:
-         XShowCommand(string identifier) : _identifier(identifier) { }
+         XShowCommand(const string &identifier) : _identifier(identifier) { }
          virtual string ToString() const {
             string s = ":xshow(";
             return s + _identifier + ")" ;

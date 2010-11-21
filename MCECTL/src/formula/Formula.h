@@ -17,7 +17,7 @@ namespace Formula {
 
    class Visitor;
 
-   class Formula {
+   class Formula : public Showable {
    public:
       typedef Formula &reference;
       typedef const Formula &const_reference;
@@ -28,11 +28,13 @@ namespace Formula {
    class False : public Formula {
    public:
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { return "0"; }
    };
 
    class True : public Formula {
    public:
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { return "1"; }
    };
 
    class PVar : public Formula {
@@ -41,6 +43,7 @@ namespace Formula {
    public:
       PVar(const string &name) : _name(name) {};
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { return _name; }
    };
 
    class Negation : public Formula {
@@ -50,6 +53,7 @@ namespace Formula {
       Negation( Formula::const_reference sub_formula ) : _sub_formula(sub_formula) { }
       Formula::const_reference GetSubFormula() const { return _sub_formula; }
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { stringstream s; s << "!" << _sub_formula.ToString(); return s.str(); }
    };
 
    // Abstract
@@ -72,10 +76,11 @@ namespace Formula {
    class Conjunction : public BinaryFormula {
    public:
       Conjunction(
-         Formula::const_reference before,
-         Formula::const_reference after
-      ) : BinaryFormula(before, after) { }
+         Formula::const_reference left,
+         Formula::const_reference right
+      ) : BinaryFormula(left, right) { }
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { stringstream s; s << "(" << GetLeft().ToString() << " ^ " << GetRight().ToString() << ")"; return s.str(); }
    };
 
    // Abstract
@@ -105,6 +110,7 @@ namespace Formula {
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { stringstream s; s << "E(" << GetLeft().ToString() << " U* " << GetRight().ToString() << ")"; return s.str(); }
    };
 
    class Release : public AutomatonFormula {
@@ -116,6 +122,7 @@ namespace Formula {
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
+      string ToString() const { stringstream s; s << "E(" << GetLeft().ToString() << " R* " << GetRight().ToString() << ")"; return s.str(); }
    };
 
    class Visitor {
