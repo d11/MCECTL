@@ -48,6 +48,7 @@ namespace AST {
             string tmp("[ACTION ");
             return tmp + _action_name + "]";
          }
+         string GetName() const { return _action_name; }
          virtual ~Action() { }
          virtual void Accept(Visitor &visitor) const;
       };
@@ -64,6 +65,7 @@ namespace AST {
          virtual ~Kleene() {
             delete _sub_regex;
          }
+         const Regex &GetSubRegex() const { return *_sub_regex; }
          virtual void Accept(Visitor &visitor) const;
       };
 
@@ -82,6 +84,8 @@ namespace AST {
             delete _sub_regex_1;
             delete _sub_regex_2;
          }
+         const Regex &GetSubRegex1() const { return *_sub_regex_1; }
+         const Regex &GetSubRegex2() const { return *_sub_regex_2; }
          virtual void Accept(Visitor &visitor) const;
       };
       class Union : public Regex {
@@ -95,6 +99,8 @@ namespace AST {
             string tmp("[");
             return tmp + _sub_regex_1->ToString() + " UNION " + _sub_regex_2->ToString() + "]";
          }
+         const Regex &GetSubRegex1() const { return *_sub_regex_1; }
+         const Regex &GetSubRegex2() const { return *_sub_regex_2; }
          virtual ~Union() {
             delete _sub_regex_1;
             delete _sub_regex_2;

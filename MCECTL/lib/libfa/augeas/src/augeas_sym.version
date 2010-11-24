@@ -1,0 +1,36 @@
+AUGEAS_0.1.0 {
+    global:
+      aug_init;
+      aug_close;
+      aug_get;
+      aug_set;
+      aug_insert;
+      aug_rm;
+      aug_mv;
+      aug_match;
+      aug_save;
+      aug_print;
+      # Symbols with __ are private
+      __aug_load_module_file;
+    local: *;
+};
+
+AUGEAS_0.8.0 {
+    global:
+      aug_defvar;
+      aug_defnode;
+      aug_load;
+} AUGEAS_0.1.0;
+
+AUGEAS_0.10.0 {
+    global:
+      aug_error;
+      aug_error_message;
+      aug_error_minor_message;
+      aug_error_details;
+} AUGEAS_0.8.0;
+
+AUGEAS_0.11.0 {
+    global:
+      aug_setm;
+} AUGEAS_0.10.0;

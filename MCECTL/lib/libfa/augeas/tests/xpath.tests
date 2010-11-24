@@ -1,0 +1,237 @@
+# Tests of the XPath matching
+
+# Blank lines and lines starting with '#' are ignored
+#
+# Each test consists of one line declaring the test followed by a complete
+# list of the expected result of the match.
+#
+# The test is declared with a line 'test NAME MATCH'. A result is either
+# just a path (meaning that the value associated with that node must be
+# NULL) or of the form PATH = VALUE, meaning that the value for the node at
+# PATH must be VALUE. If VALUE is '...', the test does not check the value
+# associated with PATH in the tree.
+#
+# The MATCH XPath expression is matched against a fixed tree (the one from the
+# root/ subdirectory) and the result of the aug_match is compared with the
+# results listed in the test
+#
+# The test framework sets up variables:
+#   hosts   /files/etc/hosts/*
+
+# Very simple to warm up
+test wildcard /files/etc/hosts/*/ipaddr
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+     /files/etc/hosts/2/ipaddr = 172.31.122.14
+
+test wildcard-var $hosts/ipaddr
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+     /files/etc/hosts/2/ipaddr = 172.31.122.14
+
+# Compare the value of the current node with a constant
+test self-value /files/etc/hosts/*/ipaddr[ . = '127.0.0.1' ]
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+
+test self-value-var $hosts/ipaddr[ . = $localhost ]
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+
+# Find nodes that have a child named 'ipaddr' with a fixed value
+test child-value /files/etc/hosts/*[ipaddr = '127.0.0.1']
+     /files/etc/hosts/1
+
+test child-value-var $hosts[ipaddr = $localhost]
+     /files/etc/hosts/1
+
+# Find nodes that have a child 'ipaddr' that has no value
+test child-nil-value /files/etc/hosts/*[ipaddr = '']
+
+test child-nil-value-var $hosts[ipaddr = '']
+
+# Find nodes that have no value
+test self-nil-value /files/etc/hosts/*[. = '']
+     /files/etc/hosts/1
+     /files/etc/hosts/2
+
+test self-nil-value-var $hosts[. = '']
+     /files/etc/hosts/1
+     /files/etc/hosts/2
+
+# Match over two levels of the tree
+test two-wildcards /files/etc/*/*[ipaddr='127.0.0.1']
+     /files/etc/hosts/1
+
+test pam-system-auth /files/etc/pam.d/*/*[module = 'system-auth']
+     /files/etc/pam.d/login/2
+     /files/etc/pam.d/login/4
+     /files/etc/pam.d/login/5
+     /files/etc/pam.d/login/8
+     /files/etc/pam.d/postgresql/1
+     /files/etc/pam.d/postgresql/2
+     /files/etc/pam.d/newrole/1
+     /files/etc/pam.d/newrole/2
+     /files/etc/pam.d/newrole/3
+
+# Multiple predicates are treated with 'and'
+test pam-two-preds /files/etc/pam.d/*/*[module = 'system-auth'][type = 'account']
+     /files/etc/pam.d/login/4
+     /files/etc/pam.d/postgresql/2
+     /files/etc/pam.d/newrole/2
+
+# Find nodes that have siblings with a given value
+test pam-two-preds-control /files/etc/pam.d/*/*[module = 'system-auth'][type = 'account']/control
+     /files/etc/pam.d/login/4/control = include
+     /files/etc/pam.d/postgresql/2/control = include
+     /files/etc/pam.d/newrole/2/control = include
+
+# last() gives the last node with a certain name
+test last /files/etc/hosts/*[ipaddr = "127.0.0.1"]/alias[last()]
+     /files/etc/hosts/1/alias[3] = galia
+
+test last-var $hosts[ipaddr = $localhost]/alias[last()]
+     /files/etc/hosts/1/alias[3] = galia
+
+# We can get nodes counting from the right with 'last()-N'
+test last-minus-one /files/etc/hosts/*[ipaddr = "127.0.0.1"]/alias[ last() - 1 ]
+     /files/etc/hosts/1/alias[2] = galia.watzmann.net
+
+# Make sure we look at all nodes with a given label (ticket #23)
+test transparent-multi-node /files/etc/ssh/sshd_config/AcceptEnv/10
+     /files/etc/ssh/sshd_config/AcceptEnv[2]/10 = LC_ADDRESS
+
+test abbrev-descendants /files/etc/pam.d//1
+     /files/etc/pam.d/login/1
+     /files/etc/pam.d/postgresql/1
+     /files/etc/pam.d/newrole/1
+
+test descendant-or-self /files/descendant-or-self :: 4
+     /files/etc/ssh/sshd_config/AcceptEnv[1]/4 = LC_TIME
+     /files/etc/aliases/4
+     /files/etc/fstab/4
+     /files/etc/pam.d/login/4
+     /files/etc/pam.d/newrole/4
+     /files/etc/inittab/4
+
+test descendant /files/etc/aliases/4/descendant::4
+
+test descendant-or-self-2 /files/etc/aliases/4/descendant-or-self::4
+     /files/etc/aliases/4
+
+# No matches because the predicate asks if there is a toplevel node
+# 'ipaddr' with the given value
+test abs-locpath /files/etc/hosts/*[/ipaddr = '127.0.0.1']/canonical
+
+test rel-pred /files/etc/hosts/*/canonical[../ipaddr = '127.0.0.1']
+     /files/etc/hosts/1/canonical = localhost.localdomain
+
+# Not the best way to write this, but entirely acceptable
+test path-with-parent /files/etc/hosts/*/canonical[../ipaddr = '127.0.0.1']/../alias
+     /files/etc/hosts/1/alias[1] = localhost
+     /files/etc/hosts/1/alias[2] = galia.watzmann.net
+     /files/etc/hosts/1/alias[3] = galia
+
+test node-exists-pred /files/etc/hosts/*/canonical[../alias]
+     /files/etc/hosts/1/canonical = localhost.localdomain
+     /files/etc/hosts/2/canonical = orange.watzmann.net
+
+test ipaddr-child //*[ipaddr]
+     /files/etc/hosts/1
+     /files/etc/hosts/2
+
+test ipaddr-sibling //*[../ipaddr]
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+     /files/etc/hosts/1/canonical = localhost.localdomain
+     /files/etc/hosts/1/alias[1] = localhost
+     /files/etc/hosts/1/alias[2] = galia.watzmann.net
+     /files/etc/hosts/1/alias[3] = galia
+     /files/etc/hosts/2/ipaddr = 172.31.122.14
+     /files/etc/hosts/2/canonical = orange.watzmann.net
+     /files/etc/hosts/2/alias = orange
+
+test lircd-ancestor //*[ancestor::kudzu][label() != '#comment']
+     /augeas/files/etc/sysconfig/kudzu/path = /files/etc/sysconfig/kudzu
+     /augeas/files/etc/sysconfig/kudzu/mtime = ...
+     /augeas/files/etc/sysconfig/kudzu/lens = @Shellvars
+     /augeas/files/etc/sysconfig/kudzu/lens/info = ...
+     /files/etc/sysconfig/kudzu/SAFE = no
+
+test wildcard-last /files/etc/hosts/*[position() = last()]
+     /files/etc/hosts/2
+
+test wildcard-not-last /files/etc/hosts/*[position() != last()][ipaddr]
+     /files/etc/hosts/1
+
+test nodeset-nodeset-eq /files/etc/sysconfig/network-scripts/*[BRIDGE = /files/etc/sysconfig/network-scripts/ifcfg-br0/DEVICE]
+     /files/etc/sysconfig/network-scripts/ifcfg-eth0
+
+test last-ssh-service /files/etc/services/service-name[port = '22'][last()]
+     /files/etc/services/service-name[24] = ssh
+
+test count-one-alias /files/etc/hosts/*[count(alias) = 1]
+     /files/etc/hosts/2
+
+test number-gt /files/etc/hosts/*[count(alias) > 1]
+     /files/etc/hosts/1
+
+test pred-or /files/etc/hosts/*[canonical = 'localhost' or alias = 'localhost']
+     /files/etc/hosts/1
+
+test pred-and-or /files/etc/hosts/*[(canonical = 'localhost' or alias = 'localhost') and ipaddr = '127.0.0.1']
+     /files/etc/hosts/1
+
+# We used to parse this as '/files/etc/.' followed by garbage, that
+# was silently ignored. This path must not match anything, instead of
+# every child of /files/etc
+test path-with-dot /files/etc/.notthere
+
+test str-neq /files/etc/*['foo' != 'foo']
+
+# label() returns the label of the context node as a string
+test label-neq /files/etc/hosts/*[label() != '#comment']
+     /files/etc/hosts/1
+     /files/etc/hosts/2
+
+# 'and' and 'or' need to coerce types to boolean
+test coerce-or /files[/files/etc/hosts/*[ipaddr = '127.0.0.1'] or /files/etc/aliases/*[name = 'root'] ]
+     /files
+
+test coerce-and-true /files['foo' and count(/files/etc/hosts/*) ]
+     /files
+
+test coerce-and-false /files['' and count(/none) and /none]
+
+test preceding-sibling /files/etc/hosts/*/preceding-sibling::*[alias = 'localhost']
+     /files/etc/hosts/1
+
+test preceding-sibling-pred /files/etc/grub.conf/*[preceding-sibling::*[1] = ../default]
+     /files/etc/grub.conf/timeout = 5
+
+test preceding-sibling-pred2 /files/etc/grub.conf/*[preceding-sibling::*[1][self::default]]
+     /files/etc/grub.conf/timeout = 5
+
+test following-sibling /files/etc/hosts/1/*/following-sibling::alias
+     /files/etc/hosts/1/alias[1] = localhost
+     /files/etc/hosts/1/alias[2] = galia.watzmann.net
+     /files/etc/hosts/1/alias[3] = galia
+
+test following-sibling-pred /files/etc/hosts/1/*[following-sibling::alias]
+     /files/etc/hosts/1/ipaddr = 127.0.0.1
+     /files/etc/hosts/1/canonical = localhost.localdomain
+     /files/etc/hosts/1/alias[1] = localhost
+     /files/etc/hosts/1/alias[2] = galia.watzmann.net
+
+test regexp1 /files/etc/sysconfig/network-scripts/*[label() =~ regexp('.*-eth0')]
+     /files/etc/sysconfig/network-scripts/ifcfg-eth0
+
+test regexp2 /files/etc/hosts/*[* =~ regexp('127\..*')]
+     /files/etc/hosts/1
+
+# Union of nodesets
+test union (/files/etc/yum.conf | /files/etc/yum.repos.d/*)/*/gpgcheck
+     /files/etc/yum.conf/main/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora-updates.repo/updates/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora-updates.repo/updates-debuginfo/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora-updates.repo/updates-source/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora.repo/fedora/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora.repo/fedora-debuginfo/gpgcheck = 1
+     /files/etc/yum.repos.d/fedora.repo/fedora-source/gpgcheck = 1
+     /files/etc/yum.repos.d/remi.repo/remi/gpgcheck = 1
+     /files/etc/yum.repos.d/remi.repo/remi-test/gpgcheck = 1

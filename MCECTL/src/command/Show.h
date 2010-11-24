@@ -27,12 +27,13 @@ namespace Command {
    class ShowCommand : public Command {
       private:
          string _identifier;
-         void TryShowAll(const Environment &environment) const {
+         bool TryShowAll(const Environment &environment) const {
 				// :show() prints whole environment info
 				if (_identifier.empty()) {
 					cout << environment.ToString() << endl;
-					return;
+					return true;
 				}
+            return false;
          }
       public:
          ShowCommand(const string &identifier) : _identifier(identifier) { }
@@ -43,7 +44,9 @@ namespace Command {
 
 
          virtual void Execute(Environment &environment, GlobalOptions &options) {
-            TryShowAll(environment);
+            if (TryShowAll(environment)) {
+               return;
+            }
             
             bool found_automaton = true;
             try {

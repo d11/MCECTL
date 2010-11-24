@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8.1)
 project (MCECTL)
 cmake_policy(VERSION 2.8.1)
 
-#SET(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 set(CMAKE_CXX_FLAGS "-g -Wall")
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "Lex.h;CTL_Parse.output")
@@ -45,13 +45,22 @@ set(CPPFILES
 #   lib/libfa/augeas.c
 #)
 
+ADD_CUSTOM_COMMAND(
+   OUTPUT libfa.a
+   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/lib/libfa/augeas/src/.libs/libfa.a ${CMAKE_CURRENT_BINARY_DIR}/libfa.a
+)
+
+add_custom_target(libfa ALL DEPENDS libfa.a)
 add_library(
    MCECTL STATIC
    ${CPPFILES}
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
 )
-link_directories("lib/libfa")
+add_dependencies(MCECTL libfa)
+link_directories(".")
+include_directories("lib/libfa/augeas/src/")
+#find_library(fa PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/libfa/augeas/src/.libs)
 target_link_libraries(MCECTL fa)
 
 add_executable(
