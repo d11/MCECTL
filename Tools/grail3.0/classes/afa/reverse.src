@@ -1,0 +1,198 @@
+/******************************************************************************************
+
+File:	classes/afa/reverse.src
+-----
+
+Description:	
+------------
+	This file contains the definition of the following function:
+	
+		afa<T> afa<T>::reverse() const
+
+	This function is a public member of the template class afa
+	(declared in afa.h).
+
+Revision History:
+-----------------
+	X. Wu			Initial version of source code
+	S. Huerter 08/12/98	Header and comments
+
+******************************************************************************************/
+/******************************************************************************************
+
+				afa<T> afa<T>::reverse() const
+
+Description:
+	This function is a public member of the template class afa (declared in afa.h).
+	This function returns an afa accepting the reverse of the language accepted by "this" afa.
+	
+	This function can be called in the following way(s):
+		safa = afa.reverse();
+
+	Return Value:
+		afa<T>			- the afa accepting the reverse of 
+					  the language accepted by "this" afa;
+	OR,
+		error msg.		- if the number of bit-vectors reachable 
+					  from the characteristic vector under
+			 		  the transition function exceeds 32, the 
+					  reverse machine cannot be constructed using our
+					  bit-vector representation; an error msg. is
+					  returned.
+			
+******************************************************************************************/
+
+#ifndef _Iptr
+#define _Iptr
+
+typedef int* iptr;
+
+#endif
+
+template <class T>
+afa<T> afa<T>::reverse() const
+{
+   afa<T> rafa;
+   rafa.symbol = symbol;
+
+//if the number of states is 0, then a accept either all the strings or 
+//accept nothing. So, rafa will accept all the strings or nothing
+   if (states == 0)
+      {
+         rafa.states = 0;
+         rafa.final  = 0;
+         rafa.head   = head;
+         return rafa;
+      }
+
+   int column = symbol.size();
+   int big = (int) pow(2, states);
+   int *I=new int[big];
+   iptr* T1 =new iptr[big];
+
+   for (int x=0; x<big; x++)
+	{
+		I[x] = 0;
+		T1[x] = NULL;
+	}
+   queue<int> q;
+   q.push(final);
+   int index=0;
+   I[final] = 1;
+
+   while (!q.empty())
+	{
+	   int temp = q.pop();
+	   T1[index] = new int[column+1];
+	   T1[index][0] = temp;
+	   for (x=0; x<column; x++)
+		{
+		   int vector = transition(temp, x);
+		   T1[index][x+1] = vector;
+		   if (I[vector] == 0)
+			{
+			   I[vector] = 1;
+	 		   q.push(vector);
+			}
+		}
+	   index++;
+	}
+   
+   for (x = 0; x<big; x++)
+	I[x] = 0;
+
+   int count = 0;
+   for (x=0; x<index; x++)
+      if(head.evaluate(T1[x][0]) == 1)
+	{
+	   q.push(T1[x][0]);
+	   I[T1[x][0]] = 1;
+	   count++;
+	}
+
+   while (!q.empty())
+	{
+	   int temp = q.pop();
+	   for (x=0; x<index; x++)
+	      if (I[T1[x][0]] == 0)
+		 for (int y=0; y<column; y++)
+		    if (T1[x][y+1] == temp)
+ 			{
+		   	   q.push(T1[x][0]);
+			   I[T1[x][0]] = 1;
+			   count++;
+			}
+	}
+
+//if I[final] = 0, then the original afa accepts no string;
+   if (I[final] == 0)
+	{
+         rafa.states = 0;
+         rafa.final  = 0;
+         rafa.head.append(term(0,1));
+         return rafa;	
+	}
+
+   if (count > 32)
+	{
+	  cerr<<"The machine is too big for doing reverse"<<endl;
+	  exit(1);
+	}
+
+   int *P=new int[count];
+   int indic = 0;
+   for(x = 0; x<index; x++)
+      if (I[T1[x][0]] == 1)
+	 {
+	    P[indic] =x;
+	    I[T1[x][0]] = ++indic;
+	 }
+	
+
+//the number of states of rafa is the number of reachable 
+//and useful bit-vectors
+   rafa.states = count;
+
+//the final states of rafa is the vectors which is accepted by head
+   for (int i=0; i<rafa.states ; i++)
+      {
+         if (head.evaluate(T1[P[i]][0]) ==1)
+	    rafa.final += (unsigned) pow(2, i);
+      }
+
+//the head function of rafa is the function which accepts the vector
+//whose f-component is 1, where f is the final
+   unsigned alpha;
+   alpha = (unsigned) pow(2, I[final]-1);
+   term t(alpha, alpha);
+   rafa.head.append(t);
+
+//construct the transition function of rafa by:
+//g'(a,u)_x =1 iff exists y s. t. u_y =1 and g(a,x) =y
+   int y_index = rafa.states;
+   rafa.table = new funct[column * y_index];
+   for (int k=0; k<y_index; k++)
+      for (int l=0; l<column; l++)
+	{
+	   if (I[T1[P[k]][l+1]] == 0)
+		rafa.table[k*column+l].append(term(0,1));
+	   else
+		{		 
+	           unsigned alpha = (unsigned) pow(2, I[T1[P[k]][l+1]] -1);
+	   	   rafa.table[k*column+l].append(term(alpha, alpha));
+		}
+	}
+
+    for (k= 0; k<y_index; k++)
+	for (int l=0; l<column; l++)
+	   rafa.table[k*column+l].simplify();
+    delete [] I;
+    delete [] P;
+    for (i = 0; i<index; i++)
+	delete [] T1[i];
+    delete [] T1;
+    return rafa;
+}
+
+
+

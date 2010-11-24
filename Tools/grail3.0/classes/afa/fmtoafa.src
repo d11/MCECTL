@@ -1,0 +1,447 @@
+/******************************************************************************
+
+File:	classes/afa/fmtoafa.src
+-----
+
+Description:	
+------------
+	This file contains the definition of the following function:
+	
+			void afa<T>::fmtoafa(const fm<T>& a)
+
+	This function is a public member of the template class afa
+	(declared in afa.h).
+
+Revision History:
+-----------------
+	X. Wu			Initial version of source code
+	S. Huerter 08/12/98	Improved version of source code
+				(average decrease in run-time is by 97%),
+				header and comments
+        M.Hoeberechts 98/10/25  Replaced difftime by - 
+                                (some older time.h versions do not define
+                                 difftime) 
+
+******************************************************************************/
+
+#include <time.h>
+#include "protot.h"
+#include "manage_state.src"
+#include "manage_bitvec.src"
+
+/******************************************************************************
+
+			void afa<T>::fmtoafa(const fm<T>& a)
+			
+Description:
+	This function is a public member of the template class afa (declared in afa.h).
+	This function rebuilds this afa to accept the same language as the given dfa a.
+	Since this transformation produces a logarithmic reduction in the number of states
+	of a, and we are using a bit-vector representation for afa, the number of states of
+	the input dfa must not exceed pow(2,32).  Also for efficency it is required that the
+	dfa states be numbered contiguously starting at 0 (ie. 0,1,2,.. without skipping
+	any integers).  If any of these requirements are not met, behaviour/output of this
+	function is unpredictable.  No error messages are provided. 
+
+	This function can be called in the following way(s):
+		afa1.fmtoafa(dfa1);
+	
+	Parameters:
+		const fm<T>& a			- the dfa to transform to h-afa
+
+**************************************************************************/
+
+
+/*************************************************************************/
+void out_time(char *s, time_t beg, time_t fin)
+{
+  double elapsedt;
+
+//  elapsedt = difftime(fin, beg);
+  elapsedt = fin - beg;
+  cout<<s<<":";
+  cout<<"\n\tbegin at:\t"<<beg;
+  cout <<"\n\tend at\t:\t"<<fin;
+  cout<<"\n\telapsed:\t"<<elapsedt;
+  cout<<"\n\n";
+
+}
+/*************************************************************************/
+
+void print_array(int *p, int N)
+{
+for(int i=0; i<N; i++)
+	{
+	cout<<p[i]<<" ";
+	if(!((i+1)%20)) cout<<"\n";
+	}
+return;
+}
+/*************************************************************************/
+//given state_node array ptr with size n, and a state item,
+//this procedure find the index of the node that contains item,
+//or return -1 if there is no such node
+int find_pos(const state_node* ptr,int n, const state& item)
+{
+  for (int i=0; i<n; i++)
+    {
+      if (ptr[i].stat == item)
+	return i;
+    }
+  return -1;
+}
+/****************************************************************************/
+int find_pos(const array<char>& things, const char& thing)
+{
+	for (int i=0; i<things.size(); i++)
+	{	
+	if(things[i] == thing)
+	return i;
+	}
+	return -1;
+}
+
+/****************************************************************************/
+
+//this procedure transform a given finite state machine into a h-afa
+template <class T>
+void afa<T>::fmtoafa(const fm<T>& a)
+{
+//time_t strt, fin, beg, end;
+//time(&beg);
+
+  fm<T> dfa = a;
+ 
+  if (dfa.is_deterministic() == 0)         //if the dfa is not detrerministic
+    dfa = dfa.subset();                    //make dfa deterministic
+
+  if (dfa.is_complete()==0)                //if the dfa is not complete
+    dfa.complete();                        //complete the dfa
+
+//get all the input symbols of the dfa
+  set<T> inputs;
+  dfa.labels(inputs);                      //get all the alphbets
+  symbol = (array<T>)inputs;               //conversion from set to array
+  symbol.sort();                           //sort the symbols for the convience
+
+  set<state> sset;
+  dfa.states(sset);                        //all the states of the dfa 
+
+  set<state> fset;               
+  dfa.finals(fset);                        //all the final states
+
+  set<state> start_st;                     //start state set of the dfa
+  dfa.starts(start_st);
+
+  unsigned total = sset.size();            //total number of states for dfa
+  states = find_min_log(total);            //number of states the afa has
+  unsigned dif = (unsigned)pow(2,states) - total;
+  unsigned fn = fset.size();               //number of the dfa finals
+
+
+//if the afa has zero many states, then if the dfa's only state is final
+//state set head function to be 1, otherwise set head function 0
+  if ( states == 0)
+    {
+      final = 0;
+      if (fn==0)       //the orignal dfa has no final states
+	{
+	  term t(0,1);
+	  head.append(t);    //head function is constant 0
+	  return;
+	}
+      else            //the only state of the dfa is a final state
+	{
+	  term t(0,0);
+	  head.append(t);    //head function is constant 1
+	  return;
+	}
+    }
+
+//if the dfa has no final states then the equivalent afa should accept nothing
+  if (fn == 0)
+    {
+      final = 0;
+      states = 0;
+      term t(0,1);
+      head.append(t);       //head function is constant 0
+      return;
+    }
+
+
+//Build ORD and ORD_INVERSE:--------------------------------------------------------------------
+unsigned    MAX = (unsigned) pow(2,states)-1;
+unsigned    *ORD = ord_count(states), 
+            *ORD_INVERSE = new unsigned[MAX+1];
+//do the inversion
+for(unsigned i=0; i<MAX+1; i++)
+	ORD_INVERSE[ORD[i]] = i;
+
+//now find pivot:-------------------------------------------------------------------------------
+unsigned pivot, pivotpos;
+pivot = fn;
+pivotpos=ORD_INVERSE[pivot];
+
+for(i=fn;i<=fn+dif;i++)
+  {
+  if(pivotpos>ORD_INVERSE[i])
+    {
+    pivotpos=ORD_INVERSE[i];
+    pivot = i;
+    }
+  }
+
+//----------------------------------------------------------------------------------------------
+delete(ORD_INVERSE); //we're done with ORD_INVERSE, therefore clear some space.
+
+//find the position of all the 1's in pivot, and put them on a newlist headlist
+  mylist<int> headlist;  
+  for (int x = 1; x<=states; x++)  
+    if( (pivot & (unsigned)pow(2,states-x))!=0)
+      {
+        mynode<int> tmp(x);
+        headlist.add_node(tmp);
+      }
+
+//build the head function
+  int count = headlist.get_count();      //the number of node on mylist headlist
+  for (i=1; i<=count; i++)
+    {
+      int pos = *(headlist.get_ith_elem(i));
+      unsigned alpha=0;
+      unsigned beta=0;
+      for (int j=1; j<=pos; j++)
+        {
+	  alpha +=(unsigned) pow(2, j-1);
+        }
+      beta = (unsigned) pow(2,pos-1);
+      term tmp(alpha, beta);
+      head.append(tmp);
+    }
+
+//compute fcount and ncount----------------------------------------------------------------------
+
+unsigned fcount = 0, ncount = 0;
+for(i=0; i<=MAX; i++)
+  {
+    if(head.evaluate(ORD[i]))
+      fcount++;
+    else
+      ncount++;
+  }
+
+//----------------------------------------------------------------------------------------------
+
+//build arrayf and arrayn-----------------------------------------------------------------------
+int npos=0, fpos=0;
+int * arrayf = new int[fcount], * arrayn =new int[ncount];
+
+for(i=0; i<=MAX; i++)
+  {
+    if(head.evaluate(ORD[i]))
+	{
+	arrayf[fpos] = (int)ORD[i];
+	fpos++;
+	}
+    else
+	{
+      	arrayn[npos] = (int)ORD[i];
+	npos++;
+	}
+  }
+
+delete(ORD); //we're done with ORD, therefore clear some space.
+
+//----------------------------------------------------------------------------------------------
+
+  set< inst<T> > delta = get_arcs(dfa);
+  set<state> allstate = sset;      //all the states for the dfa
+  int *INCOUNTS = new int[total];  //a cell for each dfa state, to count incoming transitions.
+  sset-=fset;                      //the set of all nonfinal states of the dfa
+
+//init INCOUNTS
+for (i=0; i<total; i++) 
+	INCOUNTS[i]=0;
+//build INCOUNTS
+for (i=0; i<delta.size(); i++)     //for each dfa instruction, find the sink, and increment its INCOUNT entry
+	INCOUNTS[delta[i].get_sink().value()]++;
+ 
+
+  int indicator = 0;               //to indicate which array the start state in
+  state_node* fstate=new state_node[fn], *nstate = new state_node [total - fn];
+
+ for (i = 0; i<fn; i++)
+    {
+      state tmp =fset[i];
+      if (start_st.member(tmp)>=0)
+        {
+	  indicator = 1;
+        }
+      fstate[i] = build_state_node(tmp, INCOUNTS[tmp.value()]);
+    }
+  for (i =0; i<total -fn; i++)
+    {
+      nstate[i] = build_state_node(sset[i], INCOUNTS[sset[i].value()]);
+    }
+
+delete(INCOUNTS);
+
+  sort_state(fstate, fn);
+  sort_state(nstate,total - fn);
+
+  int position = 0;                //the array index of the start state
+
+//decide the final states of the afa
+  mylist<int>  F;        //the list for finals of the afa
+  if (indicator ==1 )    //the start state of dfa is also a final state of dfa   
+    {
+      position = find_pos(fstate, fn, start_st[0]);
+      for ( int i = 1; i<=states; i++)
+        {
+          if ( (arrayf[position] & (unsigned)pow(2, i-1)) >0 )
+	    {
+	      mynode<int> tmp(i); 
+  	      F.add_node(tmp);
+	    }
+        }
+    }
+  else 
+   {
+      position = find_pos(nstate, total-fn, start_st[0]);
+      for (int i = 1; i<=states; i++)
+        {
+          if ( (arrayn[position] & (unsigned)pow(2, i-1)) >0 )
+	    {
+	      mynode<int> tmp(i);
+	      F.add_node(tmp);
+	    }
+        }
+    }
+
+//convert the final state list to a bit_vector
+  {
+    int count = F.get_count();
+    for (i=1; i<=count; i++)
+      {
+        int number = *(F.get_ith_elem(i));
+        final += (unsigned)pow(2,number-1);
+      }
+  }
+
+//construct transitions for the afa
+  
+  int symbolcount = symbol.size();       //the size of symbol array
+  int arc_size  = delta.size();          //number of instructions of the dfa
+  table = new funct[states * symbolcount];
+  
+//time_t sim_beg,sim_end, sim_tot=0, ins_beg, ins_end, ins_tot=0, sim2beg, sim2fin, sim2tot=0;
+
+
+/*------------------------------------------------------------------------------------------*/
+
+for(int k=0; k<arc_size; k++)                  //for every dfa instruction,
+{
+	inst<T> tmp_inst  = delta[k];
+	T     sym         = tmp_inst.get_label();                       //get label of current instr.
+	int   sympos      = find_pos(symbol, sym);                      //find position of label in symbol array
+	state tmp_sink    = tmp_inst.get_sink();                        //get sink of current instr.
+	state tmp_source  = tmp_inst.get_source();                      //get source of current instr.
+	int   sink_enc, source_enc;   //to hold their encodings.	
+
+	int     pos = find_pos(fstate, fn, tmp_sink);                   //look in fstate for the sink
+	if(pos>=0)                                                     //if it's there, get its encoding from arrayf
+	  	sink_enc = arrayf[pos];
+	else
+		{
+		pos = find_pos(nstate, total-fn, tmp_sink);             //if not in fstate, the enc. of sink is in arrayn.
+		sink_enc = arrayn[pos];
+		}
+
+	pos = find_pos(fstate, fn, tmp_source);                         //look in fstate for the source
+	if(pos>=0) 
+		source_enc = arrayf[pos];
+	else                                                           //if not in fstate, the enc. of source is in arrayn.
+		{
+		pos = find_pos(nstate, total-fn, tmp_source);            
+		source_enc = arrayn[pos];
+		}
+
+
+	int alpha = 0, beta = 0;				//wrap up source_enc using alpha, beta vectors into a term
+	unsigned bitvector = source_enc;
+	for(int w = 1; w<=states;w++)
+		{
+		alpha += (unsigned)pow(2,w-1);
+		if( (bitvector & (unsigned)pow(2,w-1)) > 0 )
+			beta += (unsigned)pow(2,w-1);
+		}
+	term t(states,alpha, beta);    //a term of dimension "states"
+
+
+
+	for(int j=1; j<=states; j++)                        //see which table entries get the term
+		{
+		if((sink_enc & (unsigned)pow(2,j-1)) > 0)
+			table[(j-1)*symbolcount + sympos].append(t);     //this used to be .append
+		}
+
+}
+
+
+for (i = 0; i<symbolcount; i++)                           //now go through the table and simplify.
+{
+    for (int j =1; j<=states; j++)
+      {
+	if(table[(j-1)*symbolcount + i].get_head() == 0)        // if no entry, the transition should be 0
+	{
+		term t(states,0,1);
+		table[(j-1)*symbolcount + i].append(t);
+	}	
+	else
+		table[(j-1)*symbolcount + i].simplify2();       // otherwise simplify what's there.
+	        
+      }
+}
+	
+/*
+//See if the minimized functions are logically equiv to the simplified ones by comparing all truth assignments
+
+//for (i = 0; i<symbolcount; i++)                          
+//{
+//    for (int j =1; j<=states; j++)
+//      {
+	
+//        cout<<"\nnum terms in f.sim: "<<table[(j-1)*symbolcount + i].numterms();
+//	cout<<"\nnum terms in f.sim2: "<<test_table[(j-1)*symbolcount + i].numterms();
+//	cout<<"\ntruth table comparison for g"<<symbol[i]<<j<<":";
+	
+//	int indic=1;
+//	for(unsigned k=0; k<(unsigned)pow(2,states);k++)
+	 // {
+	//if( test_table[(j-1)*symbolcount + i].evaluate(k) != table[(j-1)*symbolcount + i].evaluate(k))
+	//	indic=0;
+	 // }
+	 //if(indic==1)cout<<"equiv\n";  
+	
+//	}
+//}
+*/
+/*------------------------------------------------------------------------------------------*/
+//cout<<"\ntotal time sim2ing :\t"<<sim2tot;
+//cout<<"\ntotal time simplifying :\t"<<sim_tot;
+
+
+
+//time(&end);
+
+//out_time("TOTAL: ", beg, end);
+
+
+}	
+
+
+
+
+
+
+

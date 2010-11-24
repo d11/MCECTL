@@ -1,0 +1,101 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH afacomp 1 "Grail"
+.SH NAME
+afacomp \- compute the complement of a machine
+.SH SYNOPSIS
+.B afacomp afa
+.sp
+.B afacomp <afa
+.SH DESCRIPTION
+.B
+afacomp
+computes the complement of \fIafa\fR and writes 
+the result on the standard output.  
+.LP
+\fIafa\fR must conform to the Grail bit-wise \fIafa\fR format for machines.
+.LP
+The complement of a machine accepts any string not accepted by 
+the original machine.  Complement is defined in terms of the 
+underlying alphabet of the machine.  
+.B
+afacomp
+computes the complement only with respect to the symbols that appear
+in the original machine. 
+.SH EXAMPLES
+.EX
+% cat bitafa3
+symbols: [a,b]
+states:  4
+finals:  7
+head: 1 1
+14 2+15 12
+15 6
+15 7
+14 8+14 6+15 14
+15 2+7 1+15 7
+15 8+15 4
+15 3+15 10
+14 8+15 4
+
+% afacomp bitafa3
+symbols: [a,b]
+states:  4
+finals:  7
+head: 1 0
+14 2+15 12
+15 6
+15 7
+14 8+14 6+15 14
+15 2+7 1+15 7
+15 8+15 4
+15 3+15 10
+14 8+15 4
+
+% afacomp < bitafa3
+symbols: [a,b]
+states:  4
+finals:  7
+head: 1 0
+14 2+15 12
+15 6
+15 7
+14 8+14 6+15 14
+15 2+7 1+15 7
+15 8+15 4
+15 3+15 10
+14 8+15 4
+
+%cat bitafa3 | afacomp
+symbols: [a,b]
+states:  4
+finals:  7
+head: 1 0
+14 2+15 12
+15 6
+15 7
+14 8+14 6+15 14
+15 2+7 1+15 7
+15 8+15 4
+15 3+15 10
+14 8+15 4
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+afa(5)

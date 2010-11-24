@@ -1,0 +1,63 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1993
+
+
+/***************************************************************************
+
+  File:  classes/fm/minuseq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      fm<Label>& fm<Label>::operator-=(const fm<Label>& s)
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/06         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+            fm<Label>& fm<Label>::operator-=(const fm<Label>& s)
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function removes any arcs which are found in
+    both this fm and the parameter fm from this fm.  Since the input 
+    alphabet is implicitly defined by the arcs in the fm, any letters which 
+    occur in the removed arcs and not elsewhere will be removed from the
+    alphabet.  The parameter fm is unchanged; the function returns a
+    reference to this fm.
+
+    This function can be called in the following ways:
+      this_fm.operator-=(other_fm);
+      this_fm -= other_fm;
+
+  Parameters:
+    const fm<Label>& s - the fm containing the arc to be subtracted from
+                         this fm.
+
+  Return Value:
+    fm<Label>& - a reference to this fm
+
+  
+ ***************************************************************************/
+
+template <class Label>
+fm<Label>&
+fm<Label>::operator-=(const fm<Label>& s)
+{
+	arcs -= s.arcs;
+	return *this;
+}

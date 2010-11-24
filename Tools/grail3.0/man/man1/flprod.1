@@ -1,0 +1,70 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH flprod 1 "Grail"
+.SH NAME
+flprod \- compute the product of two finite languages
+.SH SYNOPSIS
+.B flprod fl1 fl2
+.sp
+.B flprod fl2 <fl1
+.SH DESCRIPTION
+.B
+flprod
+computes the product of the finite languages \fIfl1\fR and \fIfl2\fR,
+writing the resulting finite language on the standard output.  Both languages
+may be specified on the command line, or one may be read from standard input.
+\fIfl2\fR can, if desired, be the same file as \fIfl1\fR.
+.LP
+If two finite languages are not specified, 
+.B
+flprod
+returns 0. 
+\fIfl1\fR and \fIfl2\fR must conform to the Grail format for finite languages.
+.LP
+The product of the two languages is formed by catenated every string in
+the first language with every string in the second lanuage.  The product
+of a language and the empty language is the empty language.  The catenation of
+a string and the empty string is the first string.  
+.SH EXAMPLES
+.EX
+% cat fl1
+aa
+bb
+
+% cat fl2
+test
+
+run
+
+% flprod fl1 fl1
+aaaa
+aabb
+bbaa
+bbbb
+
+% flprod fl1 fl2
+aatest
+bbtest
+aa
+bb
+aarun
+bbrun 
+
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5), fllq(1), flrq(1)

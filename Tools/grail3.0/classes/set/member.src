@@ -1,0 +1,94 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	November 1994
+
+
+/***************************************************************************
+
+  File:  classes/set/member.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int set<Item>::member(const Item& s) const
+
+    This function is a public member of the template class set
+    (declared in set.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/30         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                int set<Item>::member(const Item& s) const
+
+  Description:
+    This function is a public member of the template class set 
+    (declared in set.h).  This function determines whether the parameter
+    item is a member of this set.  If the set contains fewer than 16 
+    elements, a linear search is performed.  Otherwise, the set is sorted
+    and a binary search is done.  After the execution of the function
+    the set reverts to its original order.   The function returns the
+    index of the element if it is found, -1 otherwise.
+
+    This function can be called in the following way:
+      value = this_set.member(test_item);
+
+  Parameters:
+    const Item& s - the item to be searched for in this set
+
+  Return Value:
+    int - the index of the element if it was found in the set, -1 otherwise.
+  
+ ***************************************************************************/
+
+template <class Item>
+int
+set<Item>::member(const Item& s) const
+{
+	if (sz == 0)
+		return -1;
+
+	if (sz < 16)
+		return array<Item>::member(s);
+
+	sort();
+
+	// do a binary search
+	int	left = 0;
+	int	right = sz;
+	int	probe;
+
+	for (;;)
+	{
+		probe = (right - left)/2 + left;
+
+		if (p[probe] == s)
+			return probe;
+
+		if (probe == left)
+		{
+			if ((probe + 1 < sz) && (p[probe + 1] == s))
+					return probe + 1;
+			break;
+		}
+
+		if (p[probe] < s)
+			left = probe;
+
+		if (p[probe] > s)
+			right = probe;
+	}
+	return -1;
+}
+
+

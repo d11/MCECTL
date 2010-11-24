@@ -1,0 +1,61 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fllq 1 "Grail"
+.SH NAME
+fllq \- compute the left quotient of a finite language and a string
+.SH SYNOPSIS
+.B fllq fl string
+.sp
+.B fllq string <fl
+.SH DESCRIPTION
+.B
+fllq
+computes the left quotient of the finite language \fIfl\fR and \fIstring\fR,
+writing the resulting finite language on the standard output.  The left 
+quotient is defined as the language of all strings \fIX\fR such that 
+\fIstring\fR catenated with \fIX\fR is a member of \fIfl\fR.
+.LP
+\fIfl\fR must conform to the Grail format for finite languages.
+.LP
+The left quotient of any language \fIL\fR with the empty string yields the
+language \fIL\fR.  The left quotient of the empty language and any string
+yields the empty language. 
+.SH EXAMPLES
+.EX
+% cat fl
+aaabcd
+bcbbcd
+bcd
+bcdaaa
+dcbad
+
+% fllq fl bc
+bbcd
+d
+daaa
+
+% fllq fl ""
+aaabcd
+bcbbcd
+bcd
+bcdaaa
+dcbad
+
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5), flrq(1), flprod(1)

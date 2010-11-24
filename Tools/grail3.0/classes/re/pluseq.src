@@ -1,0 +1,172 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/re/pluseq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following functions:
+      re<S>& re<S>::operator+=(const re<S>& r)
+      re<S>& re<S>::operator+=(re<S>* r)
+      re<S>& re<S>::plus(subexp<S>* s)
+
+    These functions are public members of the template class re (declared 
+    in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/08         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                re<S>& re<S>::operator+=(const re<S>& r)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function makes a new expression which is the
+    union of this re's current contents and the parameter expression.  After
+    execution, this re will contain the new expression.  For example, if
+    this re originally contained (a+b) and r contains b*, the result of this
+    operation would be (a+b)+b*.  The function returns a reference to this re.
+
+    This function can be called in the following ways:
+      this_re.operator+=(other_re);
+      this_re += other_re;
+
+  Parameters:
+    const re<S>& r - the expression to perform union on with this expression
+
+  Return Value:
+    re<S>& - a reference to this re.
+
+ ***************************************************************************/
+
+template <class S>
+re<S>&
+re<S>::operator+=(const re<S>& r)
+{
+	if (r.is_clear())
+		return *this;
+
+	if (p == 0)
+	{
+		p = r.clone();
+		return *this;
+	}
+
+	plus_exp<S>* ptr = new plus_exp<S>;
+	ptr->left = p;
+	ptr->right = r.clone();
+	p = ptr;
+	return *this;
+}
+
+
+
+/***************************************************************************
+
+                    re<S>& re<S>::operator+=(re<S>* r)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function makes a new expression which is the
+    union of this re's current contents and the expression pointed to by the
+    parameter.  After execution, this re will contain the new expression.  
+    For example, if this re originally contained (a+b) and the expression 
+    pointed to by r contains b*, the result of this operation would be 
+    (a+b)+b*.  The function returns a reference to this re.
+
+    This function can be called in the following ways:
+      this_re.operator+=(other_re_ptr);
+      this_re += other_re_ptr;
+
+  Parameters:
+    re<S>* r - a pointer to the expression to perform union on with this 
+               expression.
+
+  Return Value:
+    re<S>& - a reference to this re.
+
+  
+ ***************************************************************************/
+
+template <class S>
+re<S>&
+re<S>::operator+=(re<S>* r)
+{
+	if (r->is_clear())
+		return *this;
+
+	if (p == 0)
+	{
+		p = r->clone();
+		return *this;
+	}
+
+	plus_exp<S>* ptr = new plus_exp<S>;
+	ptr->left = p;
+	ptr->right = r->clone();
+	p = ptr;
+	return *this;
+}
+
+
+
+/***************************************************************************
+
+                      re<S>& re<S>::plus(subexp<S>* s)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function makes a new expression which is the
+    union of this re's current contents and the subexpression pointed to by
+    the parameter.  After execution, this re will contain the new expression.  
+    For example, if this re originally contained (a+b) and the subexpression 
+    pointed to by r contains b*, the result of this operation would be 
+    (a+b)+b*.  The function returns a reference to this re.
+
+    This function can be called in the following ways:
+      this_re.operator+=(other_subexp_ptr);
+      this_re += other_subexp_ptr;
+
+  Parameters:
+    subexp<S>* s - a pointer to the sub expression to perform union on with
+                   this expression.
+
+  Return Value:
+    re<S>& - a reference to this re.
+
+  
+ ***************************************************************************/
+
+template <class S>
+re<S>&
+re<S>::plus(subexp<S>* s)
+{
+        if (s == 0)
+                return *this;
+
+        if (p == 0)
+        {
+                p = s;
+                return *this;
+        }
+
+        plus_exp<S>* ptr = new plus_exp<S>;
+        ptr->left = p;
+        ptr->right = s;
+        p = ptr;
+        return *this;
+}

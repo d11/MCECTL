@@ -1,0 +1,65 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH flfilter 1 "Grail"
+.SH NAME
+flfilter \- filter a finite language with a machine
+.SH SYNOPSIS
+.B flfilter fl fm
+.sp
+.B flfilter fm <fl
+.SH DESCRIPTION
+.B
+flfilter
+parses \fIfl\fR with \fIfm\fR and returns the language containing only those 
+words in \fIfl\fR which are accepted by \fIfm\fR.  The resulting words form  
+a subset of the original finite language.
+.LP
+\fIfl\fR must conform to the Grail format for finite languages.  \fIfm\fR
+must conform to the Grail format for machines.
+.B
+flfilter
+can operate with both deterministic and non-determinstic machines.
+.SH EXAMPLES
+.EX
+% cat fm
+(START) |- 0
+0 a 1
+1 a 1
+1 b 1
+1 c 1
+1 d 1
+1 d 2
+2 -| (FINAL)
+
+% cat fl
+ab
+adbcad
+ad
+cbded
+addend
+
+% flfilter fl fm
+adbcad
+ad
+addend
+ 
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5), flexec(1)

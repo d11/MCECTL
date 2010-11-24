@@ -32,10 +32,15 @@ namespace Command {
             string s = ":xshow(";
             return s + _identifier + ")" ;
          }
-         virtual void Execute(Environment &environment, GlobalOptions &options) const {
+         virtual void Execute(Environment &environment, GlobalOptions &options) {
 				const Automaton *automaton(environment.GetAutomaton(_identifier));
 				string s(automaton->ToDot());
 	
+            // If verbose, display the DOT used
+            if (options.IsVerbose()) {
+               cout << s.c_str() << endl;
+            }
+
 				// TODO check return codes
 				FILE *dot = popen("dot -Tx11", "w");
 				if (NULL == dot) {
@@ -43,6 +48,7 @@ namespace Command {
 				}
 				fputs(s.c_str(), dot);
 				pclose(dot);
+
          }
    };
 

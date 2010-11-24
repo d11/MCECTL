@@ -1,0 +1,80 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/string/strcmp.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int string<Item>::stringcmp(const string<Item>& s) const
+
+    This function is a public member of the template class string 
+    (declared in string.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/03         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+        int string<Item>::stringcmp(const string<Item>& s) const
+
+  Description:
+    This function is a public member of the template class array 
+    (declared in array.h).  The function compares this string with
+    the parameter string.  A string is less than another string if it 
+    contains less characters or an equal number of character but comes
+    first according to lexicographical ordering.  A string is greater than
+    another string if it contains more characters or an equal number
+    of character but comes later according to lexicogrphical ordering. 
+    This function return -1 if this string is less than the parameter
+    string, 1 if this string is greater than the parameter string and
+    0 if the strings are equal.
+
+    This function can be called in the following ways:
+      result = this_string.stringcmp(other_string);
+
+  Parameters:
+    const string<Item>& s - the string to be compared with this string
+
+  Return Value:
+    int - returns -1 if this string is less than the parameter string,
+          1 if this string is greater, and 0 if the strings are equal
+
+  
+ ***************************************************************************/
+
+template <class Item>
+int
+string<Item>::stringcmp(const string<Item>& s) const
+{
+	// if this string is shorter than the parameter string, return -1
+	if (sz < s.sz)
+		return -1;
+
+	// if this string is longer than the parameter string, return 1
+	if (sz > s.sz)
+		return 1;
+
+	// otherwise, find the first character which differs and compare
+	for (int i=0; i<sz; ++i)
+	{
+		if (p[i] < s.p[i])
+			return -1;
+		if (p[i] > s.p[i])
+			return 1;
+	}
+	return 0;
+}

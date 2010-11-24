@@ -1,0 +1,73 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+template <class S>
+int
+re<S>::fill_buffer(istream& is, char** si, char left, char right)
+{
+	int	size = 0;
+	int	max = 512;
+	char	ch;
+	char*	s;
+
+	*si = NULL;
+
+	// skip white space
+
+	for (is.get(ch); !is.eof(); is.get(ch))
+		if(!isspace(ch))
+			break;
+
+	if (is.eof())
+		return 0;
+
+	// find the left delimiter
+
+	if (left != ' '  && ch != left)
+		return 0;
+
+	s = new char[max];
+
+	// collect chars until right delimiter
+
+	while (!is.eof())
+	{
+		// if two right delimiters, it's an escape
+		// note we check for all types of white space
+
+		if (ch == right || (right == ' ' && (ch == '\t' || ch == '\n')))
+		{
+			is.get(ch);
+			if (is.eof() || (ch != right) || 
+				(right == ' ' && !(ch == ' ' || ch == '\n' || ch == '\t')))
+			{
+				is.putback(ch);
+				s[size] = '\0';
+				*si = s;
+				return size;
+			}
+		}
+
+		s[size++] = ch;
+
+		// allocate more space if necessary
+
+		if (size == max)
+		{
+			max *= 2;
+
+			char* cptr = new char[max];
+			for (int i=0; i<size; ++i)
+				cptr[i] = s[i];
+			delete [] s;
+			s = cptr;
+		}
+
+		is.get(ch);
+	}
+
+	s[size] = '\0';
+	*si = s;
+	return size;
+}

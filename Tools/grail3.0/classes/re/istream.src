@@ -1,0 +1,82 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1996
+
+
+/***************************************************************************
+
+  File:  classes/re/istream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      template <class S> istream& operator>>(istream& is, re<S>& r)
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/09         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+        template <class S> istream& operator>>(istream& is, re<S>& r)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function inputs a regular expression from
+    the given input stream and stores it in r.  The input stream must be
+    valid and open before calling this function.  This function calls 
+    re<S>::parse(istream&) to parse the input.  It returns a reference to the
+    input stream.
+
+    This function can be called in the following ways:
+      operator>>(input_stream, new_re);
+      input_stream >> new_re;
+
+  Parameters:
+    istream& is - the input stream
+    re<S>& r - the re which will hold the new regular expression
+
+  Return Value:
+    istream& - a reference to the input stream.
+
+  
+ ***************************************************************************/
+
+template <class S>
+istream&
+operator>>(istream& is, re<S>& r)
+{
+	int	sz;
+	char**	s=new char*;
+	*s = NULL;
+	re<S>*	tmp_re;
+
+	// read from the stream into a string
+	sz = r.fill_buffer(is, s, re<S>::re_left_delimiter, 
+			re<S>::re_right_delimiter);
+	
+	if (sz==0)
+	{
+		r.p=0;
+		return is;
+	}
+
+	istrstream	str(*s, sz);
+
+	// parse the input and create a regular expression	
+	tmp_re = r.parse(str);
+
+	r = *tmp_re;
+	delete tmp_re;
+	delete [] (*s);	
+
+	return is;
+}

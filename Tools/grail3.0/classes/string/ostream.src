@@ -1,0 +1,74 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	July 1995
+
+
+/***************************************************************************
+
+  File:  classes/string/ostream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      template <class Item> 
+      ostream& operator<<(ostream& os, const string<Item>& s)
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/02         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+         template <class Item>
+         ostream& operator<<(ostream& os, const string<Item>& s)
+
+  Description:
+    This function outputs the contents of the parameter string onto the
+    specified output stream.  Each character is printed to the stream
+    using operator<< for Item.  If a separator is defined for the string,
+    then the characters a separated by the separator characer.  The output
+    stream must be valid and open before calling this function.  No
+    carriage return is added. The function returns a reference to the stream.
+
+    Item1(Separator)Item2(Separator)...(Separator)ItemN
+
+    This function can be called in the following ways:
+      operator<<(output_stream, a_string);
+      output_stream << a_string;
+
+  Parameters:
+    ostream& os - the output stream
+    const string<Item>& s - the string to be outputted
+
+  Return Value:
+    ostream& - a reference to the output stream
+  
+ ***************************************************************************/
+
+template <class Item>
+ostream&
+operator<<(ostream& os, const string<Item>& s)
+{
+	if (s.size() == 0)
+		return os;
+
+	for (int i=0; i<s.size()-1; ++i)
+	{
+		os << s[i];
+		if (s.separator != '\0')
+			os << s.separator;
+	}
+	os<<s[s.size() - 1];
+	return os; 
+}
+
+
+

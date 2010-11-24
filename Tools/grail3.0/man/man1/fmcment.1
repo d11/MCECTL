@@ -1,0 +1,98 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmcment 1 "Grail"
+.SH NAME
+fmcment \- compute the complement of a machine
+.SH SYNOPSIS
+.B fmcment fm
+.sp
+.B fmcment <fm
+.SH DESCRIPTION
+.B
+fmcment
+computes the complement of \fIfm\fR and writes 
+the result on the standard output.  
+.B
+fmcment 
+performs subset construction if the machine is not deterministic, 
+and completion if the machine is incomplete.
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.LP
+The complement of a machine accepts any string not accepted by 
+the original machine.  Complement is defined in terms of the 
+underlying alphabet of the machine.  
+Since Grail machines do not contain a separate specification
+of their underlying alphabet,
+.B
+fmcment 
+assumes that the alphabet used in the input machine is 
+the underlying alphabet. Thus, 
+.B
+fmcment
+computes the complement only with respect to the symbols that appear
+in the original machine.  In order to compute complement with 
+respect to an alphabet containing symbols that are not in the 
+original machine, it is necessary to add instructions from a
+start state to a new non-final state, one instruction for each 
+missing symbol.  The new state should be the source of no
+instructions.
+.SH EXAMPLES
+.EX
+% cat dfm1
+(START) |- 0
+0 a 1
+1 b 2
+2 -| (FINAL)
+
+% fmcment dfm1
+(START) |- 0
+0 a 1
+1 b 2
+0 b 3
+2 a 3
+2 b 3
+1 a 3
+3 a 3
+3 b 3
+0 -| (FINAL)
+3 -| (FINAL)
+1 -| (FINAL)
+
+% cat nfm2
+(START) |- 1
+1 a 2
+1 a 3
+1 a 4
+2 -| (FINAL)
+3 -| (FINAL)
+4 -| (FINAL)
+
+% fmcment <nfm2
+(START) |- 0
+0 a 1
+1 a 2
+2 a 2
+0 -| (FINAL)
+2 -| (FINAL)
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5)

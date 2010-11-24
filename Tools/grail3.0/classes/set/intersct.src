@@ -1,0 +1,82 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1996
+
+
+/***************************************************************************
+
+  File:  classes/set/intersct.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      set<Item>& set<Item>::intersect(const set<Item>& s1, const set<Item>& s2)
+
+    This function is a public member of the template class set
+    (declared in set.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/30         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+  set<Item>& set<Item>::intersect(const set<Item>& s1, const set<Item>& s2)
+
+  Description:
+    This function is a public member of the template class set 
+    (declared in set.h).  This is the intersection operation for sets.  After
+    the execution of this function, this set will contain the intersection
+    of s1 and s2.  s1 and s2 are unchanged.  The function returns a reference
+    to this set.
+
+    This function can be called in the following way:
+      this_set.intersect(set1, set2);    // find intersection of set1 and set2
+
+  Parameters:
+    const set<Item>& s1 - the first set to intersect
+    const set<Item>& s2 - the set to intersect with the first set
+
+  Return Value:
+    set<Item>& - a reference to this set
+  
+ ***************************************************************************/
+
+template<class Item>
+set<Item>&
+set<Item>::intersect(const set<Item>& s1, const set<Item>& s2)
+{
+	clear();
+
+	// sort s1, s2
+	s1.sort();
+	s2.sort();
+
+	// if s1 is below s2, return
+	if (s1[s1.size()-1] < s2[0])
+		return *this;
+ 
+	// compare every element of s1 with s2
+	for (int i=0; i<s1.sz; ++i)
+	{
+		// if s1 above s2, return
+		if (s1[i] > s2[s2.size()-1])
+			return *this;
+
+		if (s2.member(s1[i]) >= 0)
+			disjoint_union(s1[i]);
+	}
+
+	sorted = s1.sorted;
+	return *this;
+}
+
+

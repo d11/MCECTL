@@ -1,0 +1,89 @@
+/******************************************************************************************
+
+File:	classes/afa/afatofm.src
+-----
+
+Description:	
+------------
+	This file contains the definition of the following function:
+	
+			fm<T> afa<T>::afatofm() const
+
+	This function is a public member of the template class afa
+	(declared in afa.h).
+
+Revision History:
+-----------------
+	X. Wu			Initial version of source code
+	S. Huerter 08/12/98	Header and comments
+
+******************************************************************************************/
+/******************************************************************************************
+
+			fm<T> afa<T>::afatofm() const
+
+Description:
+	This function is a public member of the template class afa (declared in afa.h).
+	This function returns a dfa which accepts the same language as this afa.  
+
+	This function can be called in the following way(s):
+		dfa1 = afa1.afatofm(); 
+	
+	Return Value:
+		fm<T>			- the dfa accepting the same language as this afa
+
+******************************************************************************************/
+//#include "afa.h"
+#include <math.h>
+
+template <class T>
+fm<T> afa<T>::afatofm()const
+{
+  fm<T>          dfa;
+  set<state>     allq;          //all the states for the constructed dfa
+  set<state>     starts;        //the start state set of the constructed dfa
+  set<state>     finals;        //the final state set of the constructed dfa 
+  state          tmp;           //temprary number 
+  set<state>     newq;          //temprary set of states
+  
+  tmp = final;                  //avoid conversion in template
+  starts += tmp;                //put the final of the afa as the start state
+  dfa.set_starts(starts);       //start state is the characteristic vector
+
+  newq += tmp;
+  
+  while (newq.size() != 0)
+    {
+      tmp = newq[0];
+      allq += tmp;
+      if (head.evaluate(tmp.value())==1) //to see if the integer value of the 
+	                            //state satisfy the head function or not
+	finals +=tmp;               //if it satisfy the head, put it on finals
+
+  int size = symbol.size();
+//for each input symbol, construct the transition tmp a|- ?
+      for (int i=0; i<size; i++)
+	{
+	  int tnumber=0;
+	  for (int j=0; j<states; j++)
+	    if (table[j*size + i].evaluate(tmp.value())==1)
+	      tnumber+=(unsigned)pow(2,j);
+	  state target(tnumber);
+	  inst<T> newinst;
+	  newinst.assign(tmp, symbol[i], target);
+	  dfa.add_instruction(newinst);
+	  if (allq.member(target)<0)    //if the target is a new state 
+            {
+	      newq +=target;            //add the target state to newq set
+	    }
+	}
+      newq -=tmp;      //remove tmp from the set of newq. done with this state
+    }
+  dfa.set_finals(finals);
+ 
+  return dfa;
+}
+      
+
+  
+  

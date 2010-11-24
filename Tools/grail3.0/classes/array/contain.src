@@ -1,0 +1,64 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+
+/***************************************************************************
+
+  File:  classes/array/contain.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int array<Item>::contain(const array<Item>& s) const
+
+    This function is a public member of the template class array 
+    (declared in array.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/02/04         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+            int array<Item>::contain(const array<Item>& s) const
+
+  Description:
+    This function is a public member of the template class array 
+    (declared in array.h).  This function determines whether or not the
+    elements in the parameter array are contained in this array.  The
+    order of the elements does not affect the result.  The function
+    returns 1 if all the elements in the parameter array are contained in
+    this array and 0 otherwise.
+
+    This function can be called in the following way:
+      result = this_array.contain(other_array);
+
+  Parameters:
+    const array<Item>& s - the array for which containment should be checked
+
+  Return Value:
+    int - returns 1 if all the elements in the parameter array are contained
+          in this array and 0 otherwise.
+  
+ ***************************************************************************/
+
+template <class Item>
+int
+array<Item>::contain(const array<Item>& s) const
+{
+        // loop through all the elements in the parameter array and check
+        //  for membership in this array
+	for (int i=0; i<s.sz; ++i)
+		if (member(s.p[i]) < 0)
+			return 0;
+	return 1;
+}

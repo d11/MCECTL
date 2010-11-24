@@ -1,0 +1,92 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/fl/rquot.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      fl<Item>& fl<Item>::right_quotient(const string<Item>& s)
+
+    This function is a public member of the template class fl (declared 
+    in classes/fl/fl.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/05         Added header and comments (adapted from
+                                    Release Notes for Grail Version 2.5 by
+                                    Darrell Raymond and Roger Robson)
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+         fl<Item>& fl<Item>::right_quotient(const string<Item>& s)
+
+  Description:
+    This function is a public member of the template class fl (declared 
+    in classes/fl/fl.h).  This function computes the right quotient of
+    language and the parameter string and stores the resulting language
+    in this fl.  The right quotient of a language L and a string x is 
+    defined as the language of all words y such that yx is in L.  The right
+    quotient of any language L with the empty string yields the language L.
+    The right quotient of the empty language and any string yields the
+    empty language.  The function returns a reference to this fl.
+
+    This function can be called in the following way:
+      this_fl.right_quotient(a_string);
+
+  Parameters:
+    const string<Item>& s - the string to match.
+
+  Return Value:
+    fl<Item>& - a reference to this fl.
+
+  
+ ***************************************************************************/
+
+template <class Item>
+fl<Item>&
+fl<Item>::right_quotient(const string<Item>& s)
+{
+	int			j;
+	set<string<Item> >	res;
+
+   	// loop through all the words in the language
+	for (int i=0; i<words.size(); ++i)
+	{
+		// if this word can contain the parameter word
+		if (words[i].size() >= s.size())
+		{
+			// check to see if the right matches s
+			int pfx_size = words[i].size()-s.size();
+			int k = s.size();
+			for (j=words[i].size()-1; j>pfx_size-1; --j)
+				if (words[i][j] != s[--k])
+					break;
+
+			// if a match is found, add the left part of the
+			//  word to the new language
+			if (j == pfx_size-1)
+			{
+				string<Item> tmp;
+				tmp.clear();
+				for (j=0; j<pfx_size; ++j)
+					tmp += words[i][j];
+				res += tmp;
+			}
+		}
+	}
+	words = res;
+	
+	return *this;
+}

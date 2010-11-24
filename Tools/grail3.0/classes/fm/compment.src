@@ -1,0 +1,65 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+/***************************************************************************
+
+  File:  classes/fm/compment.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      void fm<Label>::complement()
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/06         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                     void fm<Label>::complement()
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function complements this fm.  That is, the
+    language represented by this fm is complemented:  all words over the
+    input alphabet previously not accepted will be accepted, and all those
+    which were accepted by this fm will not be.  The machine is made 
+    deterministic and complete before performing the operation.
+
+    This function can be called in the following way:
+      this_fm.complement();
+
+  Parameters:  none
+
+  Return Value:  none
+  
+ ***************************************************************************/
+
+template <class Label>
+void
+fm<Label>::complement()
+{
+	set<state>	all_states;
+
+	// the machine must be deterministic
+	subset();
+	
+	// the machine must be complete
+	complete();
+
+	// all non-finals become final
+	states(all_states);
+	all_states -= final_states;
+	final_states = all_states;
+}

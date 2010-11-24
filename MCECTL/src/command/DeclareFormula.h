@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  DeclareFormula.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  10/11/10 13:58:39
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -25,8 +17,6 @@
 
 #include "AST/Formula.h"
 #include "Command.h"
-
-//using namespace AST::Formula;
 
 #include "Environment.h"
 #include "GlobalOptions.h"
@@ -108,7 +98,7 @@ namespace Command {
          virtual string ToString() const {
             return string("FORMULA ") + _formula_name + " { " + _formula_ast.ToString() + " }";
          }
-         virtual void Execute(Environment &environment, GlobalOptions &options) const {
+         virtual void Execute(Environment &environment, GlobalOptions &options) {
             cout << "[FORMULA "  << _formula_name << "]" << endl;
             cout << "Declaring formula... "  << ToString() << endl;
 

@@ -1,0 +1,41 @@
+
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH FL 5 "Grail"
+.SH NAME
+fl \- format for finite languages
+.SH DESCRIPTION
+.LP
+In \fIGrail\fR, a finite language is specified by simply listing the words 
+which belong to the language.  Each word must be separated from the next by
+a newline character.  The words may employ only alphabetic characters, and
+leading and trailing whitespace is ignored.
+.LP
+The empty language is represented by a file containing no characters.  The
+empty string is represented by a line with no alphabetic characters.  
+Duplicate words are ignored.
+.LP
+The words in the language need not be ordered.
+.LP
+Grail supports parameterizable finite languages.  If the alphabet of your
+language is not the ASCII characters, then the symbols that form the words
+will be a textual representation of the objects in your alphabet.
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5), fm(5), re(5)

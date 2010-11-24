@@ -1,0 +1,75 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1993
+
+/***************************************************************************
+
+  File:  classes/fm/isdeterm.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::is_deterministic() const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/07         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                    int fm<Label>::is_deterministic() const
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  Check whether this fm is deterministic (has 
+    only one start state and exactly one instruction for each letter in 
+    the input alphabet originating from every state).  The function 
+    returns 1 if this fm is complete, 0 otherwise.
+
+    This function can be called in the following way:
+      result = this_fm.is_deterministic();
+
+  Parameters:  none
+
+  Return Value:
+    int - returns 1 if this fm is deterministic, 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::is_deterministic() const
+{
+	int		j;
+	set<state>	all_states;
+	set<Label>	alphabet;
+	fm<Label>	t;
+
+	// if more than one start state, it's not deterministic
+	if (start_states.size() != 1)
+		return 0;
+
+	// collect alphabet and states
+	labels(alphabet);
+	states(all_states);
+
+	// for every state, check for all instructions
+	for (int i=0; i<all_states.size(); ++i)
+		for (j=0; j<alphabet.size(); ++j)
+		{
+			select(alphabet[j], all_states[i], SOURCE, t);
+			if (t.size() > 1)
+				return 0;
+		}
+	return 1;
+}

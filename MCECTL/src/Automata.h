@@ -128,7 +128,7 @@ public:
 };
 
 class State {
-private:
+protected:
    string _name;
 public:
    State(const string &name) : _name(name) {}
@@ -166,8 +166,17 @@ public:
    }
 
    void AddRule( const S* state1, A *action, const S* state2 ) {
-      size_t i = _index_lookup.find(state1)->second;
-      size_t j = _index_lookup.find(state2)->second;
+      typename map<const S*, size_t>::const_iterator iter;
+      iter = _index_lookup.find(state1);
+      if (iter == _index_lookup.end()) {
+         throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
+      }
+      size_t i = iter->second;
+      iter = _index_lookup.find(state2);
+      if (iter == _index_lookup.end()) {
+         throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
+      }
+      size_t j = iter->second;
       TransitionTable &tt = *_transition_table;
       tt(i, j).push_back(action);
       _rule_list.push_back(Rule(state1, action, state2));

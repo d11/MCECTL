@@ -1,0 +1,74 @@
+//	This code copyright (c) by the Grail project
+//	No commercial use permitted without written consent.
+//	June 1995
+
+/***************************************************************************
+
+  File:  classes/bits/member.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int bits::member(const bits& f) const 
+
+    This function is a public member of the class bits (declared in bits.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/29         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                  int bits::member(const bits& f) const 
+
+  Description:
+    This function is a public member of the class bits (declared in bits.h).
+    This function determines whether bits matching the bits in the parameter 
+    bitmap exist in this bitmap.  The comparisons done depend on the size of 
+    the parameter bitmap.  The first comparison starts at the beginning of 
+    this bitmap, and the next comparison starts f.sz bits further, the 
+    third comparison starts 2*f.sz bits from the beginning etc.  If a section 
+    of bits is found in the bitmap which exactly matches the parameter bitmap,
+    the function returns 1, otherwise it returns 0.  Returns the index of 
+    the section of bits if one is found (each section is the size of the 
+    parameter bitmap) and -1 otherwise.
+
+    This function can be called in the following way:
+      this_bitmap.member(other_bitmap);
+
+  Parameters:
+    const bits& f - the bitmap to compare to this bitmap
+
+  Return Value:
+    int - returns the index of the section of bits which matches the 
+          parameter bitmap is one is found, -1 otherwise.
+  
+ ***************************************************************************/
+
+int
+bits::member(const bits& f) const 
+{
+	int	elements = sz/f.sz;	 	 // number of sections to check
+	char*	ptr = (char *) b;
+	char*	ptr2 = (char *) f.b;
+	int	j = sizeof(unsigned int) * f.sz; // number of bits in a section
+
+	// look for comparisons
+	for (int i=0; i<elements; ++i)
+	{
+		if (memcmp(ptr, ptr2, j) == 0)
+			return i;
+
+		ptr += j;
+	}
+
+	return -1;
+}

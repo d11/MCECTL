@@ -38,19 +38,20 @@ void usage(int exit_code) {
           */
 
 map<string, string> get_options(int argc, char *argv[]) {
-   static struct option longopts[] = {
-      { "file", required_argument, 0, 'f' },
-      { "verbose", 0, 0, 'v' },
-      { 0, 0, 0, 0 }
-   };
-
    map<string, string> options;
 
    int result = 0;
    int index = 0;
    while (1) {
-      result = getopt_long (argc, argv, "f:", longopts, &index);
-      
+      static struct option longopts[] = {
+         { "file",    required_argument,  0, 'f' },
+         { "verbose", no_argument,  0, 'v' },
+         { 0,         0,  0, 0   }
+      };
+
+      result = getopt_long (argc, argv, "f:v", longopts, &index);
+
+      cout << "Index: " <<  index << endl;
       if ( result < 0 )
       {
          break;
@@ -60,7 +61,14 @@ map<string, string> get_options(int argc, char *argv[]) {
          usage(1);
       }
 
-      options[ longopts[index].name ] = optarg;
+      string value;
+      if (optarg) {
+         value = optarg;
+      }
+      else {
+         value = "1";
+      }
+      options[ longopts[index].name ] = value;
       cout << "Result: " << (char)result << endl;
       cout << "Option: " << longopts[index].name << endl;
       cout << "Value:  " << (optarg != NULL ? optarg : "[none]") << endl;
@@ -88,11 +96,16 @@ int main(int argc, char *argv[]) {
 
    iter = options.find("file");
    if(iter != options.end()) {
-      Command::LoadFile command(iter->second);
-      repl.SendCommand(command);
+      Command::LoadFile *command = new Command::LoadFile(iter->second);
+      repl.SendCommand(*command);
    }
    else {
    //   cout << "No file option found" << endl;
+   }
+
+   iter = options.find("verbose");
+   if(iter != options.end()) {
+      global_options.SetVerbose();
    }
 
    repl.Run();

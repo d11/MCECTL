@@ -22,10 +22,13 @@
 class GlobalOptions {
 
    bool _quitting;
+   bool _verbose;
 public:
-   GlobalOptions() : _quitting(false) { };
-   void SetQuitting() { _quitting = true; };
-   bool IsQuitting() { return _quitting; };
+   GlobalOptions() : _quitting(false), _verbose(false) { }
+   void SetVerbose() { _verbose = true; }
+   bool IsVerbose() { return _verbose; }
+   void SetQuitting() { _quitting = true; }
+   bool IsQuitting() { return _quitting; }
 };
 
 #endif

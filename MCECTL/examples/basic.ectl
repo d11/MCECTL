@@ -1,42 +1,57 @@
-# an lts test
-DFA test_lts {
-   STATE ( initial: hungry, thirsty )
-   STATE ( hungry: hungry )
-   STATE ( thirsty: thirsty )
-   STATE ( toast_a: hungry, thirsty, toast )
-   STATE ( tea_a: hungry, thirsty, tea )
-   STATE ( toast_tea_a: hungry, thirsty, toast, tea )
-   STATE ( tea_b: thirsty, tea )
-   STATE ( toast_b: hungry, toast )
-   STATE ( fulfilled: temp )
+#PDS test_pds {
+#   STATE ( unfulfilled[_] : hungry )
+#   STATE ( unfulfilled[toast] : hungry )
+#   STATE ( eaten_toast[_] : full, eaten_all_toast )
+#   STATE ( eaten_toast[toast] : full )
+#
+#   # We can make toast when we're not full
+#   ACTION ( make_toast: unfulfilled[_] -> unfulfilled[ PUSH toast] )
+#   ACTION ( make_toast: unfulfilled[toast] -> unfulfilled[ PUSH toast ] )
+#
+#   # We can eat toast when we've got some
+#   ACTION ( eat_toast: unfulfilled[toast] -> eaten_toast[ POP ] )
+#   ACTION ( eat_toast: eaten_toast[toast] -> eaten_toast[ POP ] )
+#} 
+#
+## an lts test
+#LTS test_lts {
+#   STATE ( initial: hungry, thirsty )
+#   STATE ( hungry: hungry )
+#   STATE ( thirsty: thirsty )
+#   STATE ( toast_a: hungry, thirsty, toast )
+#   STATE ( tea_a: hungry, thirsty, tea )
+#   STATE ( toast_tea_a: hungry, thirsty, toast, tea )
+#   STATE ( tea_b: thirsty, tea )
+#   STATE ( toast_b: hungry, toast )
+#   STATE ( fulfilled: full )
+#
+#   ACTION ( make_toast: initial -> toast_a )
+#   ACTION ( make_toast: tea_a -> toast_tea_a )
+#   ACTION ( make_toast: hungry -> toast_b )
+#   ACTION ( make_tea: initial -> tea_a )
+#   ACTION ( make_tea: toast_a -> toast_tea_a )
+#   ACTION ( make_tea: thirsty -> tea_b )
+#
+#   ACTION ( eat_toast: toast_a -> thirsty )
+#   ACTION ( eat_toast: toast_tea_a -> tea_b )
+#   ACTION ( eat_toast: toast_b -> fulfilled )
+#
+#   ACTION ( drink_tea: tea_a -> hungry )
+#   ACTION ( drink_tea: toast_tea_a -> toast_b )
+#   ACTION ( drink_tea: tea_b -> fulfilled )
+#}
 
-   ACTION ( make_toast: initial -> toast_a )
-   ACTION ( make_toast: tea_a -> toast_tea_a )
-   ACTION ( make_toast: hungry -> toast_b )
-   ACTION ( make_tea: initial -> tea_a )
-   ACTION ( make_tea: toast_a -> toast_tea_a )
-   ACTION ( make_tea: thirsty -> tea_b )
-
-   ACTION ( eat_toast: toast_a -> thirsty )
-   ACTION ( eat_toast: toast_tea_a -> tea_b )
-   ACTION ( eat_toast: toast_b -> fulfilled )
-
-   ACTION ( drink_tea: tea_a -> hungry )
-   ACTION ( drink_tea: toast_tea_a -> toast_b )
-   ACTION ( drink_tea: tea_b -> fulfilled )
-}
-
-DFA test_dfa { # DFA test
-   STATE ( empty: hungry )
-   STATE ( fulfilled: foo )
-   ACTION ( make_toast: empty -> toast_ready )
-   ACTION ( eat_toast: toast_ready -> fulfilled )
-}
-
-# another DFA test
-DFA test_dfa2 {
-   STATE ( empty: hungry ) # Hungry state
-}
+#DFA test_dfa { # DFA test
+#   STATE ( empty )
+#   STATE ( fulfilled )
+#   ACTION ( make_toast: empty -> toast_ready )
+#   ACTION ( eat_toast: toast_ready -> fulfilled )
+#}
+#
+## another DFA test
+#DFA test_dfa2 {
+#   STATE ( empty )
+#}
 
 # some regex
 REGULAR all {
@@ -49,12 +64,12 @@ REGULAR eat_nonexistent_toast {
 
 # some formulas
 
-FORMULA not_always_hungry {
-   !E( 0 R[test_dfa] hungry )
-}
-#
-FORMULA dont_eat_future_toast {
-   !E( 1 U[test_dfa] 1 )
-}
+#FORMULA not_always_hungry {
+#   !E( 0 R[test_dfa] hungry )
+#}
+##
+#FORMULA dont_eat_future_toast {
+#   !E( 1 U[test_dfa] 1 )
+#}
 #
 #FORMULA no_wasteful_toas

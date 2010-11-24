@@ -22,7 +22,7 @@
 
 using namespace std;
 
-typedef set<string> Valuation;
+typedef vector<string> Valuation;
 
 class KripkeState : public State, Showable {
 private:

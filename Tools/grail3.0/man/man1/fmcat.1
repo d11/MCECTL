@@ -1,0 +1,80 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmcat 1 "Grail"
+.SH NAME
+fmcat \- catenate two machines
+.SH SYNOPSIS
+.B fmcat fm1 fm2
+.sp
+.B fmcat fm2 <fm1
+.SH DESCRIPTION
+.B
+fmcat 
+computes the catenation of \fIfm1\fR and \fIfm2\fR, writing 
+the result on the standard output.  \fIfm1\fR and \fIfm2\fR need not
+be distinct.
+.B
+fmcat
+does not introduce empty-string instructions.  It catenates the
+machines by connecting the final states of \fIfm1\fR to the
+targets of start states in \fIfm2\fR, and appending any
+other instructions.  Before catenation, the states in 
+\fIfm2\fR are renumbered so there are no collisions with
+states in \fIfm1\fR.
+.LP
+\fIfm1\fR and \fIfm2\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat dfm1
+(START) |- 0
+0 a 1
+1 b 2
+2 -| (FINAL)
+
+% fmcat dfm1 dfm1
+(START) |- 0
+0 a 1 
+1 b 2 
+2 a 4 
+4 b 5 
+5 -| (FINAL) 
+
+% cat nfm2
+(START) |- 1
+1 a 2
+1 a 3
+1 a 4
+2 -| (FINAL)
+3 -| (FINAL)
+4 -| (FINAL)
+
+% fmcat nfm2 dfm1
+(START) |- 1
+1 a 2 
+1 a 3 
+1 a 4 
+2 a 6 
+3 a 6 
+4 a 6 
+6 b 7 
+7 -| (FINAL) 
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5)

@@ -1,0 +1,66 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+
+/***************************************************************************
+
+  File:  classes/fm/remove.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      void fm<Label>::remove(const state& s)
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/07         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                 void fm<Label>::remove(const state& s)
+
+  Description:
+    This function is a public member of the template class fm (declared in
+    classes/re/fm.h).  Remove the parameter state from this fm.  Since
+    states are stored implicitly as part of instructions in an fm,
+    to remove a state, all the instructions with that state as either
+    the source or sink state are deleted, and the state is removed from
+    the sets of start states and final states.  The parameter state is
+    unchanged.
+    
+    This function can be called in the following way:
+      this_fm.remove(old_state);
+
+  Parameters:
+    const state& s - a reference to the state to be removed from the fm
+
+  Return Value:  none
+  
+ ***************************************************************************/
+
+template <class Label>
+void
+fm<Label>::remove(const state& s)
+{
+	// note that we remove from the tail of the list first;
+	// this is so we don't overlook any instructions during
+	// the deletion
+
+	for (int i=size(); i>=0; --i)
+		if (arcs[i].sourceis(s) || arcs[i].sinkis(s))
+			arcs.remove(i); 
+
+	start_states -= s;
+	final_states -= s;
+}

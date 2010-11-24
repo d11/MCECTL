@@ -1,0 +1,74 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	November 1994
+
+/***************************************************************************
+
+  File:  classes/fm/eq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::operator==(const fm<Label>& s) const
+
+    This function is a public member of the template class fm 
+    (declared in fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/01         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+           int fm<Label>::operator==(const fm<Label>& b) const
+
+  Description:
+    This function is a public member of the template class fm 
+    (declared in fm.h).  This function tests whether this fm is equal to
+    the parameter fm.  The fms are judged to be equal if they contain the
+    same set of instructions, start states and final states.  The 
+    function returns 1 if they are equal and 0 otherwise.
+
+    This function can be called in the following ways:
+      this_fm.operator==(other_fm);
+      result = (this_fm == other_fm);
+
+  Parameters:
+    const fm<Label>& s - the fm to be compared to this fm
+
+  Return Value:
+    int - returns 1 if the fms are equal and 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::operator==(const fm<Label>& b) const
+{
+	// check sizes
+	if (size() != b.size())
+		return 0;
+
+	// check start states
+	if (start_states != b.start_states)
+		return 0;
+
+	// check final states
+	if (final_states != b.final_states)
+		return 0;
+
+	// compare the instructions
+	if (arcs == b.arcs)
+		return 1;
+
+	return 0;
+}
+

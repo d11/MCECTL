@@ -1,0 +1,57 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH flprepen 1 "Grail"
+.SH NAME
+flprepen \- prepend a string to a finite language
+.SH SYNOPSIS
+.B flprepen fl string
+.sp
+.B flprepen string <fl
+.SH DESCRIPTION
+.B
+flprepen
+prepends \fIstring\fR to every word in the finite language \fIfl\fR, and 
+writes the resulting finite language on the standard output.  \fIfl\fR must 
+conform to the Grail format for finite languages.
+.LP
+Prepending a string to the empty language yields the empty language.  
+Prepending the empty string to a language \fIL\fR yields \fIL\fR.  Prepending 
+a string \fIS\fR to the empty string yields \fIS\fR.
+.SH EXAMPLES
+.EX
+% cat fl
+abc
+bcd
+
+dc
+
+% flprepen fl xyz
+xyzabc
+xyzbcd
+xyz
+xyzdc
+
+% flprepen fl ""
+abc
+bcd
+
+dc
+
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5), flappend(1)

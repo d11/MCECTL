@@ -1,0 +1,123 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	November 1994
+
+/***************************************************************************
+
+  File:  classes/set/minuseq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      set<Item>& set<Item>::operator-=(const set<Item>& s)
+      set<Item>& set<Item>::operator-=(const Item& q)
+
+    This function is a public member of the template class set
+    (declared in set.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/30         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+           set<Item>& set<Item>::operator-=(const set<Item>& s)
+
+  Description:
+    This function is a public member of the template class set 
+    (declared in set.h).  This function deletes any elements found in
+    both this set and the parameter set from this set.  Elements
+    of the parameter set which are not elements of this set are ignored.  
+    If the set was sorted, it will remain sorted if it contains less than 
+    64 elements, and may or may not remain sorted if it is larger.  The 
+    function returns a reference to this set.
+
+    This function can be called in the following ways:
+      this_set.operator-=(other_set);
+      this_set -= other_set;
+
+  Parameters:
+    const set<Item&> s - the set whose elements should be removed from this set
+
+  Return Value:
+    set<Item>& - a reference to this set
+  
+ ***************************************************************************/
+
+template <class Item>
+set<Item>&
+set<Item>::operator-=(const set<Item>& s)
+{
+	// avoid self deletion
+	if (this == &s)
+		return *this;
+
+	for (int i=0; i<s.sz; ++i)
+		*this -= s[i];
+
+	return *this;
+}
+
+
+
+/***************************************************************************
+
+             set<Item>& set<Item>::operator-=(const Item& q)
+
+  Description:
+    This function is a public member of the template class set 
+    (declared in set.h).  This function removes the parameter element from
+    this set if it is a member.  If the parameter element is not a member
+    of this set, no change is made.  If the set was sorted, it will remain 
+    sorted if it contains less than 64 elements, and may or may not remain 
+    sorted if it is larger.  The function returns a reference to this set.
+
+    This function can be called in the following ways:
+      this_set.operator-=(old_item);
+      this_set -= old_item;
+
+  Parameters:
+    const Item& q - the item to remove from this set
+
+  Return Value:
+    set<Item>& - a reference to this set
+  
+ ***************************************************************************/
+
+template <class Item>
+set<Item>&
+set<Item>::operator-=(const Item& q)
+{
+	int	i;
+
+	// is it present?
+	if ((i = member(q)) < 0) 
+		return *this;
+
+	// retain sortedness if it's not too expensive 
+	if (sorted && (sz - i < 64))
+	{
+		--sz;
+		for (; i<sz; ++i)
+			p[i] = p[i+1];
+		return *this;
+	}
+
+	// otherwise, substitute last member
+	if (sz > 1)
+		p[i] = p[sz-1]; 
+	--sz;
+	sorted = 0;
+
+	return *this;
+}
+
+

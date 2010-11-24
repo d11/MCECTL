@@ -28,7 +28,7 @@ namespace Command {
       virtual string ToString() const {
          return "";
       }
-      virtual void Execute(Environment &environment, GlobalOptions &options) const {
+      virtual void Execute(Environment &environment, GlobalOptions &options) {
       }
    };
 }

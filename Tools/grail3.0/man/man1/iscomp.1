@@ -1,0 +1,65 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH iscomp 1 "Grail"
+.SH NAME
+iscomp \- test for completeness
+.SH SYNOPSIS
+.B iscomp fm
+.sp
+.B iscomp <fm
+.SH DESCRIPTION
+.B
+iscomp
+tests \fIfm\fR for completeness (that every state has a instruction 
+with every instruction label).  The input alphabet is considered to 
+be the set of labels present in the input machine.
+.B
+iscomp
+returns 1 and writes \fBcomplete\fR on standard output
+if \fIfm\fR is complete; otherwise, it returns 0 and writes
+\fBincomplete\fR.
+.LP
+An incomplete machine can be made complete with
+.B
+fmcomp.
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat dfm3
+(START) |- 0
+0 a 1
+0 b 4
+1 c 2
+2 d 3
+3 -| (FINAL)
+4 e 5
+5 f 6
+6 -| (FINAL)
+
+% iscomp dfm3
+incomplete
+
+% fmcomp dfm3 | iscomp
+complete
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5), fmcomp(1)

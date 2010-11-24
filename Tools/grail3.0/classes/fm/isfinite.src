@@ -1,0 +1,103 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	February 1996
+
+/***************************************************************************
+
+  File:  classes/fm/isfinite.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::is_finite() const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/09         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                    int fm<Label>::is_finite() const
+
+  Description:
+    This function is a public member of the template class fm (declared in
+    classes/re/fm.h).  This function determines whether the language 
+    represented by this fm is finite (this will only be the case if the
+    fm does not contain any loops).  The function returns 1 if the language
+    represented by this fm is finite, 0 otherwise.
+
+    This function can be called in the following way:
+      result = this_fm.is_finite();
+
+  Parameters:  none
+
+  Return Value:
+    int - returns 1 if the fm is finite, 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::is_finite() const
+{
+	fm<Label>	t = *this;
+	set<state>	all;
+	set<state> 	wave;
+	set<state> 	next_wave;
+	list<set<state> > ancestors;
+	set<inst<Label> > trans;
+	fm<Label>	temp;
+
+	// collect states and transitions
+	t.states(all);
+	all.sort();
+	trans = t.arcs;
+	trans.sort();
+
+   	// initialize sources table
+	for (int i=0; i<all.size(); ++i)
+		ancestors += set<state>();
+	
+	// get first wave
+	wave = t.start_states;
+
+	while (wave.size() != 0)
+	{
+		next_wave.clear();
+
+		// build set of all states reachable from any state in wave
+		// with a single instruction.
+
+		for (int i=0; i<wave.size(); ++i)
+		{
+			int S = all.member(wave[i]);
+			for (int j=0; j<trans.size(); ++j)
+				if (trans[j].get_source() == wave[i])
+				{	
+					int F = all.member(trans[j].get_sink());
+
+					// build ancestor trail
+					ancestors[F] += ancestors[S];
+					ancestors[F] += wave[i];
+
+					// if ancestors includes self, 
+					// machine has a loop, 
+					if (ancestors[F].member(all[F]) != -1)
+						return 0;
+					next_wave += trans[j].get_sink();
+				}
+		}
+		wave = next_wave; 
+	}
+	return 1;
+}

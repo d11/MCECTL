@@ -1,0 +1,72 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	May 1993
+
+
+/***************************************************************************
+
+  File:  classes/fm/reach.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      void fm<Label>::reachable_fm()
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/07         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                    void fm<Label>::reachable_fm()
+
+  Description:
+    This function is a public member of the template class fm (declared in
+    classes/re/fm.h).  Reduce the state set in this fm to states which 
+    are reachable from a start state.
+
+    This function can be called in the following way:
+      this_fm.reachable_fm();
+
+  Parameters:  none
+
+  Return Value:  none
+  
+ ***************************************************************************/
+
+template <class Label>
+void
+fm<Label>::reachable_fm()
+{
+	int		i;
+	state		m1;
+	state		m2;
+	fm<Label>	result;
+	set<state>	r_states;
+
+	reachable_states(r_states);
+	result.start_states = start_states;
+
+	// keep only reachable final states
+	
+	result.final_states.intersect(final_states, r_states);
+
+	for (i=0; i<size(); ++i)
+	{
+		m1 = arcs[i].get_source(); 
+		m2 = arcs[i].get_sink();
+		if ((r_states.member(m1) >= 0) && (r_states.member(m2) >= 0))
+				result.disjoint_union(arcs[i]);
+	}
+	*this = result;
+}

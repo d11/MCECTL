@@ -1,0 +1,95 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH isomorph 1 "Grail"
+.SH NAME
+isomorph \- test two machines for isomorphism
+.SH SYNOPSIS
+.B isomorph fm1 fm2
+.sp
+.B isomorph fm2 <fm1
+.SH DESCRIPTION
+.B
+isomorph
+tests \fIfm1\fR and \fIfm2\fR for isomorphism.
+.B
+isomorph 
+returns 1 and writes \fBisomorphic\fR on standard output if the
+two machines are isomorphic, and returns 0 and writes 
+\fBnonisomorphic\fR otherwise.
+.LP
+If two machines are not input, 
+.B
+isomorph
+writes a diagnostic on standard error and returns 0.  If either 
+machine is not deterministic, 
+.B
+isomorph
+returns -1 and writes a diagnostic on its standard error.
+A machine can be made deterministic by filtering it
+with 
+.B
+fmdeterm.
+.LP
+Two machines are isomorphic if they are equivalent up to renumbering.
+Isomorphism is checked by applying canonical numbering to each 
+machine and then testing for identity.
+.LP
+\fIfm1\fR and \fIfm2\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat dfm4
+(START) |- 0
+0 a 1
+0 g 0
+0 b 4
+1 c 2
+2 d 3
+3 -| (FINAL)
+4 e 5
+5 f 6
+6 -| (FINAL)
+
+% isomorph dfm4 dfm4
+isomorphic
+
+% cat dfm1
+(START) |- 0
+0 a 1
+1 b 2
+2 -| (FINAL)
+
+% cat dfm2
+(START) |- 3
+3 a 4
+4 b 5
+5 -| (FINAL)
+
+% isomorph dfm1 dfm2
+isomorphic
+
+% isomorph dfm1 dfm4
+nonisomorphic
+
+% isomorph dfm1 nfm1
+nonisomorphic
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5), fmdeterm(1), isdeterm(1)

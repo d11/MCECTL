@@ -1,0 +1,64 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	May 1993
+
+/***************************************************************************
+
+  File:  classes/fm/assign.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      fm<Label>& fm<Label>::empty_string_machine()
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/06         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+               fm<Label>& fm<Label>::empty_string_machine()
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function clears the contents of this 
+    fm and adds one state which is both a final and start state.  The
+    resulting machine represents the language which contains only the empty 
+    string.    The function returns a reference to this fm.
+
+    This function can be called in the following way:
+      this_fm.empty_string_machine();
+
+  Parameters:  none
+
+  Return Value:
+    fm<Label>& - a reference to this fm
+  
+ ***************************************************************************/
+
+template <class Label>
+fm<Label>&
+fm<Label>::empty_string_machine()
+{
+	state	m;
+
+	// clear any previous values
+	clear();
+
+	// make a one-state machine
+	m = 0;
+	start_states += m;
+	final_states += m;
+
+	return *this;
+}

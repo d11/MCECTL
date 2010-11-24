@@ -1,0 +1,59 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH afasize 1 "Grail"
+.SH NAME
+afasize \- compute the state number of an alternating finite state machine
+.SH SYNOPSIS
+.B afasize afa
+.sp
+.B afasize < afa
+.SH DESCRIPTION
+.B
+afasize
+computes the number of states of a given \fIafa\fR and writes the result on 
+the standard output. 
+.LP
+\fIafa\fR must conform to the Grail bit-wise format for alternating finite 
+state machines.
+.SH EXAMPLES
+.EX
+% cat bitafa1
+symbols: [a,b]
+states:  3
+finals:  5
+head: 7 4
+7 5
+7 1
+0 1
+3 1
+6 2
+7 3
+
+% afasize  bitafa1
+3
+
+%afasize < bitafa1
+3
+
+%cat bitafa1 |afasize
+3
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+afa(5)

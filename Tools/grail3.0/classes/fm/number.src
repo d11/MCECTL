@@ -1,0 +1,150 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1993
+
+
+/***************************************************************************
+
+  File:  classes/fm/number.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::canonical_numbering()
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/09         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                 int fm<Label>::canonical_numbering()
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function renumbers the states in a 
+    deterministic fm in the order defined by canonical numbering.  The
+    start state will be numbered 0, followed by successors of the
+    start state, and then successors of the start state's successors etc.
+    The numbering continues by looping through transitions ordered by 
+    the input alphabet and numbering successor states until all the 
+    states have been done.  The function returns 1 if the numbering was 
+    successfully completed, and 0 otherwise (which will be the case if 
+    the fm was not deterministic).
+
+    This function can be called in the following way:
+      result = this_fm.canonical_numbering();
+
+  Parameters:  none
+
+  Return Value:
+    int - 1 if successful, 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::canonical_numbering()
+{
+	int			i;
+	int			j;
+	inst<Label>		t;
+	fm<Label>		new_fm;
+	state			s1;
+	state			s2;
+	fm<Label>		edges;
+	set<state>		temp_state;
+	set<Label>		temp_regexp;
+	list<state>		targets;
+	list<state>		wave;
+	list<state>		numbered;
+	list<Label>		alphabet;
+
+	// no (known) canonical renumbering for an nfm
+	if (!is_deterministic())
+		return 0;
+
+	// get the alphabet (get it as a set first, then convert to a list)
+	labels(temp_regexp);
+	for (i=0; i<temp_regexp.size(); ++i)
+		alphabet += temp_regexp[i];
+		
+	// sort the alphabet
+	alphabet.sort();
+
+	// the first wave is the start state (deterministic -> one start state)
+	temp_state = start_states;
+	numbered += temp_state[0];
+	wave += temp_state[0];
+
+	// determine the new numbers for the target states by canonical
+	// traversal
+	for (;;)
+	{
+		// for each state, go through all the alphabet letters
+		for (i=0; i<wave.size(); ++i)
+		{
+			for (j=0; j<alphabet.size(); ++j)
+			{
+				// select edges with wave[i] as source state
+				//  and alphabet[j] as label
+				select(alphabet[j], wave[i], SOURCE, edges);
+				if (edges.size() == 0)
+					continue;
+
+				if (numbered.member(edges[0].get_sink()) >= 0)
+					continue;
+				
+				numbered += edges[0].get_sink();
+				targets += edges[0].get_sink();
+			}
+		}
+
+		if (targets.size() == 0)
+			break;
+		wave = targets;
+		targets.clear();
+	}
+
+	// compute all edges and states, using the new numbers
+	for (i=0; i<start_states.size(); ++i)
+	{
+		if ((j = numbered.member(start_states[i])) == -1)
+			continue;
+		s1 = j;
+		new_fm.start_states += s1;
+	}
+
+	for (i=0; i<final_states.size(); ++i)
+	{
+		if ((j = numbered.member(final_states[i])) == -1)
+			continue;
+		s1 = j;
+		new_fm.final_states += s1;
+	}
+
+	for (i=0; i<size(); ++i)
+	{
+		if ((j = numbered.member(arcs[i].get_source())) == -1)
+			continue;
+		s1 = j;
+		if ((j = numbered.member(arcs[i].get_sink())) == -1)
+			continue;
+		s2 = j;
+		t.assign(s1, arcs[i].get_label(), s2);
+		new_fm.arcs += t;
+	}
+		
+	*this = new_fm;
+	return 1;
+}

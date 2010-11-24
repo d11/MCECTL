@@ -1,0 +1,66 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+/***************************************************************************
+
+  File:  classes/array/remove.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      array<Item>& array<Item>::remove(int j)
+
+    This function is a public member of the template class array 
+    (declared in array.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/27         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+               array<Item>& array<Item>::remove(int j)
+
+  Description:
+    This function is a public member of the template class array 
+    (declared in array.h).  This function removes the element at index j
+    from the array.  The size is decremented and any elements following the
+    removed element are compacted to fill the space.  If the index is 
+    invalid, the array is unchanged.  A reference to this array is 
+    returned.
+    
+    This function can be called in the following way:
+      this_array.remove(j);
+
+  Parameters:
+    int j - the index of the item to remove
+
+  Return Value:
+    array<Item>& - a reference to this array
+  
+ ***************************************************************************/
+
+template <class Item>
+array<Item>&
+array<Item>::remove(int j)
+{
+	// is j in range?
+	if (j < 0 || j >= sz)
+		return *this;
+
+	// remove Item at index j
+	--sz;	
+	for ( ; j<sz; ++j)
+		p[j] = p[j+1];
+
+	return *this;
+}

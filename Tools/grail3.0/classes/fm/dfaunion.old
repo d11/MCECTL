@@ -1,0 +1,207 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	Nov. 1997
+
+// *************************************************
+// MH 98/09/09  This code does not appear to be used
+// *************************************************
+
+template <class Label>
+void
+fm<Label>::dfaunion(const fm<Label>& a, const fm<Label> b)
+{
+	int			i;
+	int			j;
+	int			k;
+	fm<Label>		temp1;
+	fm<Label>		temp2;
+	fm<Label>               a1;
+	fm<Label>               b1;
+	state			s1;
+	state			s2;
+	inst<Label>		t;
+	fm<Label >		result;
+	set<Label>		alphabet1;
+	set<Label>		alphabet2;
+	set<Label>		alpha;
+	
+	if ((a.is_deterministic() == 0) || (b.is_deterministic()==0))
+	{
+		cerr<<"One machine is not deterministic, "
+		    <<"use fmunion to compute."<<endl;
+		exit(1); 
+	}
+	//copy a to a1, and b to b1
+	a1 = a;
+	b1 = b;
+
+	// clear result and this fm
+	result.clear();
+	clear();
+	// determine the union of the alphabets
+	a.labels(alphabet1);
+	b.labels(alphabet2);
+	alpha = alphabet1;
+	alpha += alphabet2;
+
+	//if alpha = alphabet1 then you need to complete a1
+	if (alpha == alphabet1)
+		a1.complete();
+
+	//if alpha properly contains alphabet1, you have to add 
+	//additional instructions, and one more state to the machine
+	else 
+	{
+		int                     index;
+        	int                     l;
+	        fm<Label>               temp;    
+        	set<state>              all_states;
+        	inst<Label>             it;
+        	set<inst<Label> >       additional;      
+
+        	// find all states of a1
+        	a1.states(all_states);
+
+        	// create a new state for a1
+        	state s1 = (a1.max_state()).value() + 1;
+
+        	// it helps to be sorted
+        	(a1.arcs).sort();
+
+	        // for each state, add an instruction for any label not
+        	// otherwise represented
+	        for (index=0; index<all_states.size(); ++index)
+        	        for (l=0; l<alpha.size(); ++l)
+                		{
+                        	a1.select(alpha[l], all_states[index], SOURCE, temp);
+                        	if (temp.size() == 0)
+                       			{
+                                	it.assign(all_states[index], alphabet[l], s1);
+                                	additional.disjoint_union(it);
+                        		}
+                		}	
+
+        	// add instructions that loop on new state
+        	for (index=0; index<alpha.size(); ++index)
+        	{
+         	       it.assign(s1, alpha[index], s1);
+         	       additional.disjoint_union(it);
+        	}
+        	(a1.arcs).disjoint_union(additional);
+		
+	}
+	//if alpha = alphabet2 then you need to complete b1
+	if (alpha == alphabet2)
+		b1.complete();
+
+	//if alpha properly contains alphabet1, you have to add 
+	//additional instructions, and one more state to the machine
+	else 
+	{
+		int                     index;
+        	int                     l;
+	        fm<Label>               temp;    
+        	set<state>              all_states;
+        	inst<Label>             it;
+        	set<inst<Label> >       additional;      
+
+        	// find all states of b1
+        	b1.states(all_states);
+
+        	// create a new state for b1
+        	state s1 = (b1.max_state()).value() + 1;
+
+        	// it helps to be sorted
+        	(b1.arcs).sort();
+
+	        // for each state, add an instruction for any label not
+        	// otherwise represented
+	        for (index=0; index<all_states.size(); ++index)
+        	        for (l=0; l<alpha.size(); ++l)
+                		{
+                        	b1.select(alpha[l], all_states[index], SOURCE, temp);
+                        	if (temp.size() == 0)
+                       			{
+                                	it.assign(all_states[index], alphabet[l], s1);
+                                	additional.disjoint_union(it);
+                        		}
+                		}	
+
+        	// add instructions that loop on new state
+        	for (index=0; index<alpha.size(); ++index)
+        	{
+         	       it.assign(s1, alpha[index], s1);
+         	       additional.disjoint_union(it);
+        	}
+        	(b1.arcs).disjoint_union(additional);
+		
+	}
+
+	// find max state of a1
+	int max = a1.max_state().value() + 1;
+	
+	// for each label, determine the cross product
+	
+	for (i=0; i<alpha.size(); ++i)
+	{
+		// find instructions using this label
+
+		a1.select(alpha[i], temp1);
+		b1.select(alpha[i], temp2);
+
+		// compute cross product
+
+		for (j=0; j<temp1.size(); ++j)
+		{
+			int v1 = temp1[j].get_source().value();
+			int v2 = temp1[j].get_sink().value();
+			for (k=0; k<temp2.size(); ++k)
+			{
+				s1 = v1 + temp2[k].get_source().value() * max;	
+				s2 = v2 + temp2[k].get_sink().value() * max;
+				t.assign(s1, alpha[i], s2);
+	
+				result.arcs.disjoint_union(t);
+			}
+		}
+		temp1.clear();
+		temp2.clear();
+	}
+
+	// start and final states
+
+	for (i=0; i<a1.start_states.size(); ++i)
+	{
+		int v1 = a1.start_states[i].value(); 
+		for (j=0; j<b1.start_states.size(); ++j)
+		{
+			s1 = v1 + b1.start_states[j].value() * max;	
+			result.start_states += s1;
+		} 
+	}
+
+	set<state> astate;
+	set<state> bstate;
+	a1.states(astate);
+	b1.states(bstate);
+	astate -= a1.final_states;
+	for (i=0; i<a1.final_states.size(); ++i)
+	{
+		int v1 = a1.final_states[i].value(); 
+		for (j=0; j<bstates.size(); ++j)
+		{
+			s2 = v1 + b1.final_states[j].value() * max;
+			result.final_states += s2;
+		} 
+	}
+	for (i=0; i<b1.final_states.size(); ++i)
+	{
+		int v1 = b1.final_states[i].value;
+		for (j=0; j<astate.size(); ++j)
+		{
+			s2 = astate[j].value + v1*max;
+			result.final_states += s2;
+		}
+
+	*this = result;
+}

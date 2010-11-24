@@ -1,0 +1,78 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmrevers 1 "Grail"
+.SH NAME
+fmrevers \- reverse a machine
+.SH SYNOPSIS
+.B fmrevers fm
+.sp
+.B fmrevers <fm
+.SH DESCRIPTION
+.B
+fmrevers
+reverses the direction of all instructions in \fIfm\fR and
+writes the result on standard output.  All start states become 
+final states and vice versa.  The input need not be
+deterministic.  The output will be nondeterministic if \fIfm\fR
+contains more than one final state (since a deterministic
+machine can have only one start state). 
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat dfm5
+(START) |- 0
+0 a 1
+1 c 2
+2 e 3
+3 -| (FINAL)
+1 b 0
+2 d 0
+
+% fmrevers dfm5
+(START) |- 3
+1 a 0
+0 b 1
+2 c 1
+0 d 2
+3 e 2
+0 -| (FINAL)
+
+% cat nfm
+(START) |- 1
+1 a 2
+1 a 3
+1 a 4
+2 -| (FINAL)
+3 -| (FINAL)
+4 -| (FINAL)
+
+% fmrevers <nfm2
+(START) |- 2
+(START) |- 3
+(START) |- 4
+2 a 1
+3 a 1
+4 a 1
+1 -| (FINAL)
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5)

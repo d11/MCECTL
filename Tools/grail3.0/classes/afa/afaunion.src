@@ -1,0 +1,95 @@
+/******************************************************************************************
+
+File:	classes/afa/afaunion.src
+-----
+
+Description:	
+------------
+	This file contains the definition of the following function:
+	
+		afa<T> afa<T>::afaunion(const afa<T>& a) const
+
+	This function is a public member of the template class afa
+	(declared in afa.h).
+
+Revision History:
+-----------------
+	X. Wu			Initial version of source code
+	S. Huerter 08/12/98	Header and comments
+
+******************************************************************************************/
+/******************************************************************************************
+
+			afa<T> afa<T>::afaunion(const afa<T>& a) const
+
+Description:
+	This function is a public member of the template class afa
+	(declared in afa.h).  This function builds an afa which accepts the union of 
+	the languages accepted by "this" afa and afa a. 
+	If the input symbol sets of "this" afa and afa a are not the same, this function calls
+	expand(const array<T>& )const (a private member of afa class) on each afa to make the 
+	sets equal.  The behaviour/output of the expand function is unpredictable if the afa
+	being expanded has a state set which exceeds 31.  Therefore, if either of this state set
+	or afa a's state set exceeds 31, the behaviour/output of this function is unpredictable. 
+	If the cardinality of the union of "this" state set and afa a's state set exceeds 32, 
+	then the union of "this" afa and afa a cannot be constructed using our bit-vector
+ 	representation.  The behaviour/output of this function is unpredictable in this case.  
+	No error messages are provided by this function.
+
+	This function can be called in the following way(s):
+		uafa = autom1.afaunion(autom2);
+		
+	Parameters:
+		const afa<T>& a 	- the afa to union with this afa
+
+	Return Value:
+		afa<T>			- the afa accepting the union of 
+					  the languages accepted by "this" afa and afa a.
+			
+******************************************************************************************/
+#include <math.h>
+//#include "afa.h"
+
+template <class T>
+afa<T> afa<T>::afaunion(const afa<T>& a)const
+{
+  afa<T> newafa;
+  if (symbol == a.symbol)
+	newafa = same_input_union(a);
+  else
+	{
+		array<T> temp;
+		temp = symbol;
+		temp +=a.symbol;
+		temp.unique();
+		temp.sort();
+
+		afa<T> afa1;
+		afa<T> afa2;
+		if (temp != symbol)
+			{
+				afa1 = expand(temp);
+				if (temp !=a.symbol)
+					{
+						afa2 = a.expand(temp);
+						newafa = afa1.same_input_union(afa2);
+					}
+				else
+					newafa = afa1.same_input_union(a);
+			}
+		else
+			{
+				if (temp != a.symbol)
+					{
+						afa2 = a.expand(temp);
+						newafa = same_input_union(afa2);
+					}
+			}
+	}
+  
+  return newafa;
+}
+  
+
+
+

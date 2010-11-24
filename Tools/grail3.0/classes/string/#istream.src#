@@ -1,0 +1,179 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	October 1995
+
+
+/***************************************************************************
+
+  File:  classes/string/istream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following functions:
+      int string<Item>::get(istream& is, Item& s)
+      int string<char>::get(istream& is, char& ch)
+      template <class Item> istream& operator>>(istream& is, string<Item>& s)
+
+    The first two functions are public members of the template class string 
+    (declared in string.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/02         Added header and comments
+
+
+ ***************************************************************************/
+
+
+#include <ctype.h>
+
+
+/***************************************************************************
+
+                int string<Item>::get(istream& is, Item& s)
+
+  Description:
+    This function is a public member of the template class string
+    (declared in string.h).  This function attempts to get one item from
+    the parameter input stream and store it in s.  is should be open and
+    valid before calling this function.  If the Item is successfully
+    retrieved, 1 is returned, otherwise 0 is returned.
+
+    This function can be called in the following way:
+      value = this_string.get(input_stream, new_item);
+
+  Parameters:
+    istream& is - the input stream to read the Item from
+    Item& s - the variable which will contain the read item
+
+  Return Value:
+    int - 1 if the read was successful, 0 otherwise.
+  
+ ***************************************************************************/
+
+template <class Item>
+int
+string<Item>::get(istream& is, Item& s)
+{
+	return is >> s ? 1 : 0;
+}
+
+
+
+/***************************************************************************
+
+              int string<char>::get(istream& is, char& ch)
+
+  Description:
+    This function is a public member of the template class string
+    (declared in string.h).  This function attempts to get one char from
+    the parameter input stream and store it in ch.  If the first character
+    read from the stream is not alphabetic, then the rest of the line is
+    skipped (all characters up to the next '\n' are ignored).  is should 
+    be open and valid before calling this function.  If an alphabetic char 
+    is successfully retrieved, 1 is returned, otherwise 0 is returned.
+
+    This function can be called in the following way:
+      value = this_string.get(input_stream, new_char);
+
+  Parameters:
+    istream& is - the input stream to read the Item from
+    char& ch - the variable which will store the char read from the stream.
+
+  Return Value:
+    int - 1 if the read was successful, 0 otherwise.
+  
+ ***************************************************************************/
+
+int
+string<char>::get(istream& is, char& ch)
+{
+	// get the first character from the stream
+	is.get(ch);
+
+	// check if is was an alphabetic character
+	if (isalpha(ch))
+	  return 1;
+	else            // if not, skip the rest of the line and return 0
+	{
+	  while (ch !='\n')
+	    {
+		is.get(ch);
+	    }
+	  return 0;
+	}
+}
+
+
+
+/***************************************************************************
+
+  template <class Item> istream& operator>>(istream& is, string<Item>& s)
+
+  Description:
+    This function reads as many Items as possible from the specified stream 
+    and stores them in the parameter string.  The Items are read using the 
+    get member function of the string class, and reading stops when get 
+    returns 0.  The string is cleared before the items are added, so after
+    the execution of this function, the string will contain only the item
+    which were on the input stream, in their original order.  The input
+    stream should be open and valid before calling this function.  The 
+    function returns a reference to the input stream.
+
+    This function can be called in the following way:
+      operator>>(input_stream, new_string);
+      input_stream >> new_string;
+
+  Parameters:
+    istream& is - the input stream to read the items from
+    string<Item>& s - the string to store the items in
+
+  Return Value:
+    istream& - a reference to the input stream
+  
+ ***************************************************************************/
+
+template <class Item>
+istream&
+operator>>(istream& is, string<Item>& s)
+{
+	Item	sym;
+
+	s.clear();
+	while(1)
+	{
+		if (s.get(is, sym))
+			{
+			s += sym;
+			}
+		else
+			break;
+	}
+	return is;
+}
+
+#ifdef	WATCOM
+template <class Item>
+istrstream&
+operator>>(istrstream& is, string<Item>& s)
+{
+	Item	sym;
+
+	s.clear();
+	for(;;)
+	{
+		if (s.get(is, sym))
+			s += sym;
+		else
+			break;
+	}
+
+	return is;
+}
+#endif
+
+
+
+

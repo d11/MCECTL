@@ -1,0 +1,79 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+
+/***************************************************************************
+
+  File:  classes/string/lt.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int string<Item>::operator<(const string<Item>& s) const
+
+    This function is a public member of the template class string 
+    (declared in string.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/02         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+        int string<Item>::operator<(const string<Item>& s) const
+
+  Description:
+    This function is a public member of the template class string 
+    (declared in string.h).  This is the less than operator for strings.
+    A string is less than another string if it contains less characters or
+    or an equal number of characters but comes first according to
+    lexicographical ordering.  The ordering is determined by the definition
+    of operator< for items.  This function returns 1 if this string is
+    less than the parameter string and 0 otherwise.
+
+    This function can be called in the following ways:
+      result = this_string.operator<(test_string);
+      result = (this_string < test_string);
+
+  Parameters:
+    const string<Item>& s - the string to be compared with this string. 
+
+  Return Value:
+    int - 1 if this string is less than the parameter string, 0 otherwise.
+  
+ ***************************************************************************/
+
+template <class Item>
+int
+string<Item>::operator<(const string<Item>& s) const
+{
+	// compare sizes
+	if (sz < s.sz)
+		return 1;
+	if (sz > s.sz)
+		return 0;
+
+	// for equal size strings, find the first character which differs
+	for (int i=0; i<sz; ++i)
+		if (p[i] != s.p[i])
+			break;
+	
+	// if both strings are empty, return 0
+	if (i == sz)
+		return 0;
+
+	// is the character which differs less for this string?
+	if (p[i] < s.p[i])
+		return 1;
+
+	return 0;
+}

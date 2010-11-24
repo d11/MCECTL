@@ -1,0 +1,56 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH flunion 1 "Grail"
+.SH NAME
+flunion \- compute the union of two finite languages
+.SH SYNOPSIS
+.B flunion fl1 fl2
+.sp
+.B flunion fl2 <fl1 
+.SH DESCRIPTION
+.B
+flunion
+computes the union of \fIfl1\fR and \fIfl2\fR.  This is defined as the language
+containing the union of the words in \fIfl1\fR and \fIfl2\fR.
+.LP
+\fIfl1\fR and \fIfl2\fR must conform to the Grail format 
+for finite languages.
+.SH EXAMPLES
+.EX
+% cat fl1
+abc
+def
+
+% cat fl2
+ghia
+abc
+
+zzab
+
+% flunion fl1 fl2
+abc
+def
+ghia
+
+zzab
+
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fl(5)

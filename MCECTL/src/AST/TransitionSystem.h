@@ -14,6 +14,8 @@
 #include <vector>
 #include <set>
 #include "Automata.h"
+#include <numeric>
+#include "Util.h"
 
 namespace AST {
 
@@ -28,7 +30,16 @@ namespace AST {
          return _action_name;
       }
    };
-   class PushDownAction : public RegularAction { };
+   class PushDownAction : public RegularAction {
+   private:
+      enum { PUSH, POP, REWRITE } _type;
+      StackSymbol _symbol;
+   public:
+
+   
+   };
+
+   class PushDownEffect { };
 
    class State : public Showable {
    protected:
@@ -44,20 +55,45 @@ namespace AST {
       }
    };
    class KripkeState : public State {
+   protected:
       vector<string> _propositions;
    public:
       KripkeState(const string &state_name, const vector<string> &propositions) : State(state_name), _propositions(propositions) { }
+      vector<string> GetPropositions() const { return _propositions; }
       //const ::State *Create() {
 
       //}
       string ToString() const {
          stringstream s;
-         s << _state_name << ": ";
-         vector<string>::const_iterator iter;
-         for (iter = _propositions.begin(); iter != _propositions.end(); ++iter) {
-            s << *iter << ",";
-         }
-            
+         s << _state_name << ": "
+           << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
+         return s.str();
+      }
+   };
+
+   class PushDownState : public State {
+   protected:
+      StackSymbol _symbol;
+   public:
+      PushDownState(const string &state_name, const StackSymbol &stack_symbol) : State(state_name), _symbol(stack_symbol) { }
+      StackSymbol GetSymbol() const { return _symbol; }
+      string ToString() const {
+         stringstream s;
+         s << _state_name << "[" << _symbol << "]";
+         return s.str();
+      }
+   };
+
+   class PushDownKripkeState : public KripkeState {
+   protected:
+      StackSymbol _symbol;
+   public:
+      PushDownKripkeState(const string &state_name, const StackSymbol &stack_symbol, const vector<string> &propositions) : KripkeState(state_name, propositions), _symbol(stack_symbol) { }
+      StackSymbol GetSymbol() const { return _symbol; }
+      string ToString() const {
+         stringstream s;
+         s << _state_name << "[" << _symbol << "]" << " : "
+           << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
          return s.str();
       }
    };
@@ -67,10 +103,10 @@ namespace AST {
       bool _owns_states;
       enum Type { DFA, PDA, LTS, PDS };
       struct Rule {
-         const State  *state1;
+         string state1;
          const Action *action;
-         const State  *state2;
-         Rule(const State *s, const Action *a, const State *t) : state1(s), action(a), state2(t) { }
+         string state2;
+         Rule(const string &s, const Action *a, const string &t) : state1(s), action(a), state2(t) { }
       };
    private:
       vector<const State*> _states;
@@ -82,9 +118,7 @@ namespace AST {
          _states.push_back(state);
       }
 
-      Automaton(const State *state1, const Action *action, const State *state2) : _owns_states(true) {
-         _states.push_back(state1);
-         _states.push_back(state2);
+      Automaton(const string &state1, const Action *action, const string &state2) : _owns_states(true) {
          Rule rule(state1, action, state2);
          _rules.push_back(rule);
       }
@@ -126,14 +160,22 @@ namespace AST {
       string ToString() const {
          stringstream s;
          s << "AUTOMATON ABSTRACT SYNTAX TREE" << endl;
-         s << "STATES:" << endl;
+         s << "Type: ";
+         switch (_type) {
+            case DFA: s << "DFA"; break;
+            case LTS: s << "LTS"; break;
+            case PDA: s << "PDA"; break;
+            case PDS: s << "PDS"; break;
+            default: s << "undefined"; break;
+         }
+         s << endl << "STATES:" << endl;
          vector<const State*>::const_iterator state_iter;
          for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
             s << (*state_iter)->ToString() << endl;
          }
          vector<Rule>::const_iterator rule_iter;
          for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
-            s << "(" << (*rule_iter).state1->ToString() << ", " << (*rule_iter).action->ToString() << ", " << (*rule_iter).state2->ToString() << ")" << endl;
+            s << "(" << rule_iter->state1 << ", " << (*rule_iter).action->ToString() << ", " << rule_iter->state2 << ")" << endl;
          }
          return s.str();
       }

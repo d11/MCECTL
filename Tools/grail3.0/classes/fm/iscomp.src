@@ -1,0 +1,71 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	February 1993
+
+
+/***************************************************************************
+
+  File:  classes/fm/iscomp.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::is_complete() const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/07         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                    int fm<Label>::is_complete() const
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  Determine whether this fm is complete (has at
+    least one instruction for each letter in the input alphabet 
+    originating from every state).  The function returns 1 if this fm 
+    is complete, 0 otherwise.
+
+    This function can be called in the following way:
+      result = this_fm.is_complete();
+
+  Parameters:  none
+
+  Return Value:
+    int - returns 1 if the fm is complete, 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::is_complete() const
+{
+	fm<Label>	t;
+	set<Label>	alphabet;
+	set<state>	all_states;
+
+	// collect alphabet and states
+	labels(alphabet);
+	states(all_states);
+
+	// for every state, check for all instructions
+	for (int i=0; i<all_states.size(); ++i)
+		for (int j=0; j<alphabet.size(); ++j)
+		{
+			select(alphabet[j], all_states[i], SOURCE, t);
+			if (t.size() == 0)
+				return 0;
+		}
+	return 1;
+}

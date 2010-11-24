@@ -1,0 +1,64 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmtofl 1 "Grail"
+.SH NAME
+fmtofl \- convert a machine to a finite language
+.SH SYNOPSIS
+.B fmtofl fm
+.sp
+.B fmtofl <fm
+.SH DESCRIPTION
+.B
+fmtofl
+computes a finite language that accepts the same language
+as \fIfm\fR, and writes the result on standard output.  
+The input need not be deterministic.  
+.B
+fmtofl
+returns 0 if the machine cannot be represented as a finite language.
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat fm1
+(START) |- 0
+0 a 1
+1 c 2
+2 e 3
+3 -| (FINAL)
+1 b 2
+2 d 3
+
+% fmtofl fm1
+abd
+abe
+acd
+ace
+
+% cat fm2
+(START) |- 1
+1 -| (FINAL)
+
+% fmtofl fm2
+
+
+.EE
+.SH AUTHORS
+Roger Robson, Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5), fl(5), fltofm(1)

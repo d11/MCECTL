@@ -1,0 +1,124 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/re/parse.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      re<S>* re<S>::parse(istream& str)
+
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/09         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                       re<S>* re<S>::parse(istream& str)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function attempts to read and parse a regular
+    expression from the parameter input stream.  The input stream must be
+    valid and open before calling this function.  The expression must be
+    terminated by a right bracket, a star, or the end of the input stream.
+    The function calls term(istream&) to start the parsing.  term(istream&) 
+    will get either a bracketed expression, a symbol, the empty set, the 
+    empty string or a term followed by a star from the stream and return it.
+    If there is still more on the stream, parse(istream&) will handle
+    catenating or performing union on the next input.  In other words,
+    a regular expression interpreted as either a term, the catenation of
+    two expressions or the union of two expressions.  The function returns
+    a pointer to the regular expression which was read.
+
+    This function can be called in the following way:
+      new_re = this_re.parse(input_stream);
+
+  Parameters:
+    istream& str - the stream from which the expression should be read
+
+  Return Value:
+    re<S>* - a pointer to the new regular expression
+
+  Note:
+    It is not apparent why the handling of star is in both this function and 
+    term(istream&) since the code in this function should never be executed.
+    MH 98/06/09
+  
+ ***************************************************************************/
+
+template <class S>
+re<S>*
+re<S>::parse(istream& str)
+{
+	token_type	t;
+	re<S>*		tmp;
+	char		k;
+
+	// get a term
+	tmp = new re<S>;
+	tmp->p = term(str);
+
+	// if there was nothing on the stream, return right away
+	if (tmp->is_clear())
+		return tmp;
+
+	for (;;)
+	{
+		// process tokens
+		switch(t = token(str))
+		{
+		case eos_t:
+			return tmp;
+
+		case plus_t:
+			str >> k;
+			re<S>*	tmp2;
+			tmp2 = parse(str);
+			tmp->plus(tmp2->p);
+			tmp2->p = 0;
+			delete tmp2;
+			break;
+				
+		case estring_t:
+			tmp->cat(term(str));
+			break;
+
+		case eset_t:
+			tmp->cat(term(str));
+			break;
+
+		case cat_t:
+		case lparen_t:
+		case symbol_t:
+			tmp->cat(term(str));
+			break;
+
+		case rparen_t:
+			return tmp;
+
+		case star_t:
+			tmp->star();
+			return tmp;
+
+		default:	
+			tmp->clear();
+			return tmp;
+		}
+	}
+}

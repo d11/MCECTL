@@ -1,0 +1,92 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+/***************************************************************************
+
+  File:  classes/pool/return.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      void pool<S>::return_member(void* s)
+
+    This function is a public member of the template class pool
+    (declared in pool.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/29         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                   void pool<S>::return_member(void* s)
+
+  Description:
+    This function is a public member of the template class pool 
+    (declared in pool.h).  Returns the chumk of memory pointed to by the
+    parameter to the pool of free memory.  This function implements the
+    delete operation.  To return the memory, its location in the pool
+    is determined and then the corresponding bit is set to show that the
+    memory is available.
+
+    This function can be called in the following way:
+      this_pool.return_member(item_ptr);
+
+  Parameters:
+    void* s - a pointer to the memory which should be deallocated
+
+  Return Value:  none
+  
+ ***************************************************************************/
+
+template <class S>
+void
+pool<S>::return_member(void* s)
+{
+	S* s_ptr = (S*) s;
+
+	int	k = POOL_SIZE;
+	for (int i=0; i<p.size(); ++i)
+	{
+		S*	ptr = (S*) p[i];
+
+		// is the pointer outside this array?
+		if (s_ptr < ptr || s_ptr > &ptr[k-1])
+		{
+			// check the next larger array
+			k *= 2;
+			continue;
+		}
+
+		// if not, compute the location in the array
+		int j  = (S*) s_ptr - (S*) ptr;
+		
+		// find the index of the bit to set to show free address
+		int total = 0;
+		for (int l=0; l<i; ++l)
+		{
+			k /= 2;
+			total += k;
+		}
+
+		total += j;
+
+#ifdef	ATT
+		b.Set(total);
+#endif
+#ifndef	ATT
+		b.set(total);
+#endif
+		++sp;
+		return;
+	} 
+}

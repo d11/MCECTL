@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.1)
 project (MCECTL)
+cmake_policy(VERSION 2.8.1)
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
@@ -26,26 +27,45 @@ set(CPPFILES
    src/formula/Formula.cpp
    src/Environment.cpp
 	src/AST/Formula.cpp
+	src/AST/Regex.cpp
    src/TransitionSystem.cpp
    src/Automata.cpp
+   src/Util.cpp
 )
 
-add_executable(
-   MCECTL
-   src/MCECTL.cpp
+
+#SET(CMAKE_C_FLAGS "-std=c99")
+#add_library(
+#   fa
+#   lib/libfa/fa.c
+#   lib/libfa/hash.c
+#   lib/libfa/internal.c
+#   lib/libfa/memory.c
+#   lib/libfa/ref.c
+#   lib/libfa/augeas.c
+#)
+
+add_library(
+   MCECTL STATIC
    ${CPPFILES}
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
 )
-target_link_libraries(MCECTL ${READLINE_LIBRARY})
+link_directories("lib/libfa")
+target_link_libraries(MCECTL fa)
+
+add_executable(
+   MCECTL-REPL
+   src/MCECTL.cpp
+)
+target_link_libraries(MCECTL-REPL ${READLINE_LIBRARY})
+target_link_libraries(MCECTL-REPL MCECTL)
 
 # TEST HARNESS
 #FILE (GLOB TESTCPP test/*.cpp)
 add_executable(
    Test
    test/Tests.cpp
-   ${CPPFILES}
-   ${BISON_MyParser_OUTPUTS}
-   ${FLEX_MyScanner_OUTPUTS}
 )
+target_link_libraries(Test MCECTL)
 target_link_libraries(Test boost_unit_test_framework)

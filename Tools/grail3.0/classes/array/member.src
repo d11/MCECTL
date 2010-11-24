@@ -1,0 +1,98 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	June 1995
+
+/***************************************************************************
+
+  File:  classes/array/member.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int array<Item>::member(const Item& s) const
+
+    This function is a public member of the template class array 
+    (declared in array.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/25         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+              int array<Item>::member(const Item& s) const
+
+  Description:
+    This function is a public member of the template class array 
+    (declared in array.h).  This function searchs for the parameter item
+    in this array.  If the item is found, its index is returned.
+    Otherwise, the function returns -1.
+
+    This function can be called in the following way:
+      result = this_array.member(test_item);
+
+  Parameters:
+    const Item& s - a reference to the item to search for
+
+  Return Value:
+    int - the index of the item if it is found, -1 otherwise
+  
+ ***************************************************************************/
+
+
+template <class Item>
+int
+array<Item>::member(const Item& s) const
+{
+	// if the array is empty, the item is not found
+        if (sz == 0)
+		return -1;
+
+        // if unsorted, do a linear search
+	if (!is_sorted())
+	{
+		for (int i=0; i<sz; ++i)
+			if (p[i] == s)
+				return i;
+		return -1;
+	}
+
+	// if sorted, do a binary search
+	int	left = 0;
+	int	right = sz;
+	int	probe;
+
+	for (;;)
+	{
+		// probe = (right - left)/2 + left;
+		probe = (right + left)/2;
+
+		if (p[probe] == s)
+			return probe;
+
+		if (probe == left)
+		{
+			if ((probe + 1 < sz) && (p[probe + 1] == s))
+					return probe + 1;
+			break;
+		}
+
+		if (p[probe] < s)
+			left = probe;
+
+		else
+		// if (p[probe] > s)
+			right = probe;
+	}
+
+        // if the item was not found, return -1
+	return -1;
+}

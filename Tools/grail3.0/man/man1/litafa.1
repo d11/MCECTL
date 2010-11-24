@@ -1,0 +1,103 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH litafa 1 "Grail"
+.SH NAME
+litafa \- convert an \fIafa\fR from  bit-wise representation  
+to  literal representation 
+.SH SYNOPSIS
+.B litafa bitafa
+.sp
+.B litafa < bitafa
+.SH DESCRIPTION
+.B
+litafa
+reads in a given \fIafa\fR which is in bit-wise representation, converts it to 
+the  \fIafa\fR which is in its literal representation, and
+then write the \fIliteralized afa\fR on the standard output. 
+.LP
+\fIbitafa\fR must conform to the Grail bit-wise format for alternating 
+finite state machines.
+.SH EXAMPLES
+.EX
+% cat bitafa2
+symbols: [a,b,c]
+states:  3
+finals:  2
+head: 7 4
+6 2+7 1
+7 1
+0 1
+0 1
+6 2+7 1
+0 1
+0 1
+0 1
+7 3
+
+
+% litafa bitafa2
+symbols: [a,b,c]
+states: 3
+finals: q2 
+head: ~q1~q2q3
+q2~q3+q1~q2~q3
+q1~q2~q3
+0
+0
+q2~q3+q1~q2~q3
+0
+0
+0
+q1q2~q3
+
+% litafa < bitafa2
+symbols: [a,b,c]
+states: 3
+finals: q2 
+head: ~q1~q2q3
+q2~q3+q1~q2~q3
+q1~q2~q3
+0
+0
+q2~q3+q1~q2~q3
+0
+0
+0
+q1q2~q3
+
+
+% cat bitafa2 | litafa
+symbols: [a,b,c]
+states: 3
+finals: q2 
+head: ~q1~q2q3
+q2~q3+q1~q2~q3
+q1~q2~q3
+0
+0
+q2~q3+q1~q2~q3
+0
+0
+0
+q1q2~q3
+
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+afa(5)

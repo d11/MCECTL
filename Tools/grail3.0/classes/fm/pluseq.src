@@ -1,0 +1,132 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/fm/pluseq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definitions of the following functions:
+      fm<Label>& fm<Label>::operator+=(const fm<Label>& a)
+      fm<Label>& fm<Label>::operator+=(fm<Label>* a)
+
+    These function are public members of the template class fm 
+    (declared in fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/01         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+          fm<Label>& fm<Label>::operator+=(const fm<Label>& a)
+
+  Description:
+    This function is a public member of the template class fm 
+    (declared in fm.h).  This function implements the fm union 
+    operation.  The states in the parameter fm are assigned the numbers
+    following the maximum state in this fm.  All the instructions, start
+    states and final states in the parameter fm are added to those in this
+    fm to perform the union.  The function returns a reference to this 
+    fm; the parameter fm is unchanged.
+
+    This function can be called in the following ways:
+      this_fm.operator+=(new_fm);
+      this_fm += new_fm;
+
+  Parameters:
+    const fm<Label>& a - the fm to be added to this fm
+
+  Return Value:
+    fm<Label>& - a reference to this fm
+  
+ ***************************************************************************/
+
+template <class Label>
+fm<Label>&
+fm<Label>::operator+=(const fm<Label>& a)
+{
+	int	i;
+
+	// find the maximum state value of this
+	int max = max_state().value() + 1;
+
+	// append the instructions, renumbering as you go
+	for (i=0; i<a.size(); ++i)
+	{
+		inst<Label>	tmp = a[i];
+		tmp.renumber(max);
+		disjoint_union(tmp);
+	}
+
+	// now add the start states
+	set<state>	s;
+	a.starts(s);
+	for (i=0; i<s.size(); ++i)  // renumber
+		s[i] += max;
+	start_states.disjoint_union(s);
+
+	// now add the final states
+	a.finals(s);
+	for (i=0; i<s.size(); ++i)  // renumber
+		s[i] += max;
+	final_states.disjoint_union(s);
+
+	return *this;
+}
+
+
+/***************************************************************************
+
+             fm<Label>& fm<Label>::operator+=(fm<Label>* a)
+
+  Description:
+    This function is a public member of the template class fm 
+    (declared in fm.h).  This function implements the fm union 
+    operation.  The states in the fm pointed to by the parameter 
+    are assigned the numbers following the maximum state in this fm.  
+    All the instructions, start states and final states in the fm pointed
+    to by the parameter are added to those in this fm to perform the 
+    union.  The function returns a reference to this fm; the parameter 
+    fm is unchanged.
+
+    This function can be called in the following ways:
+      this_fm.operator+=(new_fm_ptr);
+      this_fm += new_fm_ptr;
+
+  Parameters:
+    fm<Label>* a - a pointer to the fm to be added to this fm
+
+  Return Value:
+    fm<Label>& - a reference to this fm
+  
+ ***************************************************************************/
+
+template <class Label>
+fm<Label>&
+fm<Label>::operator+=(fm<Label>* a)
+{
+        // find the maximum state value of this
+        int max = max_state().value() + 1;
+
+        // renumber the machine
+        a->renumber(max);
+
+        // now just append the set
+        disjoint_union(*a);
+
+        return *this;
+}
+
+

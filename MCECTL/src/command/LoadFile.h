@@ -36,9 +36,9 @@ namespace Command {
       private:
          string _filename;
       public:
-         LoadFile(string filename) : _filename(filename) { };
+         LoadFile(const string &filename) : _filename(filename) { };
          virtual string ToString() const { string s = ":load(\""; return s + _filename + "\")"; };
-         virtual void Execute(Environment &environment, GlobalOptions &options) const {
+         virtual void Execute(Environment &environment, GlobalOptions &options) {
             FILE *input = fopen(_filename.c_str(), "r");
             if (NULL == input) {
                perror("Couldn't open file");

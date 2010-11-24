@@ -1,0 +1,58 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+template <class S>
+token_type
+re<S>::token(istream& str)
+{
+	char	k;
+
+	if (str.eof() || str.tellg() < 0) 
+		return eos_t;
+
+	// skip white space
+
+	while (((char) str.peek() == ' ') || ((char) str.peek() == '\t') 
+			|| ((char) str.peek() == '\n'))
+		str >> k;	
+
+	// now return appropriate token
+
+	if (str.eof() || str.tellg() <  0)
+		return eos_t;
+
+	if ((char) str.peek() == re<S>::re_plus)
+		return plus_t;
+	if ((char) str.peek() == re<S>::re_star)
+		return star_t;
+	if ((char) str.peek() == re<S>::re_cat)
+		return cat_t;
+	if ((char) str.peek() == re<S>::re_lparen)
+		return lparen_t;
+	if ((char) str.peek() == re<S>::re_rparen)
+		return rparen_t;
+	if ((char) str.peek() == re<S>::re_eset[0])
+	{
+		str >> k;
+		if ((char) str.peek() != re<S>::re_eset[1])
+		{
+			cerr << "\"" << (char) str.peek() << "\" illegal at " << str.tellg() << "\n";
+			return error_t;
+		}
+		return eset_t;
+	}
+
+	if ((char) str.peek() == re<S>::re_estring[0])
+	{
+		str >> k;
+		if ((char) str.peek() != re<S>::re_estring[1])	
+		{
+			cerr << "\"" << (char) str.peek() << "\" illegal at " << str.tellg() << "\n";
+			return error_t;
+		}
+		return estring_t;
+	}
+
+	return symbol_t;
+}

@@ -1,0 +1,67 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+
+/***************************************************************************
+
+  File:  classes/fm/assign.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      fm<Label>& fm<Label>::operator=(const fm<Label>& f)
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/15         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+            fm<Label>& fm<Label>::operator=(const fm<Label>& f)
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This is the assignment function for finite machines.
+    Assigns this fm to have the same set of instructions, start states and
+    final states as the parameter fm.  The function returns a reference to
+    this fm.
+
+    This function can be called in the following ways:
+      this_fm.operator=(other_fm);
+      this_fm = other_fm;
+
+  Parameters:
+    const fm<Label>& fm - the fm to be assigned to this fm.
+
+  Return Value:
+    fm<Label>& - a reference to this fm
+
+  
+ ***************************************************************************/
+
+template <class Label>
+fm<Label>&
+fm<Label>::operator=(const fm<Label>& f)
+{
+	// check for self-assignment
+	if (this == &f)
+		return *this;
+
+	arcs = f.arcs;
+	start_states = f.start_states;
+	final_states = f.final_states;
+
+	return *this;
+}

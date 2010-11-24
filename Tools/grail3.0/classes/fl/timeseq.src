@@ -1,0 +1,80 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/fl/timeseq.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      fl<Item>& fl<Item>::operator*=(const fl<Item>& l)
+
+    This function is a public member of the template class fl (declared 
+    in classes/fl/fl.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/05         Added header and comments (adapted from
+                                    Release Notes for Grail Version 2.5 by
+                                    Darrell Raymond and Roger Robson)
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+             fl<Item>& fl<Item>::operator*=(const fl<Item>& l)
+
+  Description:
+    This function is a public member of the template class fl (declared 
+    in classes/fl/fl.h).  This function computes the cross product of this
+    language and the parameter language and stores the result in this fl.
+    The cross product of languages L1 and L2 is the set of all words xy
+    such that x is an element of L1 and y is an element of L2.  The
+    cross product of any finite language with an empty language yields an
+    empty language.  The cross product of any string with the empty string
+    yields the original string.  The function returns a reference to this
+    fl.
+
+    This function can be called in the following ways:
+      this_fl.operator*=(other_fl);
+      this_fl *= other_fl;
+
+  Parameters:
+    const fl<Item>& l - the language to be crossed with this language.
+
+  Return Value:
+    fl<Item>& - a reference to this language.
+
+  
+ ***************************************************************************/
+
+template <class Item>
+fl<Item>&
+fl<Item>::operator*=(const fl<Item>& l)
+{
+	set<string<Item> >	res;
+
+	// loop through all the words in this language
+	for (int i=0; i<size(); ++i)
+	{
+		// loop through all the words in the parameter language
+		for (int j=0; j<l.size(); ++j)
+		{
+			// catenate the words
+			string<Item> tmp = words[i];
+			tmp += l.words[j];
+			res += tmp;
+		}
+	}
+
+	words = res;
+	return *this;
+}

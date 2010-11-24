@@ -1,0 +1,101 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmexec 1 "Grail"
+.SH NAME
+fmexec \- execute a machine on an input string
+.SH SYNOPSIS
+.B fmexec [-d] fa string
+.sp
+.B fmexec [-d] string <fm
+.SH DESCRIPTION
+.B
+fmexec
+tests the word \fIstring\fR for membership in the language of the
+machine \fIfm\fR.  If \fIstring\fR is accepted,
+.B
+fmexec 
+returns 1 and writes \fBaccepted\fR on its standard error;
+otherwise it returns 0 and writes \fBnot accepted\fR on its
+standard error.  
+.B
+fmexec 
+can execute both deterministic and nondeterministic
+machines.
+.LP
+The \fB-d\fR option causes 
+.B
+fmexec
+to print each instruction that it executes for each character
+of \fIstring\fR that is processed.  In the case of nondeterministic 
+machines,
+.B
+fmexec 
+will print the set of instructions that are executed
+for each character of \fIstring\fR.
+.LP
+\fIfm\fR must conform to the Grail format for machines.  \fIstring\fR
+should probably be protected from the shell by double quotes. 
+.SH EXAMPLES
+.EX
+% cat nfm1
+(START) |- 1
+1 a 2
+1 a 3
+2 b 2
+3 b 3
+2 c 4
+3 c 5
+4 d 4
+5 d 5
+4 -| (FINAL)
+5 -| (FINAL)
+
+% fmexec nfm1 "abc"
+accepted
+
+% fmexec nfm1 "abbbbbbbbbbcdddddddddddd"
+accepted
+
+% fmexec nfm1 "x"
+not accepted
+
+% fmexec -d "abbcd" <nfm1
+on a take instructions
+1 a 2 
+1 a 3
+on b take instructions
+2 b 2 
+3 b 3
+on b take instructions
+2 b 2 
+3 b 3 
+on c take instructions
+2 c 4 
+3 c 5 
+on d take instructions
+4 d 4 
+5 d 5
+terminate on final states 4 5 
+
+accepted
+ 
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5), fmenum(1)

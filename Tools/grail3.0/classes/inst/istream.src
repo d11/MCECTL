@@ -1,0 +1,182 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/inst/istream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      template <class Label> istream& operator>>(istream& is, inst<Label>& t)
+
+    This function is a friend of the template class inst (declared in inst.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/04         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+  template <class Label> istream& operator>>(istream& is, inst<Label>& t)
+
+  Description:
+    This function is a friend of the template class inst (declared in inst.h).
+    This function allows an instruction to be inputted from the stream is.
+    The stream should be valid and open before calling this function.  The
+    inputted instruction will be stored in the parameter instruction, t.
+    The type of instruction inputted depends on what is found on the stream.
+
+    If START_STATE is found in the source position followed by START_SYMBOL
+    and a state number, then the instruction will designate the state as
+    a start state.  For example, input of  "(START) |- 2" would result in
+    an instruction which has START as the source and 2 as the sink.
+
+    If a state number is found first followed by FINAL_SYMBOL and FINAL_STATE,
+    then the instruction will designate the state as a final state.  For
+    example, input of "3 -| (FINAL)" would result in an instruction which
+    has 3 as the source and FINAL as the sink.
+
+    An error message is outputted to the standard stream if START_STATE or
+    FINAL_STATE are found without the corresponding START_SYMBOL or
+    FINAL_SYMBOL.
+
+    If the input consists of a state number followed by a label, followed by
+    another state number, then the instruction will represent a transition.
+    For example, input of "1 a 2" would result in an instruction which has
+    1 as the source state, 'a' as the label and 2 as the sink state.
+
+    Leading white space is ignored.  If no input is found on the stream, then
+    a NULL instruction is returned.  In all cases, inst<Label>::left_delimiter
+    is expected to follow the source input and inst<Label>::right_delimiter
+    is expected to follow the label and preceed the sink.  Normally, these
+    delimiters are set as spaces (see classes/inst/std.h).
+
+    The function returns a reference to the input stream.
+
+    This function can be called in the following ways:
+      operator>> (input_stream, new_inst);
+      input_stream >> new_inst;
+
+  Parameters:
+    istream& is - the input stream
+    inst<Label>& t - stores the instruction which is read from the stream
+
+  Return Value:
+    istream& - a reference to the input stream.
+  
+ ***************************************************************************/
+
+template <class Label>
+istream&
+operator>>(istream& is, inst<Label>& t)
+{
+	string<char>	s1;
+	string<char>	s2;
+	string<char>	s3;
+	int		ch;
+	state		m;
+
+	// skip white space
+	while ((ch = is.get()) != EOF)
+		if (!isspace((char) ch))
+		{
+			is.putback(ch);
+			break;
+		}
+
+	// if nothing, return null transition
+	if (is.eof())
+	{
+		t.null();
+		return is;
+	}
+
+	// input first state
+	while ((ch = is.get()) != EOF)
+	{
+		if ((char) ch == inst<Label>::left_delimiter)
+			break;
+		s1 += (char) ch;
+	}
+	s1 += '\0';
+
+	// input label
+	while ((ch = is.get()) != EOF)
+	{
+		if ((char) ch == inst<Label>::right_delimiter)
+			break;
+		s2 += (char) ch;
+	}
+	s2 += '\0';
+
+	// skip white space
+	while ((ch = is.get()) != EOF)
+		if (!isspace((char) ch))
+		{
+			is.putback(ch);
+			break;
+		}
+
+	// input second state
+	while ((ch = is.get()) != EOF)
+	{
+		if (isspace((char) ch))
+			break;
+		s3 += (char) ch;
+	}
+	s3 += '\0';
+
+	if (s2.is_null())
+		return is;
+
+	// check for start instruction
+	if (strcmp(s1.ptr(), START_STATE) == 0)
+	{
+		if (strcmp(s2.ptr(), START_SYMBOL) != 0)
+		{
+			cerr << "start label error " << s2 << "\n";
+			return is;
+		}
+
+		m = atoi(s3.ptr());
+		t.make_start(m);
+		return is;
+	}
+
+	// check for final instruction
+	if (strcmp(s3.ptr(), FINAL_STATE) == 0)
+	{
+		if (strcmp(s2.ptr(), FINAL_SYMBOL) != 0)
+		{
+			cerr << "final label error " << s2 << "\n";
+			return is;
+		}
+
+		m = atoi(s1.ptr());
+		t.make_final(m);
+		return is;
+	}
+
+	// else we just have a normal instruction
+	istrstream 	ist(s2.ptr(), s2.size());
+
+	// this `conversion' to keep Watcom happy
+	istream&	bogus = ist;
+
+	bogus >> t.label; 
+	t.source = atoi(s1.ptr());
+	t.sink = atoi(s3.ptr());
+
+	return is;
+}

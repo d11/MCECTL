@@ -1,0 +1,308 @@
+/******************************************************************************************
+ File: 	classes/afa/dnf/functios.src
+ -----
+
+ Description:
+ ------------
+	This file contains the definition of the following functions:
+
+		void     skipspace(istream& in)
+		istream& operator>>(istream& in, term& t)
+		ostream& operator<<(ostream& out, const term& t)
+		void     term::print(ostream& out)const
+		istream& operator>>(istream& in, funct& f)
+		ostream& operator<<(ostream& out, const funct& f)
+		void     funct::print(ostream& out)const
+		
+	These functions are concerned with inputting/outputting
+	objects of type "term" and "funct" 
+
+ Revision History:
+ -----------------
+	X. Wu				Initial version of source code
+	S. Huerter 08/11/98		Header and comments
+
+******************************************************************************************/
+#include <iostream.h>
+#include "function.h"
+#include <math.h>
+#include <ctype.h>
+#include <stdio.h>
+/******************************************************************************************
+		
+			void skipspace(istream& in)
+
+Description:
+	This function reads past all whitespace (ie. ' ' and '/t').
+
+Parameters:
+	istream& in			-input stream being read
+
+******************************************************************************************/
+void skipspace(istream& in)
+{
+  char ch;
+  in.get(ch);
+  while ((ch ==' ') ||(ch =='\t'))
+    in.get(ch);
+  in.putback(ch);
+}
+/******************************************************************************************
+
+		istream& operator>>(istream& in, term& t)
+
+Description:
+	This function is a friend function of the term class.  This function reads a term
+	from the parameter input stream "in" into the parameter term t.  This function
+	expects a term to be of the form of two integers separated by a space (representing
+	the alpha and beta members of the term), eg. 63 36 . The character following the
+	term is left on the input buffer "in".
+
+	This function can be called in the following way(s):
+		my_in_stream >> myterm;
+
+Parameters:
+	istream& in			- the input stream being read from
+	term& t				- the term to read the data into
+
+Return Value:
+	istream&			-a reference to the parameter input
+					 stream "in" (so other operator>> 's
+					  can be applied if desired)
+
+******************************************************************************************/
+istream& operator>>(istream& in, term& t)
+{
+  char ch;
+  skipspace(in);         //skip the leading space
+  in.get(ch);
+
+  if ((ch=='\n')||(ch == -1))      //empty line or empty file, nothing read in
+    {
+      in.putback(ch);  //leave the endl character to the buffer
+      return in;
+    }
+  else if (isdigit(ch) == 0)       //suppose to be a number   
+    {
+      cerr<<"wrong data"<<endl;
+      exit(1);
+    }  
+
+  else 			           //right data for the alpha componenet
+    {
+       in.putback(ch);
+       in>>t.alpha;
+       in.get(ch);
+       if (ch != ' ')              //blank space to separate integers
+	 {
+	   cerr<<"wrong data"<<endl;
+	   exit(1);
+	 }
+       else
+	 {
+	   skipspace(in);
+	   in.get(ch);
+	   if (isdigit(ch) == 0)  //supose to be an integer for beta
+	     {
+		cerr<<"wrong data"<<endl;
+		exit(1);
+	     }
+	   else
+	    {
+		in.putback(ch);
+	        in>>t.beta;
+		return in;
+	    }
+	 }
+    }
+}
+/******************************************************************************************
+
+			ostream& operator<<(ostream& out, const term& t)
+		
+Description:
+	This function is a friend function of the term class.  This function writes term t
+	to the parameter output stream "out".  
+
+	This function can be called in the following way(s):
+		my_out_stream << myterm;
+
+Parameters:
+	ostream& out			- the output stream to write to
+	term& t				- the term to write
+
+Return Value:
+	ostream&			-a reference to the parameter input
+					 stream "out" (so other operator<< 's
+					  can be applied if desired)
+
+******************************************************************************************/
+ostream& operator<<(ostream& out, const term& t)
+{
+  out<<t.alpha<<' '<<t.beta;
+  return out;
+}
+/******************************************************************************************
+
+				void term::print(ostream& out)const
+					
+Description:
+	This function is a public member of the term class.  It writes this term
+	symbolically to the output stream "out", eg., q1q2~q3q4~q5~q6 where the qi
+	are the variables this funct is defined over.  "~" denotes logical negation
+	of the variable following it.
+
+	This function can be called in the following way(s):
+		t.print(out_stream);
+
+Parameters:
+	ostream& out			- the output stream to write to
+******************************************************************************************/
+void term::print(ostream& out)const
+{
+  if (alpha == 0)               //t is a constant term
+    {
+      if (beta == 0)            //t is constant 1
+	{
+	  out<<1;
+	  return;
+	}
+      else                      //t is constant 0
+	{
+	  out<<0;
+	  return;
+	}
+    }
+  for (int i=0; i<32; i++)      //t is not a constant
+    {
+      unsigned test = (unsigned) pow(2,i);
+      if( (alpha & test) != 0)   //xi or ~xi is in this term
+	if ((beta & test) != 0)       //xi is in this term
+	  {
+	    out<<'q'<<(i+1);
+	  }
+        else
+	  out<<'~'<<'q'<<(i+1);
+    }
+}
+/******************************************************************************************
+
+			istream& operator>>(istream& in, funct& f)
+
+Description:
+	This function is a friend function of the funct class.  This function reads a funct
+	from the parameter input stream "in" into the parameter funct f.  This function
+	expects a funct to occupy one line in the form "term+term+..+term" followed by an
+	end-of-line character.  This function skips the end of line character. 
+	eg. <beginning of stream>59 3+63 5+63 49+63 38<\n><end of stream>
+	This function can be called in the following way(s):
+		my_in_stream >> myfunct;
+
+Parameters:
+	istream& in			- the input stream being read from
+	funct& f			- the funct to read the data into
+
+Return Value:
+	istream&			-a reference to the parameter input
+					 stream "in" (so other operator>> 's
+					  can be applied if desired)
+
+******************************************************************************************/
+istream& operator>>(istream& in, funct& f)
+{
+  term t(0,0);
+  char ch;
+  in>>t;
+
+  f.append(t);
+  skipspace(in);
+  in.get(ch);
+
+  while (ch !='\n')
+    {
+      term newt(0,0);
+      in>>newt;
+      f.append(newt);
+      in.get(ch);
+    }
+  return in;
+}
+/******************************************************************************************
+
+			ostream& operator<<(ostream& out, const funct& f)
+		
+Description:
+	This function is a friend function of the funct class.  This function writes funct f
+	to the parameter output stream "out". 
+	eg. 59 3+63 5+63 49+63 38 
+
+	This function can be called in the following way(s):
+		my_out_stream << myfunc;
+
+Parameters:
+	ostream& out			- the output stream to write to
+	funct& f			- the funct to write
+
+Return Value:
+	ostream&			-a reference to the parameter input
+					 stream "out" (so other operator<< 's
+					  can be applied if desired)
+
+******************************************************************************************/
+ostream& operator<<(ostream& out, const funct& f)
+{
+  term *tmp = f.get_head();
+  if (tmp != 0)
+    {
+	out<<(*tmp);
+        tmp = tmp->get_next();
+    } 
+  while (tmp != 0)
+    {
+	out<<'+';
+	out<<(*tmp);
+ 	tmp = tmp->get_next();
+    }
+  out<<endl;
+  return out;
+}
+/******************************************************************************************
+
+			void funct::print(ostream& out)const
+		
+Description:
+	This function is a public member of the funct class.  This function writes 
+	this funct to the parameter output stream "out" symbolically, for eg.,
+
+	~q1~q2q3~q4~q5~q6+~q1~q2~q3~q4q5~q6+q1~q2~q3q4q5~q6+q1q2~q3~q4q5~q6
+	
+	where the qi are the variables this funct is defined over, 
+	"~" denotes logical negation of the variable following it,
+	and "+" denotes logial OR.
+	
+	This function can be called in the following way(s):
+		myfunc.print(outstream);
+
+Parameters:
+	ostream& out			- the output stream to write to
+	
+******************************************************************************************/
+void funct::print(ostream& out)const
+
+{
+  term* tmp = head;
+  if (tmp != 0)
+    tmp->print(out);
+  tmp = tmp->get_next();
+  while (tmp != 0)
+    {
+      out<<'+';
+      tmp->print(out);
+      tmp = tmp->get_next();
+    }
+  out <<endl;
+}
+
+
+
+

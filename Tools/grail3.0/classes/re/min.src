@@ -1,0 +1,204 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+/***************************************************************************
+
+  File:  classes/re/min.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following functions:
+      subexp<S>* subexp<S>::minimize()
+      re<S>& re<S>::minimize()
+      subexp<S>* cat_exp<S>::minimize()
+      subexp<S>* plus_exp<S>::minimize()
+
+    These functions are public members of the template class re (declared 
+    in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/09         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                     subexp<S>* subexp<S>::minimize()
+
+  Description:
+    This function is a virtual member of the template class subexp (declared 
+    in classes/re/re.h).  This is the default implementation of the minimize
+    function for the subclasses of subexp.  It returns a pointer to the
+    unchanged expression.
+
+  Parameters:  none
+
+  Return Value:
+    subexp<S>* - a pointer to the minimized subexpression.
+
+  
+ ***************************************************************************/
+
+template <class S>
+subexp<S>*
+subexp<S>::minimize()
+{
+	return this; 
+}
+
+
+
+
+/***************************************************************************
+
+                         re<S>& re<S>::minimize()
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function minimizes the regular expression 
+    represented by this re.  Note that minimal regular expressions are not 
+    unique.  The function returns a reference to this re.
+
+  Parameters:  none
+
+  Return Value:
+    re<S>& - a reference to the minimized expression
+
+  
+ ***************************************************************************/
+
+template <class S>
+re<S>&
+re<S>::minimize()
+{
+	if (p != 0)
+		p = p->minimize();
+	return *this;	
+}
+
+
+/***************************************************************************
+
+                     subexp<S>* cat_exp<S>::minimize()
+
+  Description:
+    This function is a public member of the template class cat_exp (declared 
+    in classes/re/re.h).  This function minimizes a regular expression which
+    represents a catenation of two subexpressions.  It minimizes the left
+    and right expressions and then checks the results to see if either the
+    left or right expression is empty and can be eliminated.  Returns a
+    pointer to the minimized expression or 0 if the entire expression was
+    eliminated.
+
+  Parameters:  none
+
+  Return Value:
+    subexp<S>* - a pointer to the minimized subexpression.
+
+  
+ ***************************************************************************/
+
+template <class S>
+subexp<S>*
+cat_exp<S>::minimize()
+{
+	// minimize right and left expressions
+	if (left != 0)
+		left->minimize();
+	if (right != 0)
+		right->minimize();
+
+	// if both the left and the right expressions are clear, return
+	//  a clear expression
+	if (left == 0 && right == 0)
+		return 0;
+
+	if (left == 0 || left->is_empty_string())
+	{
+		delete left;
+		return right;
+	}
+	
+	if (right == 0 || right->is_empty_string())
+	{
+		delete right;
+		return left;
+	}
+
+	// MH this seems wrong??  Shouldn't it return empty_set?
+	if (left->is_empty_set() || right->is_empty_set())
+	{
+		delete left;
+		delete right;
+		return 0;
+	}
+
+	return this;
+}
+
+
+
+
+/***************************************************************************
+
+                  subexp<S>* plus_exp<S>::minimize()
+
+  Description:
+    This function is a public member of the template class plus_exp (declared 
+    in classes/re/re.h).  This function minimizes a regular expression which
+    represents a union of two subexpressions.  It minimizes the left
+    and right expressions and then checks the results to see if either the
+    left or right expression is empty and can be eliminated.  Returns a
+    pointer to the minimized expression or 0 if the entire expression was
+    eliminated.
+
+  Parameters:  none
+
+  Return Value:
+    subexp<S>* - a pointer to the minimized subexpression.
+
+  
+ ***************************************************************************/
+
+template <class S>
+subexp<S>*
+plus_exp<S>::minimize()
+{
+	// minimize the left and right expressions
+	if (left != 0)
+		left->minimize();
+	if (right != 0)
+		right->minimize();
+
+	// if both expressions are clear, return a clear expression
+	if (left == 0 && right == 0)
+		return 0;
+
+	if (left == 0 || left->is_empty_set())
+	{
+		delete left;	
+		return right;
+	}
+
+	if (right == 0 || right->is_empty_set())
+	{
+		delete right;
+		return left;
+	}
+
+	// if the expressions in the union are the same, eliminate one
+	if (*left == right)
+	{
+		delete right;
+		return left;
+	}
+
+	return this;
+}

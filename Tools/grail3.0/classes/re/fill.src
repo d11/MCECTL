@@ -1,0 +1,148 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/re/fill.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int re<S>::fill_buffer(istream& is, char** si, char left, char right)
+
+    This function is a private member of the template class re (declared 
+    in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/11         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+    int re<S>::fill_buffer(istream& is, char** si, char left, char right)
+
+  Description:
+    This function is a private member of the template class re (declared 
+    in classes/re/re.h).  This function scans the input stream for a regular
+    expression and copies it into the string buffer, si.  No parsing or
+    symbol recognition in the regular expression is done; it is identified
+    by the left and right delimiters on the stream (the parameters left 
+    and right).  The values for left and right are usually determined from
+    re<S>::re_left_delimiter and re<S>::re_right_delimiter (see
+    (alphabetdirectory)/lexical.h for defintion).  If two right delimitors are
+    found in a row, they are assumed to be an escape sequence and thus left in
+    the string.  Scanning of the stream stops when a single right delimiter
+    is found or the end of the stream is reached (the stream pointer will
+    be positioned after the last delimiter if found).  Character \0 is
+    added to the end of the string buffer.  The function returns the number of
+    characters read into the buffer.
+
+    This function can be called in the following ways:
+      size = this_re.fill_buffer(input_stream, buffer, left, right);
+
+  Parameters:
+    istream& is - the input stream from which the buffer should be filled
+    char** si - a pointer to the buffer string
+    char left - the left delimiter for the input string
+    char right - the right delimiter for the input string
+
+  Return Value:
+    int - the size of the buffer which was read
+
+ ***************************************************************************/
+
+template <class S>
+int
+re<S>::fill_buffer(istream& is, char** si, char left, char right)
+{
+	int	size = 0;	// current size of buffer
+	int	max = 512;	// maximum size of buffer
+	char	ch;		// current character read
+	char*	s;		// temporary storage of read characters
+
+	*si = NULL;
+
+	// skip white space
+	for (is.get(ch); !is.eof(); is.get(ch))
+		if(!isspace(ch))
+			break;
+
+	s = new char[max+1];
+
+	if (is.eof())
+	{	
+		s[0] = '0';
+		return 0;
+	}
+
+	// find the left delimiter
+	if (left != ' '  && ch != left)
+	{
+		s[0]= '\0';
+		return 0;
+	}
+
+	// collect chars until right delimiter
+	while (!is.eof())
+	{
+		// if two right delimiters, it's an escape
+		// note we check for all types of white space
+		if (ch == right || (right == ' ' && (ch =='\t' || ch == '\n')))
+		{
+			is.get(ch);
+
+			// if there was only one delimiter, it's not an escape
+			//  so put \0 on end of string and return.
+			if (is.eof() || (ch != right) || (right == ' ' && 
+			   !(ch == ' ' || ch == '\n' || ch == '\t')))
+			{
+				is.putback(ch);
+				s[size++]=' ';
+				s[size] = '\0';
+
+				// copy temp string to parameter
+				int k=strlen(s);
+				*si=new char[k+1];
+				strcpy (*si, s);
+				delete [] s;
+
+				return size;
+			}
+		}
+
+		// add next character to the string
+		s[size++] = ch;
+
+		// allocate more space if necessary
+		if (size == max)
+		{
+			max *= 2;
+
+			char* cptr = new char[max+1];
+			for (int i=0; i<size; ++i)
+				cptr[i] = s[i];
+			delete [] s;
+			s = cptr;
+		}
+
+		is.get(ch);
+	}
+
+	s[size++]= ' ';
+	s[size] = '\0';
+	int index = strlen(s);
+	*si = new char[index+1];
+	strcpy (*si, s);
+	delete [] s;
+	return size;
+}

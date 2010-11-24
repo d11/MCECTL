@@ -1,0 +1,132 @@
+
+
+
+afacomp(1)                User Commands                afacomp(1)
+
+
+
+NAME
+     afacomp - compute the complement of a machine
+
+SYNOPSIS
+     afacomp afa
+
+     afacomp <afa
+
+DESCRIPTION
+     afacomp computes the complement of _a_f_a and writes the result
+     on the standard output.
+
+     _a_f_a must conform  to  the  Grail  bit-wise  _a_f_a  format  for
+     machines.
+
+     The complement of a machine accepts any string not  accepted
+     by  the original machine.  Complement is defined in terms of
+     the underlying alphabet of the machine. afacomp computes the
+     complement  only  with respect to the symbols that appear in
+     the original machine.
+
+EXAMPLES
+          % cat bitafa3
+          symbols: [a,b]
+          states:  4
+          finals:  7
+          head: 1 1
+          14 2+15 12
+          15 6
+          15 7
+          14 8+14 6+15 14
+          15 2+7 1+15 7
+          15 8+15 4
+          15 3+15 10
+          14 8+15 4
+
+          % afacomp bitafa3
+          symbols: [a,b]
+          states:  4
+          finals:  7
+          head: 1 0
+          14 2+15 12
+          15 6
+          15 7
+          14 8+14 6+15 14
+          15 2+7 1+15 7
+          15 8+15 4
+          15 3+15 10
+          14 8+15 4
+
+          % afacomp < bitafa3
+          symbols: [a,b]
+
+
+
+SunOS 5.5              Last change: Grail                       1
+
+
+
+
+
+
+afacomp(1)                User Commands                afacomp(1)
+
+
+
+          states:  4
+          finals:  7
+          head: 1 0
+          14 2+15 12
+          15 6
+          15 7
+          14 8+14 6+15 14
+          15 2+7 1+15 7
+          15 8+15 4
+          15 3+15 10
+          14 8+15 4
+
+          %cat bitafa3 | afacomp
+          symbols: [a,b]
+          states:  4
+          finals:  7
+          head: 1 0
+          14 2+15 12
+          15 6
+          15 7
+          14 8+14 6+15 14
+          15 2+7 1+15 7
+          15 8+15 4
+          15 3+15 10
+          14 8+15 4
+          (Reg.).fi
+
+
+AUTHORS
+     Xiuming Wu and Sheng Yu, the Grail project
+
+SEE ALSO
+     afa(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SunOS 5.5              Last change: Grail                       2
+
+
+

@@ -1,0 +1,184 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH afareverse 1 "Grail"
+.SH NAME
+afareverse \- compute the reverse operation of a machine
+.SH SYNOPSIS
+.B afacomp afa
+.sp
+.B afareverse <afa
+.SH DESCRIPTION
+.B
+afareverse
+computes the reverse of \fIafa\fR and writes 
+the result on the standard output.  
+.LP
+\fIafa\fR must conform to the Grail bit-wise \fIafa\fR format for machines.
+.LP
+The reverse of a machine accepts any string whose reverse is accepted by 
+the original machine.  reverse is defined in terms of the 
+underlying alphabet of the machine.  
+.B
+afareverse
+computes the reverse only with respect to the symbols that appear
+in the original machine. The filter first check to see if the number
+of states of the reverse afa exceeds 32 or not. If it does, the filter report
+that \FIthe machine is too big for reverse\fR, otherwise,
+the filter construct the reverse of the afa.
+.SH EXAMPLES
+.EX
+% cat bitafa
+symbols: [a,b,c,d]
+states:  3
+finals:  3
+head: 7 4
+7 3
+0 1
+0 1
+0 1
+0 1
+0 1
+7 3
+0 1
+0 1
+7 1
+0 1
+7 2
+
+
+% afareverse bitafa
+symbols: [a,b,c,d]
+states:  8
+finals:  16
+head: 8 8
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+2 2
+1 1
+4 4
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+
+
+% afareverse < bitafa
+symbols: [a,b,c,d]
+states:  8
+finals:  16
+head: 8 8
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+2 2
+1 1
+4 4
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+
+
+%cat bitafa | afareverse
+symbols: [a,b,c,d]
+states:  8
+finals:  16
+head: 8 8
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+1 1
+1 1
+1 1
+1 1
+1 1
+16 16
+2 2
+1 1
+4 4
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+afa(5)

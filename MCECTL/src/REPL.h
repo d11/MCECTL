@@ -53,7 +53,7 @@ public:
       InitMessage();
    }
 
-   void SendCommand( const Command::Command &command ) {
+   void SendCommand( Command::Command &command ) {
       //cout << "REPL recieved command: " << command.ToString() << endl;
       cout << Prompt() << command.ToString() << endl;
       try {

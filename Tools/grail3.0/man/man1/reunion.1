@@ -1,0 +1,54 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH reunion 1 "Grail"
+.SH NAME
+reunion \- compute the disjunction of two regular expressions
+.SH SYNOPSIS
+.B reunion re1 re2
+.sp
+.B reunion re2 <re1
+.SH DESCRIPTION
+.B
+reunion 
+computes \fIre1\fR `or' \fIre2\fR,
+and writes the result on standard output.
+.LP
+\fIre1\fR and \fIre2\fR must conform to the Grail format 
+for regular expressions.
+.SH EXAMPLES
+.EX
+% cat re3
+(a+b)*(abc)
+
+% cat re2
+""
+
+% reunion re3 re2
+(a+b)*abc+""
+
+% cat re4
+(((a)+(b))*)
+
+% reunion re4 re3
+(a+b)*+(a+b)*abc
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+re(5)

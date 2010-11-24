@@ -1,0 +1,65 @@
+//	This code copyright (c) by the Grail project
+//	No commercial use permitted without written consent.
+//	June 1995
+
+
+/***************************************************************************
+
+  File:  classes/bits/index.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int bits::operator[](int index) const 
+
+    This function is a public member of the class bits.h (declared in bits.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/29         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                   int bits::operator[](int index) const 
+
+  Description:
+    This function is a public member of the class bits (declared in bits.h).
+    This function returns the value of the bit at the specified index.  
+    The return value will be 1 if the bit is set and 0 otherwise.
+
+    This function can be called in the following ways:
+      value = this_bitmap.operator[](index);
+      value = this_bitmap[index];
+
+  Parameters:
+    int index - the index of the bit value to return
+
+  Return Value:
+    int - 1 if the bit is set and 0 otherwise
+  
+ ***************************************************************************/
+
+int
+bits::operator[](int index) const 
+{
+        // check whether the index is valid
+	if (index >= sz * block || index < 0) 
+	{
+		cerr << index << " out of range\n";
+		return -1;
+	}
+
+	unsigned int	temp = b[index / block] & (1 << (index % block));
+	if (temp > 0)
+		return 1;
+	return 0;
+}
+

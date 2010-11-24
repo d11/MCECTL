@@ -1,0 +1,83 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1995
+
+
+/***************************************************************************
+
+  File:  classes/set/list.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      set<Item>& set<Item>::from_list(list<Item>& l)
+
+    This function is a public member of the template class set
+    (declared in set.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/30         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+             set<Item>& set<Item>::from_list(list<Item>& l)
+
+  Description:
+    This function is a public member of the template class set 
+    (declared in set.h).  This function makes the parameter list into
+    a set and then swaps the contents of this set with the parameter
+    list.  After execution of this function, the list will contain the
+    elements which the set previously contained and this set will contain
+    a unique instance of every element which was present in the parameter
+    list.  The function returns a reference to this set.
+
+    This function can be called in the following way:
+      this_set.from_list(list_to_convert);
+
+  Parameters:
+    list<Item>& l - a reference to the list to be converted and swapped with
+                    this set
+
+  Return Value:
+    set<Item>& - a reference to this set
+  
+ ***************************************************************************/
+
+template <class Item>
+set<Item>&
+set<Item>::from_list(list<Item>& l)
+{
+	// remove duplicates
+	l.unique();
+
+	// swap list and set 
+	Item* ptr = p;
+	p = l.p;
+	l.p = ptr;
+
+	int i = sz;
+	sz = l.sz;
+	l.sz = i;
+
+	i = max;
+	max = l.max;
+	l.max = i;
+
+	i = sorted;
+	sorted = 1;
+	l.sorted = i;
+
+	return *this;
+}
+
+
+

@@ -1,0 +1,112 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/re/star.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definitions of the following functions:
+      subexp<S>* subexp<S>::star()
+      re<S>& re<S>::star()
+
+    These functions are members of the template class subexp and
+    the template class re respectively (declared in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/09         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                         subexp<S>* subexp<S>::star()
+
+  Description:
+    This function is a virtual member of the template class subexp (declared 
+    in classes/re/re.h).  This function performs the star operation on this
+    subexpression and creates a new subexpression to hold the resulting
+    expression.  This expression is unchanged; a pointer to the new expression
+    is returned.
+
+    This function can be called in the following way:
+      new_exp = this_exp.star();
+
+  Parameters:  none
+
+  Return Value:
+    subexp* - a pointer to the new subexpression
+
+  
+ ***************************************************************************/
+
+template <class S>
+subexp<S>*
+subexp<S>::star()
+{
+	star_exp<S>* ce = new star_exp<S>;
+
+	ce->left = this;
+	return ce; 
+}
+
+
+
+/***************************************************************************
+
+                           re<S>& re<S>::star()
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function performs the star operation on this
+    regular expression and replaces the current contents with the new
+    starred expression.  A reference to this re is returned.
+
+    This function can be called in the following way:
+      new_re = this_re.star();
+
+  Parameters:  none
+
+  Return Value:
+    re<S>& - a reference to the new regular expression
+  
+ ***************************************************************************/
+
+template <class S>
+re<S>&
+re<S>::star()
+{
+	if (p == 0)
+		return *this;
+
+	p = p->star();
+	return *this;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

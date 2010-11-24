@@ -1,0 +1,110 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+/***************************************************************************
+
+  File:  classes/pool/get.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      void* pool<S>::get_member()
+
+    This function is a public member of the template class pool 
+    (declared in pool.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/05/29         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                      void* pool<S>::get_member()
+
+  Description:
+    This function is a public member of the template class pool 
+    (declared in pool.h).  This function returns a pointer to a free
+    chunk of meory which can hold an item of type S.  This function
+    implements the 'new' operation.  The memory is allocated from one
+    of the arrays in the pool if possible, but otherwise a new array which
+    is twice the size of the last array is allocated.
+
+    This function can be called in the following ways:
+      new_item = this_pool.get_member();
+
+  Parameters:  none
+
+  Return Value:
+    void* - a pointer to the allocated chunk of memory which is large enough
+            to hold an item of the template parameter type.
+  
+ ***************************************************************************/
+
+template <class S>
+void*
+pool<S>::get_member()
+{
+	S*	ptr;
+	int	i;
+
+	// if it's sparse, try to find a usable element
+	if (sp != 0)
+	{
+		// i returns index of free element
+		i = b.next(-1);
+
+		if (i < 0) // this should never happen	
+		{
+			cout << "got a -1, sp is " << sp << endl;
+			cout << b <<endl;
+			sp = 0;
+			goto allocate;
+		}
+
+		b.clear(i);	// clear the bit for i to indicate use
+		--sp;
+
+	        // compute the address of the associated block
+        	int total = POOL_SIZE;
+        	int old = 0;
+        	for (int j=0;  ; ++j)
+        	{
+                	if (total > i)
+                        	break;
+                	old = total;
+                	total += POOL_SIZE << j + 1;
+        	}
+
+	        i -= old;
+        	ptr = p[j];
+        	return &(ptr[i]);
+	}
+
+
+allocate:
+
+	// if the current block is full, allocate a new one	
+	i = POOL_SIZE << p.size()-1;	// determine current size by shifting
+	if (sz == i)			// if block is full
+	{
+		// allocate double the last block size
+		i = POOL_SIZE << p.size();
+		p += new S[i];		// add new array to pool
+		b.increase(i);		// increase the bits
+		sz = 0;
+	}
+
+	// otherwise, just return the next element
+	ptr = p[p.size()-1];
+	return &(ptr[sz++]);
+}
+

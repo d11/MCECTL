@@ -1,0 +1,130 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	August 1994
+
+// *************************************************
+// MH 98/09/09  This code does not appear to be used
+// *************************************************
+
+#ifndef		FM_CLASS_DEFINITION
+
+enum { SOURCE, SINK, EITHER };
+
+template <class Label> class fl;
+
+template <class Label>
+class fm
+{
+        friend set<inst<Label> > get_arcs (const fm<Label>& f)
+	  { set<inst<Label> > tmp;
+	    tmp = f.arcs;
+	    return tmp;
+	  }
+
+
+	protected:
+
+	int	find_part(set<set<state> >&, state);
+	int	find_first(const state&) const;
+	void	merge_inverse(set<set<state> >&, set<set<state> >&,set<state>&);
+
+	set<inst<Label> >	arcs;			// instructions
+	set<state>		start_states;
+	set<state>		final_states;
+
+	// friend functions
+
+	friend	istream&	
+	operator>>(istream&, fm<Label>&);		// stream input
+
+	// public functions
+
+	public:
+ 
+			fm() { ; }
+			fm(const fm<Label>& x) :
+			arcs(x.arcs), start_states(x.start_states), 
+			  final_states(x.final_states) { }
+			~fm() { ; }		
+	fm<Label>&	operator=(const fm<Label>&);
+	int		operator==(const fm<Label>&) const;	
+	int		operator!=(const fm<Label>& x) const	
+			{ return *this == x ? 0 : 1; }
+	fm<Label>&	operator+=(const fm<Label>&);	// union of fm
+	fm<Label>&	operator+=(fm<Label>*);	// union of fm
+	fm<Label>&	operator^=(const fm<Label>&);	// catenation
+	fm<Label>&	operator-=(const fm<Label>& a);	// delete instructions
+	inst<Label>&	operator[](int i) const		// return instruction
+			{ return arcs[i]; }
+	void		add_instruction(const inst<Label>& i)
+			{ arcs += i; }
+	void		cartesian(const set<state>&, const set<Label>&, 
+				const set<state>&);
+	int		canonical_numbering();		// number states
+	fm<Label>&	clear() 			// clear contents of fm
+			{ arcs.clear(); start_states.clear();
+			  final_states.clear(); return *this; }
+	void		complement();			// complement the fm
+	void		complete();			// complete an fm
+	void		cross_product(const fm<Label>&, const fm<Label>);	
+//	void            dfaunion(const fm<Label>& a, const fm<Label> b);
+	fm<Label>&	disjoint_union(const fm<Label>&);
+	inline fm<Label>&	disjoint_union(const inst<Label>&);
+	fm<Label>&	empty_string_machine();		// create e-machine
+	int		enumerate(int, set<string<Label> >&); 
+							// generate strings in L
+	set<state>&	finals(set<state>& r) const	// all final states
+			{ return r=final_states; }
+	int		is_complete() const;		// complete ?
+	int		is_deterministic() const;	// deterministic ?
+	int		is_universal() const;		// universal ?
+	set<Label>&	labels(set<Label>&) const;	// all labels
+	state		max_state() const;		// maximum state
+	int		member_of_language(const string<Label>&, const int) 
+						const;	// test membership
+	fm<Label>&	min_by_partition();		// minimize machine
+	int		number_of_final_states() const
+			{ return final_states.size(); }
+	int		number_of_labels() const
+			{ set<Label> r; return labels(r).size(); }
+	int		number_of_start_states() const
+			{ return start_states.size(); }
+	int		number_of_states() const
+			{ set<state> r; return states(r).size(); }
+	int		number_of_instructions() const	
+			{ return arcs.size(); }
+	void		plus();				// ``+'' of fm
+	void		reachable_fm();			// reachable sub-fm
+	void		reachable_states(set<state>&) const;	
+							// reachable states
+	void		remove(const state&);		// remove arcs with
+							// this state
+	void		renumber(int);			// renumber fm
+	void		reverse();			// reverse fm
+	fm<Label>&	select(const state&, int, fm<Label>&) const;
+	fm<Label>&	select(const Label&, fm<Label>&) const;
+	fm<Label>&	select(const Label&, const state&, int, 
+					fm<Label>&) const;
+	void		set_finals(const set<state>& s)
+			{ final_states = s; }
+	void		set_starts(const set<state>& s)
+			{ start_states = s; }
+	fm<Label>&	single(const Label&);		// single instruction fm
+	set<state>&	sinks(set<state>&) const;	// sinks states of fm
+	int		size() const			// return size of fm
+			{ return arcs.size(); }
+	set<state>&	sources(set<state>&) const;	// sinks states of fm
+	fm<Label>&	star();				// ``*'' of fm
+	set<state>&	starts(set<state>& r) const	// all start states
+			{ return r=start_states; }
+	void		stats(ostream&) const;
+	set<state>&	states(set<state>&) const;	// all states
+	fm<Label>&	subset();			// subset construction
+ 	int		fmtofl(fl<Label>&) const;	// conversion to fl
+ 	void		fltofm(const fl<Label>&);	// conversion from fl
+ 	void		flfilter(fl<Label>&) const;	// filter fl
+ 	int		is_finite() const;		// represents fl ?
+};
+
+#define		FM_CLASS_DEFINITION
+#endif

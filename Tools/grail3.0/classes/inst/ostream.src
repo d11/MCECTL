@@ -1,0 +1,104 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	July 1995
+
+
+/***************************************************************************
+
+  File:  classes/inst/ostream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      template <class Label> ostream& operator<<(ostream& os, inst<Label>& t)
+
+    This function is a public member of the template class inst
+    (declared in inst.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/03         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+  template <class Label> ostream& operator<<(ostream& os, inst<Label>& t)
+
+  Description:
+    This function is a public member of the template class inst 
+    (declared in inst.h).  This function outputs the parameter label onto 
+    the specified output stream.  The format of the output depends on the
+    type of instruction:  one which designates a state as a final state,
+    one which designates a state as a start state or the representation of
+    a transition.
+
+    If the label has a final sink, then the format is the following:
+       source (FINAL_SYMBOL) (FINAL_STATE)
+    for example:    
+       1 -| (FINAL)
+
+    If the source state is a start state then the format is the following:
+       (START_STATE) (START_SYMBOL) sink
+    for example:
+       (START) |- 0
+
+    If source is not a start state and the sink is not final, the format is
+    the following:
+       source label sink
+    for example:
+       1 a 2
+
+    The separator used between the states and the label is the one specified
+    are inst<Label>::left_delimiter and inst<Label>::right_delimiter
+    (normally spaces).
+
+    operator<< for states and Label determines the output format for the
+    source, sink and label.  The function returns a reference to the output 
+    stream.
+
+    This function can be called in the following ways:
+      operator<<(output_stream, instruction);
+      output_stream << instruction;
+
+  Parameters:
+    ostream& os - the output stream
+    inst<Label>& t - the instruction to be outputted.
+
+  Return Value:
+    ostream& - a reference to the output stream
+
+  
+ ***************************************************************************/
+
+template <class Label>
+ostream&
+operator<<(ostream& os, inst<Label>& t)
+{
+	// if this is a START instruction
+	if (t.is_start())
+	{
+		os << START_STATE << inst<Label>::left_delimiter 
+			<< START_SYMBOL << inst<Label>::right_delimiter;
+		return os << t.get_sink();
+	}
+
+	// if this is not a START instruction
+	os << t.get_source() << inst<Label>::left_delimiter;
+
+	// if this is a FINAL instruction
+	if (t.is_final())
+		return os << FINAL_SYMBOL << inst<Label>::right_delimiter 
+				<< FINAL_STATE;
+
+	// if this is not a FINAL instruction
+	return os << t.get_label() << inst<Label>::right_delimiter 
+		<< t.get_sink(); 
+}
+

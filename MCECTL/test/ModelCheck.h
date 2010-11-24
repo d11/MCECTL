@@ -19,11 +19,11 @@ BOOST_AUTO_TEST_CASE( test_basic )
    BOOST_CHECK_NO_THROW(
       Environment env;
 
-      set<string> v1;
-      v1.insert("p");
-      v1.insert("q");
-      set<string> v2;
-      v2.insert("p");
+      vector<string> v1;
+      v1.push_back("p");
+      v1.push_back("q");
+      vector<string> v2;
+      v2.push_back("p");
 
       vector<KripkeState*> states;
       KripkeState *s1 = new KripkeState("foo", v1);

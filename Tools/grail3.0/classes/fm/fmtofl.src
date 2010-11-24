@@ -1,0 +1,117 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/fm/fmtofl.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::fmtofl(fl<Label>& lang) const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/10         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+            int fm<Label>::fmtofl(fl<Label>& lang) const
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function converts the language represented
+    by this fm to a finite language and stores the result in lang.  If the 
+    conversion is not possible (i.e. the language is not finite), then
+    the function returns -1, otherwise it returns 1.
+
+    This function can be called in the following way:
+      this_fm.fmtofl(new_lang);
+
+  Parameters:
+    fl<Lable>& lang - stores the converted finite language
+
+  Return Value:
+    int - 1 if conversion successful, -1 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::fmtofl(fl<Label>& lang) const
+{
+	fm<Label>		tmp;
+	array<state>		wave;
+	array<string<Label> >	wave_hist;
+	array<state>		next_wave;
+	array<string<Label> >	next_hist;
+	string<Label>	 	tmp_str;
+	fm<Label>		temp;
+	set<state>		tmp_states;
+	int			i;
+
+	// check for finiteness
+	if (!is_finite())
+		return -1;
+
+	// reduce to reachable machine
+
+	tmp = *this;
+	tmp.reachable_fm();
+	tmp.reverse();
+	tmp.reachable_fm();
+	tmp.reverse();
+
+	// initialize... 
+	lang.clear(); 
+
+	// initialize wave, and wave_hist
+	wave += tmp.start_states;
+	for (i=0; i<wave.size(); ++i)
+		wave_hist += string<Label>(); 
+
+	while (wave.size()!=0)
+	{
+		// advance wave
+		next_wave.clear();
+		next_hist.clear();
+		for (i=0; i<wave.size(); ++i)
+		{
+			select(wave[i], SOURCE, temp);
+			for (int j=0; j<temp.size(); j++)
+			{
+				next_wave += temp[j].get_sink();
+				tmp_str = wave_hist[i];
+				tmp_str += temp[j].get_label();
+				next_hist += tmp_str;  
+			}
+		}
+		wave = next_wave;
+		wave_hist = next_hist;		
+
+		// output words
+		for (i=0; i<wave.size(); ++i)
+			if (tmp.final_states.member(wave[i]) != -1)
+				lang += wave_hist[i];
+	}  
+	
+	// test for empty word
+	tmp_str.clear();
+	tmp_states.intersect(tmp.start_states, tmp.final_states);
+	if (tmp_states.size() != 0)
+		lang += tmp_str;
+
+	return 1;
+}

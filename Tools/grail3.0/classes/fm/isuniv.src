@@ -1,0 +1,69 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1993
+
+
+/***************************************************************************
+
+  File:  classes/fm/isuniv.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      int fm<Label>::is_universal() const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/10         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                int fm<Label>::is_universal() const
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function checks whether the language
+    represented by this fm is universal.  That is, it checks whether this
+    fm accepts all words over its input alphabet.  In order for the
+    fm to have this property, it must be complete and all reachable states
+    must be final states.  The function returns 1 if the universal 
+    language is accepted and 0 otherwise.
+
+    This function can be called in the following way:
+      result = this_fm.is_universal();
+
+  Parameters:  none
+
+  Return Value:
+    int - returns 1 if the universal language is accepted and 0 otherwise
+  
+ ***************************************************************************/
+
+template <class Label>
+int
+fm<Label>::is_universal() const
+{
+	set<state>		fm_states;
+
+	// if not complete, then not universal
+	if (!is_complete())
+		return 0;
+
+	//  if complete, all reachable states must be final
+	reachable_states (fm_states); 
+
+	if (!final_states.contain(fm_states))
+		return 0;
+
+	return 1;
+}

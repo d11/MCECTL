@@ -1,0 +1,394 @@
+/******************************************************************************************
+ File: 	classes/afa/afa.src
+ -----
+
+ Description:
+ ------------
+	This file contains the definition of the following functions:
+
+		istream& operator>>(istream& in, afa<T>& autom)
+		ostream& operator<<(ostream& out, const afa<T>& autom)
+		void afa<T>::print(ostream& out) const
+		
+	The first two functions are friends of the template class afa
+	(declared in afa.h).  The third function is a public member of 
+	the template class afa. 
+
+ Revision History:
+ -----------------
+	X. Wu				Initial version of source code
+	S. Huerter 08/11/98		Header and comments
+
+******************************************************************************************/
+#include <iostream.h>
+//#include "afa.h"
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+void skipspace(istream&);
+/******************************************************************************************
+
+		istream& operator>>(istream& in, afa<T>& autom)
+
+Description:
+	This function is a friend to the template class afa (declared in afa.h).
+	This function reads an afa from the paramter input stream "in" into the 
+	parameter afa "autom".
+	This function assumes the afa being read from the specified input stream
+	is of the form of the following example:
+	
+			<beginning of stream>
+			symbols: [a,b,c,d,e,f]<\n>
+			states:  6<\n>
+			finals:  27<\n>
+			head: 63 32<\n>
+			63 4+62 34<\n>
+			63 8+63 36+63 22<\n>
+			59 3+63 5+63 49+63 38<\n>
+			61 9+63 1<\n>
+			63 42+63 41<\n>
+			31 20+63 19<\n>
+			63 27+63 34+63 17+63 14<\n>
+			.
+			.
+			.
+			etc
+			.
+			.
+			.
+			59 18+63 56+63 37<\n>
+			63 3+63 24<\n>
+			31 1+63 28<\n>
+			63 12+63 23<\n>
+			63 52+63 15<\n>
+			<end of stream>
+
+	where each entry in the transition table occupies one line, eg. above, 
+	g(q1,a, u) = 63 4+62 34
+	.
+	.
+	.
+	g(q6,f,u) = 63 52+63 15 .
+	Each term is represented by a pair of integers (we interpret the integers as bit-vectors)
+	separated by a space, eg. 31 20.  The "+" symbol denotes logical "OR".
+	  	  
+	This function can be called in the following way(s):
+			my_in_stream >> my_afa;
+
+	Parameters:
+		istream& in			- the input stream to read from
+		afa<T>& autom			- the afa to read into
+
+	Return Values:
+		istream&			-a reference to the parameter input
+						 stream "in" (so other operator>> 's
+						 can be applied if desired)
+			
+******************************************************************************************/			
+template <class T>
+istream& operator>>(istream& in, afa<T>& autom)
+{
+//skip space and empty line
+  skipspace(in);
+  char ch;
+  in.get(ch);
+  while (ch =='\n')
+    {
+      skipspace(in);
+      in.get(ch);
+    }
+  in.putback(ch);
+
+//get the input symbols
+  char str[20];
+  in>>str;                      //skip the string "symbols: "
+  getarray(in, autom.symbol);
+  
+//skip space and empty lines
+  skipspace(in);
+  in.get(ch);
+  while (ch == '\n')
+    {
+      skipspace(in);
+      in.get(ch);
+    }
+  in.putback(ch);
+
+//get the states number
+  in>>str;                      //skip the string "states: "
+  in>>autom.states;
+
+//skip space and empty lines
+  skipspace(in);
+  in.get(ch);
+
+  while (ch == '\n')
+    {
+      skipspace(in);
+      in.get(ch);
+    }
+  in.putback(ch);
+
+//get the finals
+  str[0]='\0';
+  in>>str;                     //skip the string "finals: "
+  skipspace(in);
+  in>>autom.final;
+//  in.get(ch);
+
+/*  if (ch == '0')
+  {
+      autom.final = 0;
+      while (ch != '\n')       //get rid the rest of the line
+        in.get(ch);
+    }
+  else
+    while (ch !='\n')
+      {
+     	unsigned index;
+      	in.get(ch);
+      	index=ch - '0';
+        autom.final += (unsigned)pow(2,index-1);
+	skipspace(in);
+      	in.get(ch);
+    }
+*/
+//get the head function
+//skip space and empty lines
+  skipspace(in);
+  in.get(ch);
+  while (ch == '\n')
+    {
+      skipspace(in);
+      in.get(ch);
+    }
+  in.putback(ch);
+  in>>str;
+  in>>autom.head;
+
+//skip space and empty lines
+  skipspace(in);
+  in.get(ch);
+  while (ch == '\n')
+    {
+      skipspace(in);
+      in.get(ch);
+    }
+  in.putback(ch);
+
+//get the the transition functions
+  int size = (autom.symbol).size();
+  int states =autom.states;	
+  autom.table = new funct[states * size];     
+  for (int i = 0; i<states; i++)
+    for (int j = 0; j<size; j++)
+      {
+	in>>(autom.table)[i*size + j];
+
+//skip blank space and empty lines 
+        skipspace(in);
+        in.get(ch);
+        while (ch == '\n')
+          {
+            skipspace(in);
+            in.get(ch);
+          }
+        in.putback(ch);
+
+      }
+  in.get(ch);      //get rid of the end of file character
+  return in;
+}
+
+
+/******************************************************************************************
+
+		ostream& operator<<(ostream& out, const afa<T>& autom)
+
+Description:
+	This function is a friend to the template class afa (declared in afa.h).
+	This function writes the paramter afa "autom" to the parameter output
+	stream "out" in the following form of string: 
+
+			<beginning of stream>
+			symbols: [a,b,c,d,e,f]<\n>
+			states:  6<\n>
+			finals:  27<\n>
+			head: 63 32<\n>
+			63 4+62 34<\n>
+			63 8+63 36+63 22<\n>
+			59 3+63 5+63 49+63 38<\n>
+			61 9+63 1<\n>
+			63 42+63 41<\n>
+			31 20+63 19<\n>
+			63 27+63 34+63 17+63 14<\n>
+			.
+			.
+			.
+			etc
+			.
+			.
+			.
+			59 18+63 56+63 37<\n>
+			63 3+63 24<\n>
+			31 1+63 28<\n>
+			63 12+63 23<\n>
+			63 52+63 15<\n>
+			<end of stream>
+
+	where each entry in the transition table occupies one line, eg. above, 
+	g(q1,a, u) = 63 4+62 34
+	.
+	.
+	.
+	g(q6,f,u) = 63 52+63 15 .
+	Each term is represented by a pair of integers (we interpret the integers as bit-vectors)
+ 	separated by a space, eg. 31 20.  The "+" symbol denotes logical "OR". 
+  	  
+	This function can be called in the following way(s):
+			my_out_stream << my_afa;
+
+	Parameters:
+		ostream& out			- the output stream to write to
+		afa<T>& autom			- the afa to write
+
+	Return Values:
+		ostream&			- a reference to the parameter output
+						  stream "out" (so other operator<< 's
+						  can be applied if desired)
+			
+******************************************************************************************/
+template <class T>
+ostream& operator<<(ostream& out, const afa<T>& autom)
+{
+  out<<"symbols: ";
+  print(out, autom.symbol);
+  out<<endl;
+  out<<"states:  "<<autom.states<<endl;
+
+  out<<"finals:  ";
+  out<<autom.final;
+/*  if (autom.final == 0)
+    {
+      out<<'0';
+    }
+  else  
+    for (int i =0; i<32; i++)
+      {
+        unsigned test = (unsigned) pow(2,i);
+        if ((autom.final & test)  > 0)
+	  out<<'q'<<(i+1)<<" ";
+      }
+*/
+  out<<endl;
+
+  out<<"head: ";
+  out<<autom.head;
+  int size = (autom.symbol).size();
+  int states = autom.states;
+  for (int i=0; i<states; i++)
+    for (int j=0; j<size; j++)
+      out<<(autom.table)[i*size + j]; 
+
+  return out;
+}
+/******************************************************************************************
+
+			void afa<T>::print(ostream& out) const
+
+Description:
+	This function is a public member of the template class afa (declared in afa.h).
+	This function writes this afa in symbolic form to the parameter output stream "out".
+	For example,
+
+			<beginning of stream>	
+			symbols: [a,b,c,d,e,f]<\n>
+			states: 6<\n>
+			finals: q1 q4 q5 q6<\n> 
+			head: ~q1~q2~q3~q4~q5q6<\n>
+			~q1~q2q4~q5~q6+q1~q2~q3~q4q5q6<\n>
+			~q1~q2q3~q4~q5~q6+~q1~q2~q3~q4q5~q6+q1~q2~q3q4q5~q6+q1q2~q3~q4q5~q6<\n>
+			q1q2~q4~q5~q6+q1~q2q3~q4~q5+~q1q2~q3q4~q5q6<\n>
+			q1~q2~q3~q4~q5q6+q1~q2q3q4~q5~q6<\n>
+			q1q2~q3q4~q5~q6+q1~q2~q3q4~q5q6+~q1q2q3~q4~q5q6<\n>
+			.
+			.
+			etc
+			.
+			.
+			q1~q2~q3~q4~q5~q6<\n>
+			~q1~q2~q3q4q5~q6+q1~q2q3q4q5~q6<\n>
+			q1~q2q3~q4q5~q6+q1q2q3q4~q5~q6<\n>
+			<end of stream>
+
+	where each entry in this transition table occupies one line, eg. above,
+	g(q1,a,u) = ~q1~q2q4~q5~q6+q1~q2~q3~q4q5q6
+	. 
+	.
+	.
+	g(q6,f,u) = q1~q2q3~q4q5~q6+q1q2q3q4~q5~q6 .
+	Each term is printed symbolically, eg. ~q1q2q3~q4~q5q6.  The symbol "~" denotes negation
+	of the variable following it.  The symbol "+" denotes logical OR.
+	   
+	This function can be called in the following way(s):
+		my_afa.print(my_outstream);
+
+	Parameters:
+		ostream& out			- the output stream to write to
+	
+******************************************************************************************/
+template <class T>
+void afa<T>::print(ostream& out) const
+{
+//print the alphabet array of the afa to the file
+  out<<"symbols: ";
+  out<<'[';
+  int size = symbol.size();
+  if (size == 0)
+    {
+	out<<']'<<endl;
+    }
+  else if (size == 1)
+    {
+	out<<symbol[0]<<']'<<endl;
+    }
+  else
+    {
+	for (int i = 0; i<size-1; i++)
+    	   {
+	      out<<symbol[i]<<',';
+    	   }
+	out<<symbol[size-1]<<']'<<endl;
+    }
+
+//print the the state number of the afa to the file
+  out<<"states: "<<states<<endl;
+
+//print the final states bitvector
+  out<<"finals: ";
+  if (final == 0)
+    {
+      out<<'0';
+    }
+  else  
+    for (int i =0; i<32; i++)
+      {
+        unsigned test = (unsigned) pow(2,i);
+        if ((final & test)  > 0)
+	  out<<'q'<<(i+1)<<" ";
+      }
+  out<<endl;
+
+//print out the head function to the file
+  out<<"head: ";
+  head.print(out);
+
+//print out the transition functions to the file
+  for (int k = 0; k<states; k++)
+    for (int j = 0; j<size; j++)
+	table[k *size +j].print(out);
+}
+
+
+
+

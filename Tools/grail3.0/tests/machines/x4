@@ -1,0 +1,5 @@
+(START) |- 0
+0 abc* 1
+2 b+d 3
+1 a(e+f) 4
+4 -| (FINAL)

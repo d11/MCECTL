@@ -1,0 +1,132 @@
+
+
+
+fmtoafa(1)               USER COMMANDS                 fmtoafa(1)
+
+
+
+NAME
+     fmtoafa - convert a finite state machine to an _a_f_a
+
+SYNOPSIS
+     fmtoafa fm
+
+     fmtoafa <fm
+
+DESCRIPTION
+     fmtoafa reads in a given finite state machine, convert it to
+     an  _a_f_a,  and  then  writes the _a_f_a on the standard ouput in
+     bit-wise representation.
+
+     _f_m must  conform  to  the  Grail  format  for  finite  state
+     machines.   fmtoafa  doesn't  assume  _f_m  to  be complete or
+     deterministic
+
+     The alphabet for the resulting _a_f_a is all the input  symbols
+     which appear in instructions of the finite state machine.
+
+EXAMPLES
+          % cat testfm2
+          (START) |- 1
+          1 a 3
+          1 b 1
+          2 a 3
+          2 b 1
+          2 c 0
+          3 a 3
+          3 b 2
+          0 a 4
+          0 b 4
+          0 c 4
+          1 c 4
+          3 c 4
+          4 a 4
+          4 b 4
+          4 c 4
+          0 -| (FINAL)
+
+          % fmtoafa testfm2
+          symbols: [a,b,c]
+          states:  3
+          finals:  2
+          head: 7 4
+          6 2+7 1
+          7 1
+          0 1
+          0 1
+          6 2+7 1
+          0 1
+          0 1
+
+
+
+Sun Release 4.1        Last change: Grail                       1
+
+
+
+
+
+
+fmtoafa(1)               USER COMMANDS                 fmtoafa(1)
+
+
+
+          0 1
+          7 3
+
+
+          % fmtoafa <testfm2
+          symbols: [a,b,c]
+          states:  3
+          finals:  2
+          head: 7 4
+          6 2+7 1
+          7 1
+          0 1
+          0 1
+          6 2+7 1
+          0 1
+          0 1
+          0 1
+          7 3
+
+          % cat testfm2 | fmtoafa
+          symbols: [a,b,c]
+          states:  3
+          finals:  2
+          head: 7 4
+          6 2+7 1
+          7 1
+          0 1
+          0 1
+          6 2+7 1
+          0 1
+          0 1
+          0 1
+          7 3
+          (Reg.).fi
+
+
+AUTHORS
+     Xiuming Wu and Sheng Yu, the Grail project
+
+SEE ALSO
+     fm(5), afa(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sun Release 4.1        Last change: Grail                       2
+
+
+

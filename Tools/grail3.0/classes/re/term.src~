@@ -1,0 +1,155 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+/***************************************************************************
+
+  File:  classes/re/term.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      subexp<S>* re<S>::term(istream& str)
+
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/09         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                   subexp<S>* re<S>::term(istream& str)
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function read a term from the parameter input
+    stream.  A term is either a bracketed expression, a symbol, the empty set,
+    the empty string or a term followed by a star.  If mismatched paratheses
+    are found, an error message is printed to the standard stream and a null
+    pointer is returned.
+
+    The parsing is done by checking the next token and selecting the correct
+    action using a case statement.  If a left bracket is found parse(istream&)
+    is called to process the token inside the brackets.  A symbol, the empty
+    set, the empty string and star expressions are handled directly:  a new
+    subexpression is defined and returned.
+
+    The input stream must be valid and open before calling this function.
+    The function returns a pointer to the new subexpression.
+
+    This function can be called in the following way:
+      new_subexp = this_re.term(input_stream);
+
+  Parameters:
+    istream& str - the input stream.
+
+  Return Value:
+    subexp<S>* - a pointer to the new subexpression
+
+  Note:
+    This function is very closely coupled with parse(istream&).  It should 
+    perhaps be redesigned to make the structure simpler.  It is not
+    apparent why the handling of star is in both this function and 
+    parse(istream&) since the code in this parse(istream&) should never be 
+    executed.   MH 98/06/09
+
+  
+ ***************************************************************************/
+
+template <class S>
+subexp<S>*
+re<S>::term(istream& str)
+{
+	token_type 	t;
+	subexp<S>*	se1=0;
+	re<S>*		tmp;
+	S		s;
+	char		k;
+
+	// get the token
+	t = token(str);
+
+	if (t == eos_t)
+	{
+		se1 = 0;
+		return se1;
+	}
+
+	switch(t)
+	{
+	case rparen_t:
+		str >> k;
+		cerr<<"bracket \")\" parsing error"<<endl;
+		exit(1);      
+		break;
+
+	case lparen_t:
+		str >> k;
+		if ((t=token(str))==rparen_t)
+		{
+			str>>k;
+		        return se1 = 0;
+		} 
+		tmp = parse(str);
+		if ((t = token(str)) != rparen_t)
+		{
+			cout << (char) str.peek() << " illegal at " << str.tellg() << "\n";
+			return se1 = 0;
+		}
+		se1 = tmp->p;
+		tmp->p = 0;
+		delete tmp;
+		str >> k;
+		break;
+
+	case estring_t:
+		se1 = new empty_string<S>();
+		str >> k;
+		// str >> k;
+		break;
+
+	case eset_t:
+		se1 = new empty_set<S>;
+		str >> k;
+		// str >> k;
+		break;
+		
+//	case cat_t:	
+	case symbol_t:
+		str >> s;
+		se1 = new symbol_exp<S>(s);
+		break;
+
+	default:
+		return se1 =0;
+	}
+
+	// look for optional star(s)
+
+	if (token(str) == star_t)
+	{
+		star_exp<S>*	se2 = new star_exp<S>;
+		se2->left = se1;
+		while (token(str) == star_t)
+			str >> k;
+		return se2;
+	}
+
+	return se1;
+}
+
+
+
+
+

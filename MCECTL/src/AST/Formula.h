@@ -2,7 +2,6 @@
 #define CTL_AST_H
 
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <sstream>
 
 #include "Showable.h"

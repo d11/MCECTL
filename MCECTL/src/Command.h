@@ -25,7 +25,7 @@ namespace Command {
 
    class Command : public Showable {
       public:
-         virtual void Execute(Environment &environment, GlobalOptions &options) const = 0;
+         virtual void Execute(Environment &environment, GlobalOptions &options) = 0;
          virtual ~Command() { };
    };
 

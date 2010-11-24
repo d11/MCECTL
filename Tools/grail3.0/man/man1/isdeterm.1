@@ -1,0 +1,65 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH isdeterm 1 "Grail"
+.SH NAME
+isdeterm \- test machine for `determinism'
+.SH SYNOPSIS
+.B isdeterm fm
+.sp
+.B isdeterm <fm
+.SH DESCRIPTION
+.B
+isdeterm
+checks if \fIfm\fR is deterministic.
+.B
+isdeterm
+returns 1 and writes \fBdeterministic\fR on standard output
+if the input fm is deterministic; otherwise, it returns 0 and writes
+\fBnondeterministic\fR. 
+.LP
+A nondeterministic machine can be made deterministic with
+.B
+fmdeterm.
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat nfm1
+(START) |- 1
+1 a 2
+1 a 3
+2 b 2
+3 b 3
+2 c 4
+3 c 5
+4 d 4
+5 d 5
+4 -| (FINAL)
+5 -| (FINAL)
+
+% isdeterm nfm1
+nondeterministic
+
+% fmdeterm nfm1 | isdeterm
+deterministic
+
+.EE
+.SH AUTHORS
+Darrell Raymond and Derick Wood, the Grail project
+.SH "SEE ALSO"
+fm(5), fmdeterm(1)

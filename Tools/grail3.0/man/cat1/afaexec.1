@@ -1,0 +1,132 @@
+
+
+
+afaexec(1)               USER COMMANDS                 afaexec(1)
+
+
+
+NAME
+     afaexec - execute a machine on an input string
+
+SYNOPSIS
+     afaexec afa string
+
+     afaexec string <afa
+
+DESCRIPTION
+     afaexec tests the word _s_t_r_i_n_g for membership in the language
+     of  the machine _a_f_a.  If _s_t_r_i_n_g is accepted, afaexec returns
+     1 and writes "input was accepted" on its standard error;  If
+     all  the  symbols  of the _s_t_r_i_n_g are in the input symbol set
+     and the _s_t_r_i_n_g is not in the language of the _a_f_a, it returns
+     0 and writes "input was not accepted" on its standard error;
+     Otherwise it writes "the input symbol is not legal"  on  its
+     standard error.
+
+     _a_f_a must conform to the Grail bit-wise format for  machines.
+     _s_t_r_i_n_g should probably be protected from the shell by double
+     quotes.
+
+EXAMPLES
+          % cat bitafa2
+          symbols: [a,b,c]
+          states:  3
+          finals:  2
+          head: 7 4
+          6 2+7 1
+          7 1
+          0 1
+          0 1
+          6 2+7 1
+          0 1
+          0 1
+          0 1
+          7 3
+
+          % afaexec bitafa2 "abc"
+          input was accepted
+
+          % afaexec bitafa2 "abbb"
+          input was not accepted
+
+          %afaexec "abc" < bitafa2
+          input was accepted
+
+          % afaexec bitafa2 "x"
+          the input symbol is not legal
+
+          %cat bitafa2 | afaexec "abc"
+          input was accepted
+
+
+
+Sun Release 4.1        Last change: Grail                       1
+
+
+
+
+
+
+afaexec(1)               USER COMMANDS                 afaexec(1)
+
+
+
+          %cat bitafa2 | afaexec "abbb"
+          input was not accepted
+
+          %cat bitafa2 | afaexec "x"
+          the input symbol is not legal
+          (Reg.).fi
+
+
+AUTHORS
+     Xiuming Wu and Sheng Yu, the Grail project
+
+SEE ALSO
+     afa(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sun Release 4.1        Last change: Grail                       2
+
+
+

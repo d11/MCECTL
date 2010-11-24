@@ -1,0 +1,254 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1995
+
+
+
+/***************************************************************************
+
+  File:  classes/re/retofm.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definitions of the following functions:
+      void re<S>::retofm(fm<S>& f) const
+      inline void empty_set<S>::subexp_to_fm(fm<S>& f) const
+      inline void empty_string<S>::subexp_to_fm(fm<S>& f) const
+      inline void symbol_exp<S>::subexp_to_fm(fm<S>& f) const
+      void star_exp<S>::subexp_to_fm(fm<S>& f) const
+      void plus_exp<S>::subexp_to_fm(fm<S>& f) const
+      void cat_exp<S>::subexp_to_fm(fm<S>& f) const
+
+    These functions are public members of the template classes declared 
+    in classes/re/re.h (re and subclasses of subexp).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/10         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+                    void re<S>::retofm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class re (declared 
+    in classes/re/re.h).  This function converts a regular expression to
+    a finite machine.  This task is accomplished by calling subexp_to_fm
+    on the regular expression.
+
+    This function can be called in the following way:
+      this_re.retofm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this re.
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+void
+re<S>::retofm(fm<S>& f) const
+{
+	f.clear(); 
+
+	if (p == 0)
+		return;
+
+	p->subexp_to_fm(f);
+}
+
+
+
+/***************************************************************************
+
+           inline void empty_set<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class empty_set (declared 
+    in classes/re/re.h).  This function converts a regular subexpression
+    which represents an empty set to a finite machine.  (The resulting
+    machine will have no transitions).
+
+    This function can be called in the following way:
+      this_empty_set.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this empty_set
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+inline void
+empty_set<S>::subexp_to_fm(fm<S>& f) const
+{
+	f.clear();
+}
+
+
+
+/***************************************************************************
+
+        inline void empty_string<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class empty_string 
+    (declared in classes/re/re.h).  This function converts a regular 
+    subexpression which represents an empty string to a finite machine.
+
+    This function can be called in the following way:
+      this_empty_string.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this empty_string
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+inline void
+empty_string<S>::subexp_to_fm(fm<S>& f) const
+{
+	f.empty_string_machine();
+}
+
+
+
+/***************************************************************************
+
+          inline void symbol_exp<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class symbol_exp
+    (declared in classes/re/re.h).  This function converts a regular 
+    subexpression which represents a single symbol to a finite machine.
+
+    This function can be called in the following way:
+      this_symbol.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this symbol_exp
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+inline void
+symbol_exp<S>::subexp_to_fm(fm<S>& f) const
+{
+	f.single(content);
+}
+
+
+
+/***************************************************************************
+
+              void star_exp<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class star_exp
+    (declared in classes/re/re.h).  This function converts a regular 
+    subexpression which represents a starred expression to a finite machine.
+    The conversion is accomplished by calling sub_exp_to_fm on the expression
+    which is starred and then calling star() on the resulting machine.
+
+    This function can be called in the following way:
+      this_star_exp.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this star_exp
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+void
+star_exp<S>::subexp_to_fm(fm<S>& f) const
+{
+	left->subexp_to_fm(f);
+	f.star();
+}
+
+
+
+/***************************************************************************
+
+             void plus_exp<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class plus_exp
+    (declared in classes/re/re.h).  This function converts a regular 
+    subexpression which represents a union expression to a finite machine.
+    The conversion is accomplished by calling sub_exp_to_fm on the left and
+    right parts of the expression and then combining the resulting machines
+    using operator+=.
+
+    This function can be called in the following way:
+      this_plus_exp.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this plus_exp
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+void
+plus_exp<S>::subexp_to_fm(fm<S>& f) const
+{
+	fm<S>	g;
+	left->subexp_to_fm(f); 
+	right->subexp_to_fm(g);
+	f += g;
+}
+
+
+
+/***************************************************************************
+
+             void cat_exp<S>::subexp_to_fm(fm<S>& f) const
+
+  Description:
+    This function is a public member of the template class cat_exp
+    (declared in classes/re/re.h).  This function converts a regular 
+    subexpression which represents a catenated expression to a finite machine.
+    The conversion is accomplished by calling sub_exp_to_fm on the left and
+    right parts of the expression and then combining the resulting machines
+    using operator^=.
+
+    This function can be called in the following way:
+      this_cat_exp.subexp_to_fm(new_fm);
+
+  Parameters:
+    fm<S>& f - holds the fm which is created from this cat_exp
+
+  Return Value:  none
+
+ ***************************************************************************/
+
+template <class S>
+void
+cat_exp<S>::subexp_to_fm(fm<S>& f) const
+{
+	fm<S>	g;
+	left->subexp_to_fm(f);
+	right->subexp_to_fm(g);
+	f ^= g;
+}
+
+
+

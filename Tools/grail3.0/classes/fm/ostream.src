@@ -1,0 +1,101 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	July 1995
+
+
+/***************************************************************************
+
+  File:  classes/fm/ostream.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      template <class Label> ostream& 
+        operator<<(ostream& os, const fm<Label>& a)
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/10         Added header and comments
+
+ ***************************************************************************/
+
+
+class state;
+template <class Item> class set;
+
+
+/***************************************************************************
+
+        template <class Label> ostream& operator<<(ostream& os, 
+                          const fm<Label>& a)
+
+  Description:
+    This function outputs the fm label onto the specified output stream.
+
+    The output will consist of a list of transitions, one per line.  The
+    start states will be outputted first, followed by the normal transitions,
+    and then followed by the final states.
+
+    Start states and final states will always be outputted with the
+    pseudo-instructions (START) and (FINAL) paired with the state number.
+    If there are multiple start or final states, there will be multiple
+    pseudo-instructions.  Any normal transitions will be outputted in the 
+    format 'source label sink' (see classes/inst/ostream.src for details)
+
+    Here is an example of output:
+
+    (START) |- 0
+    0 a 1
+    2 c 4
+    1 b 2
+    4 c 1
+    4 -| (FINAL)
+
+    The output stream must be valid and open before calling this function.
+    The function returns a reference to the output stream.
+
+    This function can be called in the following ways:
+      operator<<(output_stream, fm_to_print);
+      output_stream << fm_to_print;
+
+  Parameters:
+    ostream& os - the output stream
+    const fm<Label>& a - the fm to output
+
+  Return Value:
+    ostream& - a reference to the output stream
+  
+ ***************************************************************************/
+
+template <class Label>
+ostream&
+operator<<(ostream& os, const fm<Label>& a)
+{
+	int		i;
+	inst<Label>	t;
+	set<state>	ss;
+
+	// output start pseudo-instructions
+	a.starts(ss);
+	for (i=0; i<ss.size(); ++i)
+	{
+		t.make_start(ss[i]);
+		os << t << "\n";
+	}
+
+	// output normal instructions
+	for (i=0; i<a.size(); ++i)
+		os << a[i] << "\n";
+
+	// output final pseudo-instructions
+	a.finals(ss);
+	for (i=0; i<ss.size(); ++i)
+	{
+		t.make_final(ss[i]);
+		os << t << "\n";
+	}
+
+	return os;
+}

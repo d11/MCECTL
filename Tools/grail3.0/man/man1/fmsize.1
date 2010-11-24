@@ -1,0 +1,62 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmsize 1 "Grail"
+.SH NAME
+fmsize \- compute the state number of a machine
+.SH SYNOPSIS
+.B fmsize fm
+.sp
+.B fmsize <fm
+.SH DESCRIPTION
+.B
+fmsize
+computes the number of states of a given \fIfm\fR and writes the result on 
+the standard output. 
+.LP
+\fIfm\fR must conform to the Grail format for machines.
+.SH EXAMPLES
+.EX
+% cat testfm1
+START) |- 4
+1 b 3
+2 a 0
+3 a 0
+3 b 0
+4 a 1
+4 b 2
+0 b 5
+0 a 5
+1 a 5
+2 b 5
+5 b 5
+5 a 5
+0 -| (FINAL)
+
+% fmsize  testfm1
+6
+
+%fmsize <testfm1
+6
+
+%cat testfm1 |fmsize
+6
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+fm(5)

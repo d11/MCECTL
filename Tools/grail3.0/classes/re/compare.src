@@ -1,0 +1,245 @@
+//	This code copyright (c) by the Grail project
+//	No commercial use permitted without written consent. 
+//	January 1994
+
+
+/***************************************************************************
+
+  File:  classes/re/compare.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definitions of the following functions:
+      int cat_exp<S>::
+         compare_cat_exp(const subexp<S>* l, const subexp<S>* r) const
+      int plus_exp<S>::
+         compare_plus_exp(const subexp<S>* l, const subexp<S>* r) const
+      int star_exp<S>::compare_star_exp(const subexp<S>* l) const
+      int symbol_exp<S>::compare_symbol_exp(const S& s) const
+
+    These functions are public members of the template classes declared 
+    in classes/re/re.h.
+
+    For more information on the purpose of these functions, please see the
+    header comments in classes/re/re.h.
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/06/10         Added header and comments
+
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+  int cat_exp<S>::compare_cat_exp(const subexp<S>* l, const subexp<S>* r) const
+
+  Description:
+    This function is a public member of the template class cat_exp (declared 
+    in classes/re/re.h).  This function compares this cat_exp to a cat_exp
+    which has the left and right conjucts pointed to by the parameters l and
+    r.  The function returns 1 if this cat_exp is greater than the parameter
+    cat_exp which would result from the union of the parameter conjuncts, 
+    0 if the two expressions are equal and -1 if this cat_exp is less than the
+    parameter cat_exp.
+
+    This function can be called in the following way:
+      result = this_cat_exp(other_cat_exp->left, other_cat_exp->right);
+
+  Parameters:
+    const subexp<S>* l - a pointer to the left subexp of the cat_exp which
+                         should be compared to this cat_exp
+    const subexp<S>* r - a pointer the the right subexp of the cat_exp which
+                         should be compared to this cat_exp
+
+  Return Value:
+    int - 1 if this cat_exp is greater than the parameter, 0 if they are
+          equal and -1 otherwise.
+  
+ ***************************************************************************/
+
+template <class S>
+int
+cat_exp<S>::compare_cat_exp(const subexp<S>* l, const subexp<S>* r) const
+{
+	if (left == 0 || right == 0)
+		return 0;
+
+	if (l == 0 || r == 0)
+		return 0;
+
+	if (*left == l)
+	{
+		if (*right == r)
+			return 0;
+
+		if (*right < r)
+			return -1;
+
+		return 1;
+	}
+
+	if (*left < l)
+		return -1;
+
+	return 1;
+}
+
+
+
+/***************************************************************************
+
+  int plus_exp<S>::compare_plus_exp(const subexp<S>*l,const subexp<S>*r) const
+
+  Description:
+    This function is a public member of the template class plus_exp (declared 
+    in classes/re/re.h).  This function compares this plus_exp to a plus_exp
+    which has the left and right conjucts pointed to by the parameters l and
+    r.  The function returns 1 if this plus_exp is greater than the parameter
+    plus_exp which would result from the catenation of the parameter 
+    conjuncts, 0 if the two expressions are equal and -1 if this plus_exp is
+    less than the parameter plus_exp.  This function recognizes commutative 
+    expressions as being equal; for example, comparing (a+b) to (b+a) will
+    return 0.
+
+    This function can be called in the following way:
+      result = this_plus_exp(other_plus_exp->left, other_plus_exp->right);
+
+  Parameters:
+    const subexp<S>* l - a pointer to the left subexp of the plus_exp which
+                         should be compared to this plus_exp
+    const subexp<S>* r - a pointer the the right subexp of the plus_exp which
+                         should be compared to this plus_exp
+
+  Return Value:
+    int - 1 if this plus_exp is greater than the parameter, 0 if they are
+          equal and -1 otherwise.
+  
+ ***************************************************************************/
+
+template <class S>
+int	
+plus_exp<S>::compare_plus_exp(const subexp<S>* l, const subexp<S>* r) const
+{
+	if (left == 0 || right == 0)
+		return 0;
+
+	if (l == 0 || r == 0)
+		return 0;
+
+	if (*left == l)
+	{
+		if (*right == r)
+			return 0;
+
+		if (*right < r)
+			return -1;
+
+		return 1;
+	}
+
+	// commutative union expressions are still equal
+	if (*left == r)
+	{
+		if (*right == l)
+			return 0;
+
+		if (*right < l)
+			return -1;
+
+		return 1;
+	}
+
+	if (*left < l)
+		return -1;
+
+	return 1;
+}
+
+
+
+/***************************************************************************
+
+         int star_exp<S>::compare_star_exp(const subexp<S>* l) const
+
+  Description:
+    This function is a public member of the template class star_exp (declared 
+    in classes/re/re.h).  This function compares this star_exp to a star_exp
+    which has the left expression (the expression which is starred) pointed to
+    by the parameter l.  The function returns 1 if this star_exp is greater 
+    than the parameter star_exp which would result by starring the the 
+    parameter subexp, 0 if the two expressions are equal and -1 if this 
+    star_exp is less than the parameter star_exp.
+
+    This function can be called in the following way:
+      result = this_star_exp(other_plus_exp->left);
+
+  Parameters:
+    const subexp<S>* l - a pointer to the left subexp of the star_exp which
+                         should be compared to this star_exp
+
+  Return Value:
+    int - 1 if this star_exp is greater than the parameter, 0 if they are
+          equal and -1 otherwise.
+  
+ ***************************************************************************/
+
+template <class S>
+int	
+star_exp<S>::compare_star_exp(const subexp<S>* l) const
+{
+	if (left == 0 || l == 0)
+		return 0;
+
+	if (*left == l)
+		return 0;
+
+	if (*left < l)
+		return -1;
+
+	return 1;
+}
+
+
+
+/***************************************************************************
+
+         int symbol_exp<S>::compare_symbol_exp(const S& s) const
+
+  Description:
+    This function is a public member of the template class symbol_exp
+    (declared in classes/re/re.h).  This function compares this symbol_exp 
+    to the parameter symbol_exp.  The comparison is done using operator==
+    and operator< for S.  The function returns 1 if this symbol_exp is 
+    greater than the parameter symbol_exp, 0 if they are equal, and -1 if
+    this symbol_exp is less than the parameter symbol_exp.
+
+    This function can be called in the following way:
+      result = this_symbol_exp(other_symbol_exp);
+
+  Parameters:
+    const S& s - the symbol expression to be compared with this symbol_exp
+
+  Return Value:
+    int - 1 if this symbol_exp is greater than the parameter, 0 if they are
+          equal and -1 otherwise.
+  
+ ***************************************************************************/
+
+template <class S>
+int	
+symbol_exp<S>::compare_symbol_exp(const S& s) const
+{
+	if (s == content)
+		return 0;
+
+	if (s < content)
+		return -1;
+
+	return 1;
+}

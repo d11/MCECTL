@@ -23,13 +23,13 @@ private:
    GlobalOptions &_global_options;
 public:
    CommandProcessor(Environment &env, GlobalOptions &options) : _environment(env), _global_options(options) { }
-   void ExecuteCommand( const Command::Command &command ) {
+   void ExecuteCommand( Command::Command &command ) {
       cout << "Executing command: " << command.ToString() << endl;
       command.Execute(_environment, _global_options);
       delete &command;
    }
-   void ExecuteCommandList( const vector<Command::CommandRef> &commands) {
-      vector<Command::CommandRef>::const_iterator iter;
+   void ExecuteCommandList( vector<Command::CommandRef> &commands) {
+      vector<Command::CommandRef>::iterator iter;
       for (iter = commands.begin(); iter != commands.end(); ++iter) {
          ExecuteCommand(**iter);
       }

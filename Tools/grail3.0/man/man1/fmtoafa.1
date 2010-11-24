@@ -1,0 +1,108 @@
+.de EX		
+.if \\n(.$>1 .tm troff: tmac.an: \\*(.F: extra arguments ignored
+.sp \\n()Pu
+.ne 8v
+.ie \\n(.$ .nr EX 0\\$1n
+.el .nr EX 0.5i
+.in +\\n(EXu
+.nf
+.CW
+..
+.de EE		
+.if \\n(.$>0 .tm troff: tmac.an: \\*(.F: arguments ignored
+.R
+.fi
+.in -\\n(EXu
+.sp \\n()Pu
+..
+.TH fmtoafa 1 "Grail"
+.SH NAME
+fmtoafa \- convert a finite state machine to an \fIafa\fR
+.SH SYNOPSIS
+.B fmtoafa fm
+.sp
+.B fmtoafa <fm
+.SH DESCRIPTION
+.B
+fmtoafa
+reads in a given finite state machine, convert it to an \fIafa\fR, and
+then writes the \fIafa\fR on the standard ouput in bit-wise representation. 
+.LP
+\fIfm\fR must conform to the Grail format for finite state machines.
+.B
+fmtoafa 
+doesn't assume \fIfm\fR to be complete or deterministic
+.LP
+The alphabet for the resulting \fIafa\fR is all the input symbols
+which appear in instructions of the finite state machine.
+.SH EXAMPLES
+.EX
+% cat testfm2
+(START) |- 1
+1 a 3
+1 b 1
+2 a 3
+2 b 1
+2 c 0
+3 a 3
+3 b 2
+0 a 4
+0 b 4
+0 c 4
+1 c 4
+3 c 4
+4 a 4
+4 b 4
+4 c 4
+0 -| (FINAL)
+
+% fmtoafa testfm2
+symbols: [a,b,c]
+states:  3
+finals:  2
+head: 7 4
+6 2+7 1
+7 1
+0 1
+0 1
+6 2+7 1
+0 1
+0 1
+0 1
+7 3
+
+
+% fmtoafa <testfm2
+symbols: [a,b,c]
+states:  3
+finals:  2
+head: 7 4
+6 2+7 1
+7 1
+0 1
+0 1
+6 2+7 1
+0 1
+0 1
+0 1
+7 3
+
+% cat testfm2 | fmtoafa
+symbols: [a,b,c]
+states:  3
+finals:  2
+head: 7 4
+6 2+7 1
+7 1
+0 1
+0 1
+6 2+7 1
+0 1
+0 1
+0 1
+7 3
+.EE
+.SH AUTHORS
+Xiuming Wu and Sheng Yu, the Grail project
+.SH "SEE ALSO"
+fm(5), afa(5)

@@ -1,0 +1,132 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	June 1995
+
+// *************************************************
+// MH 98/09/09  This code does not appear to be used
+// *************************************************
+
+template <class Label>
+fm<Label>&
+fm<Label>::subset()
+{
+	fm<Label>		m;
+	int			i;
+	int			k;
+	int			max;
+	int			no_states;
+	state			s1;
+	state			s2;
+	set<state>		target;
+	set<state>		temp2;
+	set<Label>		alphabet;
+	inst<Label>		t;
+	fm<Label>		temp;
+
+	// if already deterministic, do nothing
+
+	if (is_deterministic())
+		return *this;
+
+	arcs.sort();
+
+	// collect the alphabet
+
+	labels(alphabet);
+	max = max_state().value();
+
+	// create bitsets
+
+	bits	subset(max * 1);
+	bits	inter(max);
+	bits	inter2(max);
+
+	inter.clear();
+	inter2.clear();
+
+	// add start subset to the list
+
+	for (i=0; i<start_states.size(); ++i)
+#ifdef	ATT
+		inter.Set(start_states[i].value());
+#else
+		inter.set(start_states[i].value());
+#endif
+	subset += inter;
+
+	s1 = 0;	
+	m.start_states += s1;
+
+	// if some start state is also a final state, add 
+	// the new start state to the list of final states
+
+	temp2.intersect(final_states, start_states);
+	if (temp2.size() > 0)
+		m.final_states += s1;
+
+	// for each existing set in the subset list, 
+	// find a new reachable subset
+
+	no_states = 1;
+
+	for (i=0; i<no_states; ++i)
+	{
+		subset.extract(inter, i);
+		for (int j=0; j<alphabet.size(); ++j)
+		{
+			target.clear();
+
+			// the initialization to zero is only to keep DCC happy
+			int q = 0;
+
+			for (k=-1;;k=q)
+			{
+				if ((q = inter.next(k)) == -1)
+					break;
+
+				select(alphabet[j], q, SOURCE, temp);
+				target += temp.sinks(temp2);
+			}
+
+			if (target.size() == 0)
+				continue;
+
+			// create states for an instruction
+
+			s1 = i;
+
+			inter2.clear();
+			for (k=0; k<target.size(); ++k)
+#ifdef	ATT
+				inter2.Set(target[k].value());
+#else
+				inter2.set(target[k].value());
+#endif
+
+			if ((k = subset.member(inter2)) < 0)
+			{
+				subset += inter2;
+				s2 = no_states++;
+			}
+			else
+				s2 = k;
+
+			t.assign(s1, alphabet[j], s2);
+			m.arcs += t;
+
+			// if target contains a final state,
+			// add final instruction to the machine
+
+			if (k < 0)
+			{
+				temp2.intersect(final_states, target);
+
+				if (temp2.size() > 0)
+					m.final_states += s2;
+			}
+		}
+	}
+
+	*this = m;
+	return *this;
+}

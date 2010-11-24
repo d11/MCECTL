@@ -1,0 +1,59 @@
+//	This code copyright (c) by the Grail project.
+//	No commercial use permitted without written consent. 
+//	December 1993
+
+/***************************************************************************
+
+  File:  classes/fm/sinks.src
+  -----
+
+  Description:
+  ------------
+    This file contains the definition of the following function:
+      set<state>& fm<Label>::sinks(set<state>& s) const
+
+    This function is a public member of the template class fm (declared 
+    in classes/fm/fm.h).
+
+  Revision History:
+  -----------------
+    The Grail Project               Initial version of source code
+    M.Hoeberechts  98/09/09         Added header and comments
+
+ ***************************************************************************/
+
+
+
+
+/***************************************************************************
+
+            set<state>& fm<Label>::sinks(set<state>& s) const
+
+  Description:
+    This function is a public member of the template class fm (declared 
+    in classes/re/fm.h).  This function retrieves all the sink states in 
+    the fm by traversing the set of instructions and stores the states in 
+    the set s.  This fm is unchanged; the function returns a reference to
+    the set of sink states.
+
+    This function can be called in the following way:
+      this_fm.sinks(sink_set);
+
+  Parameters:
+    set<state>& s - the set to hold the sink states
+
+  Return Value:
+    set<state>& - a reference to the set of sink states
+  
+ ***************************************************************************/
+
+template <class Label>
+set<state>&
+fm<Label>::sinks(set<state>& s) const
+{
+	s.clear();
+	for (int i=0; i<size(); ++i)
+		s += arcs[i].get_sink();
+
+	return s;
+}

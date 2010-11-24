@@ -116,8 +116,14 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <automaton>[a-z_][a-z_1-9]*      {
    yylval.string= new string (yytext); 
    return DFA_IDENTIFIER;
-}
+};
+<automaton>\[           return AUTOMATON_LBRACKET;
+<automaton>\]           return AUTOMATON_RBRACKET;
 <automaton>[ \t\n]+    /* Ignore whitespace */
+<automaton>\.           return AUTOMATON_STACK_BOTTOM;
+<automaton>PUSH         return AUTOMATON_PUSH;
+<automaton>POP          return AUTOMATON_POP;
+<automaton>REWRITE      return AUTOMATON_REWRITE;
 
 #                 BEGIN(comment); /* Comment start */
 <regex>#          BEGIN(comment); /* Comment start */

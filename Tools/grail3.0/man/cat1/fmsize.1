@@ -1,0 +1,66 @@
+
+
+
+fmsize(1)                USER COMMANDS                  fmsize(1)
+
+
+
+NAME
+     fmsize - compute the state number of a machine
+
+SYNOPSIS
+     fmsize fm
+
+     fmsize <fm
+
+DESCRIPTION
+     fmsize computes the number of  states  of  a  given  _f_m  and
+     writes the result on the standard output.
+
+     _f_m must conform to the Grail format for machines.
+
+EXAMPLES
+          % cat testfm1
+          START) |- 4
+          1 b 3
+          2 a 0
+          3 a 0
+          3 b 0
+          4 a 1
+          4 b 2
+          0 b 5
+          0 a 5
+          1 a 5
+          2 b 5
+          5 b 5
+          5 a 5
+          0 -| (FINAL)
+
+          % fmsize  testfm1
+          6
+
+          %fmsize <testfm1
+          6
+
+          %cat testfm1 |fmsize
+          6
+          (Reg.).fi
+
+
+AUTHORS
+     Xiuming Wu and Sheng Yu, the Grail project
+
+SEE ALSO
+     fm(5)
+
+
+
+
+
+
+
+
+Sun Release 4.1        Last change: Grail                       1
+
+
+

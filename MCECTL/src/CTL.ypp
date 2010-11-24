@@ -83,6 +83,8 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
    Command::Command* command_ref;
    AST::Regex::Regex* regex_ref;
    AST::Automaton* automaton_ref;
+   AST::PushDownState* pushdown_state_ref;
+   AST::PushDownEffect* pushdown_effect_ref;
    vector<std::string> *string_list;
    vector<Command::Command*> *command_list;
 }
@@ -107,6 +109,9 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token FORMULA_A FORMULA_E FORMULA_U FORMULA_R FORMULA_G FORMULA_X 
 %token <string> FORMULA_PVAR
 
+%token AUTOMATON_STACK_BOTTOM AUTOMATON_LBRACKET AUTOMATON_RBRACKET
+%token AUTOMATON_PUSH AUTOMATON_POP AUTOMATON_REWRITE
+
 // Regex tokens
 %left  REGEX_OR
 %left  REGEX_SEQ
@@ -125,7 +130,10 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %type <string> single_proposition action_name state_name
 %type <string_list> proposition_list
 %type <automaton_ref> rule_dfa rule_lts rule_pda rule_pds rule_automaton
-%type <automaton_ref> automaton_component state kripke_state regular_action pushdown_action
+%type <automaton_ref> automaton_component state kripke_state pushdown_kripke_state regular_action pushdown_action
+%type <pushdown_state_ref> pushdown_state_identifier
+%type <pushdown_effect_ref> pushdown_state_destination
+%type <string> stack_symbol
 
 %type <command_ref> null_command load_command quit_command show_command xshow_command
 %token <string> QUOTED
@@ -352,7 +360,7 @@ rule_automaton: rule_automaton automaton_component
    };
 
 automaton_component:
-   state | kripke_state | regular_action | pushdown_action
+   state | kripke_state | pushdown_kripke_state | regular_action | pushdown_action
    { };
 
 state:
@@ -361,6 +369,7 @@ state:
       //string state_name($3);
       //free($3);
       AST::State *state = new AST::State(*$3);
+      cout << "Creating normal STATE" << endl;
       $$ = new AST::Automaton(state);
    };
 
@@ -372,7 +381,18 @@ kripke_state:
       AST::KripkeState *state = new AST::KripkeState(*$3, *$5);
       delete $3;
       delete $5;
+      cout << "Creating kripke STATE" << endl;
       $$ = new AST::Automaton(state);
+   };
+
+pushdown_kripke_state:
+   DFA_STATE DFA_LPAREN pushdown_state_identifier DFA_COLON proposition_list DFA_RPAREN
+   {
+      AST::PushDownState *state = $3;
+      AST::PushDownKripkeState *kripke_state = new AST::PushDownKripkeState($3->GetName(), $3->GetSymbol(), *$5);
+      delete $3;
+      delete $5;
+      $$ = new AST::Automaton(kripke_state);
    };
 
 proposition_list: single_proposition 
@@ -402,25 +422,59 @@ single_proposition:
 regular_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
    {
-      //string action_name($3);
-      //string state1_name($5);
-      //string state2_name($7);
-      //free($3);
-      //free($5);
-      //free($7);
-      AST::State *state1 = new AST::State(*$5);
-      AST::State *state2 = new AST::State(*$7);
-      AST::RegularAction *action = new AST::RegularAction(*$5);
+      AST::RegularAction *action = new AST::RegularAction(*$3);
+      $$ = new AST::Automaton(*$5, action, *$7);
       delete($3);
       delete($5);
       delete($7);
-      $$ = new AST::Automaton(state1, action, state2);
    };
 
 pushdown_action:
-   DFA_ACTION DFA_LPAREN action_name DFA_COLON DFA_RPAREN
+   DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier DFA_TRANSITION pushdown_state_destination DFA_RPAREN
    {
+      AST::PushDownEffect *effect = $7;
+
+      //PushDownAction *action = new PushDownAction(*$3, $5->
       // TODO!!
+   };
+
+pushdown_state_identifier:
+   state_name AUTOMATON_LBRACKET stack_symbol AUTOMATON_RBRACKET
+   {
+      AST::PushDownState *state = new AST::PushDownState(*$1, *$3);
+      delete $1;
+      delete $3;
+      $$ = state;
+   };
+
+pushdown_state_destination:
+   state_name AUTOMATON_LBRACKET pushdown_stack_manipulation AUTOMATON_RBRACKET
+   {
+   };
+
+stack_symbol:
+   DFA_IDENTIFIER | AUTOMATON_STACK_BOTTOM
+   {
+   };
+
+pushdown_stack_manipulation:
+   push | pop | rewrite
+   {
+   };
+
+push:
+   AUTOMATON_PUSH stack_symbol
+   {
+   };
+
+pop:
+   AUTOMATON_POP
+   {
+   };
+
+rewrite:
+   AUTOMATON_REWRITE
+   {
    };
 
 action_name:

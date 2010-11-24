@@ -10,24 +10,19 @@
 
 #include <string>
 #include <sstream>
+#include <numeric>
 
 #include "TransitionSystem.h"
 #include "Automata.h"
+#include "Util.h"
 
 // KRIPKE STATE
 
 string KripkeState::ToString() const {
    stringstream s;
-   Valuation::const_iterator iter;
-   for ( iter = _valuation.begin(); iter != _valuation.end(); iter++ )
-   {
-      //tmp += "'";
-      s << *iter;
-      //tmp += (*iter).first;
-      //tmp += " -> ";
-      //tmp += (*iter).second ? "T" : "F";
-      s << ", ";
-   }
+   s << "[" << _name << ": "
+     << accumulate(_valuation.begin(), _valuation.end(), string(""), JoinWithComma)
+     << "]";
    return s.str();
 }
 

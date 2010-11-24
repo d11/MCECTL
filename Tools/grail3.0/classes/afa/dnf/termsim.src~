@@ -1,0 +1,330 @@
+/******************************************************************************************
+ File: 	classes/afa/dnf/termsim.src
+ -----
+
+ Description:
+ ------------
+	This file contains the definition of the following functions:
+
+ 	int find_dif(unsigned a, unsigned b)
+	int term::combine(const term& t, unsigned *ord_inv)
+	int term::combine(const term& t)
+
+	The last two are public members of the term class (declared in term.h).
+
+Revision History:
+ -----------------
+	X. Wu				Initial version of source code
+	S. Huerter 08/11/98		combine(.,.), header and comments
+
+******************************************************************************************/
+#include "term.h"
+#include <math.h>
+/******************************************************************************************
+
+		int find_dif(unsigned a, unsigned b)
+
+Description:
+	This function tests if a-b = pow(2,i) for some integer i.
+	It is assumed that a > b.
+
+Parameters:
+	unsigned a,b		
+
+Return Values:
+	i		-if a-b = pow(2,i) for some integer i
+	-1		-otherwise	
+******************************************************************************************/
+int find_dif(unsigned a, unsigned b)
+{
+  int pos = -1;
+  unsigned  tmp = a ^ b;
+  for (int i = 0; i<32; i++)
+    {
+      if (tmp == (unsigned)pow(2,i))
+	 {
+	     pos = i;
+	     return pos;
+         }
+      }
+  return pos;
+}
+/******************************************************************************************
+
+		int term::combine(const term& t, unsigned *ord_inv)
+
+Description:
+	This function is a public member of the "term" class (declared in term.h).
+	This function simplifies (*this) OR t, according to two rules:
+
+	(i) For two terms t1,t2 defined on set S={x1,..,xn} and its dual set ~S,
+		(t1 <= t2) -> ((t1 OR t2)=t1)
+	    Where <= means that every Boolean variable which appears in t1 appears in t2 in 
+	    the same form.
+	(ii)If t1 = x3(y)x4 and t2 = x3(~y)x4 for some var x3,y,x4 in S,
+            then (t1 OR t2) = x3x4
+
+	This function is the same as the one below, exept much faster, because it receives
+ 	the ord_inv array.  This array is the inverse of the array containing  all elements 
+	of B**n in order of increasing weight.  (See classes/afa/manage_bitvec.src for details).
+	This results in much faster bit-vector handling.
+
+Parameters:
+	const term& t			-term to simplify with	
+	unsigned *ord_inv		-see classes/afa/manage_bitvec.src for details	
+
+Return Values:
+	1				-if *this term and term t were simplified;
+				         ( *this term is changed to the simplified logical
+					   OR result)
+	0				-otherwise
+
+******************************************************************************************/
+int term::combine(const term& t, unsigned *ord_inv)
+{
+unsigned alphat = t.alpha;
+  unsigned betat = t.beta;
+int dim = dimension;
+//if one of the two term is constant  
+  if ((alpha == 0)||(alphat == 0))
+    {
+      if (alpha == 0)                 //this term is constant
+	{
+	  if (beta == 0)              //this term is constant 1 
+	    {
+	      return 1;               //means that there is a simplification
+	    }
+	  else                        //this term is constant 0
+	    {
+	      alpha = alphat;
+	      beta  = betat;          //change this term to t
+	      return 1;               //there is a simplification
+	    }
+	}
+      else                            //t is a constant term, this is not const
+	{
+	  if (betat == 0)             //t is constant 1
+	    {
+	      alpha = 0;
+	      beta  = 0;              //change this term to constant 1
+	      return 1;               //there is a simplification
+	    }
+	  else                        //t is constant 0
+	    return 1;
+	}
+	  
+    }
+
+//none of this and t is constant
+  else
+    {
+      if (alpha == alphat)         //without considering negation, this term 
+	                           //is the same as t
+	{
+	  int pos;
+	  if (beta>betat)
+	    {
+		unsigned tmp=beta^betat;              //is the difference a power of two?
+		unsigned index = ord_inv[tmp];        //the index of tmp in the ord array;
+		if ( (index >= 1)&&(index <= dim))    //then tmp has weight 1
+		{
+		  alpha -=tmp;
+		  beta  -=tmp;
+		  return 1; 
+		}
+	    }
+	  else if (betat > beta)
+	    {
+		unsigned tmp=beta^betat;             //is the difference a power of two?
+		unsigned index = ord_inv[tmp];       //the index of tmp in the ord array;
+		if ( (index >= 1)&&(index <= dim))   //then tmp has weight 1
+	     
+		{
+		  alpha -=tmp;
+		  return 1; 
+		}
+	    }
+	  else if (beta == betat) //both term are the same
+	    return 1;
+	}
+
+      else                        //without considering the negation, both term
+	                          //still consist of different variables
+	{
+	  unsigned test = (alpha & alphat);
+	  if (test == alpha)      //without considering negation, this term is
+	                          //a subterm of t
+	    {
+              unsigned testb = alpha - beta;
+	      unsigned testc = alphat - betat;
+	      unsigned anothert = testb & testc;       //to see negations of 
+	                                               //variables
+	      unsigned tmp = (beta & betat);
+	      if ((tmp == beta)&&(anothert == testb))   //means that this term 
+	                                                //is a subterm of t
+		return 1;
+	    }
+
+	  else if (test == alphat) //without considering negation, t is
+	                           //a subterm of this term
+	    {    
+	      unsigned testb = alphat - betat;
+	      unsigned testc = alpha - beta;
+	      unsigned anothert = testb & testc;       //to see negations of 
+	   
+	      unsigned tmp = (beta & betat);
+	      if ((tmp == betat)&&(anothert == testb)) //means that t is a 
+						       //subterm of this term
+		{
+		  alpha = alphat;
+		  beta  = betat;   //change this term to t
+		  return 1;
+		}
+	    }
+
+	}
+
+    }
+  
+  return 0;
+}
+/******************************************************************************************
+
+		int term::combine(const term& t, unsigned *ord_inv)
+
+Description:
+	This function is a public member of the "term" class (declared in term.h).
+	This function simplifies (*this) OR t, according to two rules:
+
+	(i) For two terms t1,t2 defined on set S={x1,..,xn} and its dual set ~S,
+		(t1 <= t2) -> ((t1 OR t2)=t1)
+	    Where <= means that every Boolean variable which appears in t1 appears in t2 in 
+	    the same form.
+	(ii)If t1 = x3(y)x4 and t2 = x3(~y)x4 for some var x3,y,x4 in S,
+            then (t1 OR t2) = x3x4
+
+	T
+
+Parameters:
+	const term& t			-term to simplify with	
+
+Return Values:
+	1				-if *this term and term t were simplified;
+				         ( *this term is changed to the simplified logical
+					   OR result)
+	0				-otherwise
+
+******************************************************************************************/
+int term::combine (const term& t)   //the original.
+{
+  unsigned alphat = t.alpha;
+  unsigned betat = t.beta;
+
+//if one of the two term is constant  
+  if ((alpha == 0)||(alphat == 0))
+    {
+      if (alpha == 0)                 //this term is constant
+	{
+	  if (beta == 0)              //this term is constant 1 
+	    {
+	      return 1;               //means that there is a simplification
+	    }
+	  else                        //this term is constant 0
+	    {
+	      alpha = alphat;
+	      beta  = betat;          //change this term to t
+	      return 1;               //there is a simplification
+	    }
+	}
+      else                            //t is a constant term, this is not const
+	{
+	  if (betat == 0)             //t is constant 1
+	    {
+	      alpha = 0;
+	      beta  = 0;              //change this term to constant 1
+	      return 1;               //there is a simplification
+	    }
+	  else                        //t is constant 0
+	    return 1;
+	}
+	  
+    }
+
+//none of this and t is constant
+  else
+    {
+      if (alpha == alphat)         //without considering negation, this term 
+	                           //is the same as t
+	{
+	  int pos;
+	  if (beta>betat)
+	    {
+	      pos = find_dif(beta, betat);
+	      if (pos >= 0)       //x(pos+1) appear in this term, ~x(pos-1)
+		                  //appear in t, all other variable appear in
+		                  //both term are the same
+		{
+		  alpha -=(unsigned)pow(2,pos);
+		  beta  -=(unsigned)pow(2,pos);
+		  return 1;       //eliminate x(pos+1) in this term 
+		}
+	    }
+	  else if (betat > beta)
+	    {
+	      pos = find_dif(betat, beta);
+	      if (pos >= 0)       //~x(pos+1) appear in this term, x(pos-1)
+		                  //appear in t, all other variable appear in
+		                  //both term are the same
+
+		{
+		  alpha -=(unsigned)pow(2,pos);
+		  return 1;       //eliminate ~x(pos+1) in this term 
+		}
+	    }
+	  else if (beta == betat) //both term are the same
+	    return 1;
+	}
+
+      else                        //without considering the negation, both term
+	                          //still consist of different variables
+	{
+	  unsigned test = (alpha & alphat);
+	  if (test == alpha)      //without considering negation, this term is
+	                          //a subterm of t
+	    {
+              unsigned testb = alpha - beta;
+	      unsigned testc = alphat - betat;
+	      unsigned anothert = testb & testc;       //to see negations of 
+	                                               //variables
+	      unsigned tmp = (beta & betat);
+	      if ((tmp == beta)&&(anothert == testb))   //means that this term 
+	                                                //is a subterm of t
+		return 1;
+	    }
+
+	  else if (test == alphat) //without considering negation, t is
+	                           //a subterm of this term
+	    {    
+	      unsigned testb = alphat - betat;
+	      unsigned testc = alpha - beta;
+	      unsigned anothert = testb & testc;       //to see negations of 
+	   
+	      unsigned tmp = (beta & betat);
+	      if ((tmp == betat)&&(anothert == testb)) //means that t is a 
+						       //subterm of this term
+		{
+		  alpha = alphat;
+		  beta  = betat;   //change this term to t
+		  return 1;
+		}
+	    }
+
+	}
+
+    }
+  
+  return 0;
+}
+
+
+
