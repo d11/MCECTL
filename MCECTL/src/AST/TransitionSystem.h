@@ -13,87 +13,60 @@
 
 #include <vector>
 #include <set>
-#include "Automata.h"
 #include <numeric>
+#include <iterator>
+#include <boost/checked_delete.hpp>
+
+#include "Automata.h"
 #include "Util.h"
 
 namespace AST {
 
-   class Action : public Showable { };
-   class RegularAction : public Action {
+   class Action : public Showable {
+   public:
+      enum Type { REGULAR, PUSH, POP, REWRITE } _type;
    private:
       string _action_name;
+      StackSymbol _symbol;
    public:
-      RegularAction(const string &action_name) : _action_name(action_name) { }
+      Action(const string &name) : _action_name(name) { }
       const string &GetName() const { return _action_name; }
       string ToString() const {
          return _action_name;
       }
+      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
+      StackSymbol GetSymbol() const { return _symbol; }
    };
-   class PushDownAction : public RegularAction {
-   private:
-      enum { PUSH, POP, REWRITE } _type;
-      StackSymbol _symbol;
-   public:
-
-   
-   };
-
    class PushDownEffect { };
 
    class State : public Showable {
-   protected:
+   public:
+      enum Type { BASIC, KRIPKE, PUSHDOWN, PUSHDOWN_KRIPKE };
+   private:
       string _state_name;
-   public:
-      State(const string &state_name) : _state_name(state_name) { }
-      const string &GetName() const { return _state_name; }
-      virtual const ::State *Create() {
-         return new ::State(_state_name);
-      }
-      string ToString() const {
-         return _state_name;
-      }
-   };
-   class KripkeState : public State {
-   protected:
       vector<string> _propositions;
+      StackSymbol _symbol;
+      Type _type;
    public:
-      KripkeState(const string &state_name, const vector<string> &propositions) : State(state_name), _propositions(propositions) { }
+      State(const string &state_name, Type type) : _state_name(state_name), _type(type) { }
+      const string &GetName() const { return _state_name; }
+
+      Type GetType() const { return _type; }
+
+      void AddPropositions(const vector<string> &propositions) {
+         copy(propositions.begin(), propositions.end(), back_inserter(_propositions));
+      }
+
       vector<string> GetPropositions() const { return _propositions; }
-      //const ::State *Create() {
-
-      //}
-      string ToString() const {
-         stringstream s;
-         s << _state_name << ": "
-           << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
-         return s.str();
-      }
-   };
-
-   class PushDownState : public State {
-   protected:
-      StackSymbol _symbol;
-   public:
-      PushDownState(const string &state_name, const StackSymbol &stack_symbol) : State(state_name), _symbol(stack_symbol) { }
       StackSymbol GetSymbol() const { return _symbol; }
+      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
       string ToString() const {
          stringstream s;
-         s << _state_name << "[" << _symbol << "]";
-         return s.str();
-      }
-   };
-
-   class PushDownKripkeState : public KripkeState {
-   protected:
-      StackSymbol _symbol;
-   public:
-      PushDownKripkeState(const string &state_name, const StackSymbol &stack_symbol, const vector<string> &propositions) : KripkeState(state_name, propositions), _symbol(stack_symbol) { }
-      StackSymbol GetSymbol() const { return _symbol; }
-      string ToString() const {
-         stringstream s;
-         s << _state_name << "[" << _symbol << "]" << " : "
-           << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
+         s << _state_name;
+         if (_type == PUSHDOWN || _type == PUSHDOWN_KRIPKE) 
+            s << "[" << _symbol << "]";
+         if (_type == KRIPKE || _type == PUSHDOWN_KRIPKE)
+            s << ": " << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
          return s.str();
       }
    };
@@ -109,12 +82,12 @@ namespace AST {
          Rule(const string &s, const Action *a, const string &t) : state1(s), action(a), state2(t) { }
       };
    private:
-      vector<const State*> _states;
+      vector<State*> _states;
       vector<Rule> _rules;
       Type _type;
 
    public:
-      Automaton(const State *state) : _owns_states(true) {
+      Automaton(State *state) : _owns_states(true) {
          _states.push_back(state);
       }
 
@@ -125,10 +98,11 @@ namespace AST {
       ~Automaton() {
 
          if (_owns_states) {
-            typename vector<const State*>::const_iterator state_iter;
-            for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
-               delete *state_iter;
-            }
+            for_each(_states.begin(), _states.end(), boost::checked_deleter<State>() );
+            //typename vector<const State*>::const_iterator state_iter;
+            //for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
+            //   delete *state_iter;
+            //}
             typename vector<Rule>::const_iterator rule_iter;
             for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
                delete rule_iter->action;
@@ -140,20 +114,14 @@ namespace AST {
          _type = type;
       }
 
-      void Assimilate(Automaton *ts) {
-         vector<const State*>::const_iterator state_iter;
-         for (state_iter = ts->_states.begin(); state_iter != ts->_states.end(); ++state_iter) {
-            _states.push_back(*state_iter);
-         }
-         vector<Rule>::const_iterator rule_iter;
-         for (rule_iter = ts->_rules.begin(); rule_iter != ts->_rules.end(); ++rule_iter) {
-            _rules.push_back(*rule_iter);
-         }
-         ts->_owns_states = false;
-         delete ts;
+      void Assimilate(Automaton &ts) {
+         copy(ts._states.begin(), ts._states.end(), back_inserter(_states));
+         copy(ts._rules.begin(), ts._rules.end(), back_inserter(_rules));
+         ts._owns_states = false;
+         delete &ts;
       }
 
-      const vector<const State*> &GetStates() const { return _states; }
+      const vector<State*> &GetStates() const { return _states; }
       const vector<Rule>         &GetRules()  const { return _rules;  }
       const Type                 &GetType()   const { return _type;   }
 
@@ -169,7 +137,7 @@ namespace AST {
             default: s << "undefined"; break;
          }
          s << endl << "STATES:" << endl;
-         vector<const State*>::const_iterator state_iter;
+         vector<State*>::const_iterator state_iter;
          for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
             s << (*state_iter)->ToString() << endl;
          }

@@ -13,8 +13,6 @@
 
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
-//#include <boost/weak_ptr.hpp>
-//#include <boost/shared_ptr.hpp>
 
 #include <vector>
 #include <string>
@@ -33,11 +31,6 @@ public:
    typedef const Automaton &const_reference;
    virtual string ToDot() const = 0;
    virtual ~Automaton() = 0;
-};
-
-template <class T>
-class AutomatonIterator {
-
 };
 
 // Abstract
@@ -323,10 +316,6 @@ public:
 
 };
 
-class RegexBuilder {
-
-};
-
 // Deterministic Finite Automaton
 typedef FiniteAutomaton<RegularAction,           State>  DFA;
 
@@ -335,6 +324,22 @@ typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
 
 // Deterministic Push Down Automaton
 typedef FiniteAutomaton<PushDownAction,          State>  PDA;
+
+template <class A, class S>
+class AutomatonIterator {
+   const S &_state;
+public:
+   AutomatonIterator<A, S> Next(const A &action) = 0;
+
+   vector<const A*> GetAvailableActions() = 0;
+   const S &GetState() { return _state; }
+   virtual ~AutomatonIterator() { }
+};
+
+template <class S>
+class RegularAutomatonIterator : public AutomatonIterator<RegularAction, S> {
+
+};
 
 //template <class T>
 //class DFA {
