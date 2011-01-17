@@ -1,8 +1,0 @@
-1 a 0
-0 a 3
-2 a 3
-3 a 3
-(START) |- 1
-1 -| (FINAL)
-0 -| (FINAL)
-3 -| (FINAL)

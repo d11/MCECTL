@@ -1,8 +1,0 @@
-graph: { title:"test"
-         x: 30 y: 30
-         xmax: 300 ymax: 300
-         display_edge_labels: yes
-         node: { title: "A" label: "A" loc: { x: 100 y: 100 } color: red textcolor: green bordercolor: yellow }
-         node: { title: "B" label: "B" loc: { x: 20 y: 20 } color: magenta textcolor: cyan bordercolor: darkgrey }
-         edge: { sourcename: "A" targetname: "B" label: "demo" color: darkblue class: 1 }
-}

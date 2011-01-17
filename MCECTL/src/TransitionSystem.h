@@ -19,21 +19,9 @@
 
 #include "Automata.h"
 #include "Showable.h"
+#include "Lookup.h"
 
 using namespace std;
-
-typedef vector<string> Valuation;
-
-class KripkeState : public State, Showable {
-private:
-   Valuation _valuation;
-public:
-   typedef const KripkeState &const_reference;
-   typedef const KripkeState *const_ptr;
-   KripkeState(const string &name, const Valuation &valuation) : State(name), _valuation(valuation) { }
-
-   string ToString() const;
-};
 
 // Abstract
 class TransitionSystem {
@@ -44,16 +32,16 @@ public:
    virtual ~TransitionSystem() = 0;
 };
 
-class KripkeStructure : public FiniteAutomaton<RegularAction, KripkeState>, public TransitionSystem {
+class KripkeStructure : public FiniteAutomaton<RegularAction, RegularConfiguration, KripkeState>, public TransitionSystem {
 public:
    typedef const KripkeStructure &const_reference;
-   KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state);
+   KripkeStructure(const set<KripkeState *> &states, KripkeState *initial_state);
    string ToString() const;
 }; 
 
-class PushDownSystem : public FiniteAutomaton<PushDownAction, KripkeState>, public TransitionSystem {
+class PushDownSystem : public FiniteAutomaton<PushDownAction, PushDownConfiguration, KripkeState>, public TransitionSystem {
 public:
-   PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state);
+   PushDownSystem(const set<KripkeState *> &states, KripkeState *initial_state);
    string ToString() const;
 };
 

@@ -16,3 +16,7 @@ string JoinWithComma(const string &a, const string &b) {
    if (a.empty()) return b;
    return a + ", " + b;
 }
+string JoinWithCommaPtr(const string *a, const string *b) {
+   if (a->empty()) return *b;
+   return *a + ", " + *b;
+}

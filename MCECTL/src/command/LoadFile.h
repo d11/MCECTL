@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  LoadFile.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  09/11/10 19:36:01
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */

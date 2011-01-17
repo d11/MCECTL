@@ -1,6 +1,0 @@
-
-
-OCamlLibrary(libmisc, extset logger progress_out)
-
-compile: 
-

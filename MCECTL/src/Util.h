@@ -16,5 +16,6 @@
 using namespace std;
 
 string JoinWithComma(const string &a, const string &b);
+string JoinWithCommaPtr(const string *a, const string *b);
 
 #endif

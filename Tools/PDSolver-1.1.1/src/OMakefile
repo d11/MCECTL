@@ -1,5 +1,0 @@
-
-
-.SUBDIRS: pdproblems model_checker misc main parser boolean_programs logics test 
-
-compile:
