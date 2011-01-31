@@ -27,7 +27,6 @@ namespace Command {
    template <class A, class S>
    class DeclareAutomatonCommand;
 
-   /*
    template <class A, class S>
    class StateCreator : public binary_function<const AST::State *, DeclareAutomatonCommand<A, S> &, void> {
    public:
@@ -63,6 +62,7 @@ namespace Command {
       }
    };
 
+   /*
    template <class A, class S>
    class RuleCreator : public binary_function< AST::Automaton::Rule,  DeclareAutomatonCommand<A, S> &, void> {
    public:
@@ -84,16 +84,17 @@ namespace Command {
    };
    */
 
-   class DeclarePDACommand : public Command {
+   template <class A, class S>
+   class DeclareAutomatonCommand : public Command {
       private:
          string _automaton_name;
          const AST::Automaton *_ast_automaton;
 
          // Used during construction
-         map<string, PushDownState*> _state_map;
-         vector<PushDownState*> _states;
-         PushDownState *_initial_state;
-         PDA *_automaton;
+         map<string, S*> _state_map;
+         vector<S*> _states;
+         S* _initial_state;
+         FiniteAutomaton<A,S> *_automaton;
       public:
          DeclareAutomatonCommand(const string &name, const AST::Automaton *dfa) : _automaton_name(name), _ast_automaton(dfa) { }
          virtual string ToString() const {
@@ -186,15 +187,15 @@ namespace Command {
          }
          */
 
-         void CreateState(PushDownState *state) {
+         void CreateState(S *state) {
             cout << "Adding state " << state->GetName() << "(" << state << ")"  << endl;
-            _state_map.insert( make_pair<string, PushDownState*>(state->GetName(), state) );
+            _state_map.insert( make_pair<string, S*>(state->GetName(), state) );
             _states.push_back(state);
          }
 
          void CreateRule(const string &state1_name, RegularAction *action, const string &state2_name ) {
-            PushDownState *state_1 = _state_map.find(state1_name)->second;
-            PushDownState *state_2 = _state_map.find(state2_name)->second;
+            S *state_1 = _state_map.find(state1_name)->second;
+            S *state_2 = _state_map.find(state2_name)->second;
             cout << "Adding rule " << state1_name << " (" << state_1 << ") " << action->ToString() << " " << state2_name << " (" << state_2 << ") " << endl;
             if (!state_1 || !state_2) { throw runtime_error("Action refers to nonexistent state"); }
             _automaton->AddRule(state_1, action, state_2);
@@ -202,7 +203,7 @@ namespace Command {
 
         // S *CreateState(const AS &ast_state);
          void CreateAutomaton() {
-            /*
+
             for_each(
                _ast_automaton->GetStates().begin(),
                _ast_automaton->GetStates().end(),
@@ -213,12 +214,14 @@ namespace Command {
 
             _automaton = new FiniteAutomaton<A, S>( _states, _initial_state );
 
+            /*
             for_each(
                _ast_automaton->GetRules().begin(),
                _ast_automaton->GetRules().end(),
                bind2nd(RuleCreator<A, S>(), *this)
             );
             */
+            
          }
 
          virtual void Execute(Environment &environment, GlobalOptions &options) {
@@ -228,6 +231,9 @@ namespace Command {
             CreateAutomaton();
 
             environment.SetAutomaton( _automaton_name, _automaton );
+            if (!_automaton) {
+               throw runtime_error("Failed to construct automaton");
+            }
             cout << _automaton->ToString() << endl;
          }
          virtual ~DeclareAutomatonCommand() {

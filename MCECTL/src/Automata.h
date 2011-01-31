@@ -341,6 +341,10 @@ class RegularAutomatonIterator : public AutomatonIterator<RegularAction, S> {
 
 };
 
+class RegularConfiguration {
+
+};
+
 //template <class T>
 //class DFA {
 //public:
@@ -415,18 +419,6 @@ class RegularAutomatonIterator : public AutomatonIterator<RegularAction, S> {
 //   void Kleene() { }
 //};
 //
-
-
-
-typedef string StackSymbol;
-
-class PushDownState {
-
-};
-
-class PDA { 
-
-};
 
 
 #endif

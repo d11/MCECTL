@@ -76,8 +76,7 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    Formula::Formula::const_reference y
 ) {
 
-<<<<<<< HEAD
-   set<KripkeState*> product_states;
+   vector<KripkeState*> product_states;
    Valuation v;
    KripkeState *initial_state = new KripkeState("temp",v); // Temp
    /*
@@ -86,11 +85,6 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    Valuation v(lookup);
    KripkeState *k = new KripkeState("temp", v); // Temp
    product_states.insert(k); // TEMP! 
-=======
-   vector<KripkeState*> product_states;
-   KripkeState *k = new KripkeState("temp", Valuation()); // Temp
-   product_states.push_back(k); // TEMP! 
->>>>>>> parent of 0b52dbb... more;
 
    vector<KripkeState> system_states = _system.GetStates();
    vector<State>  automaton_states = automaton.GetStates();

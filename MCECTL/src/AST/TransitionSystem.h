@@ -22,14 +22,38 @@
 
 namespace AST {
 
+   class Effect {
+   protected:
+      string _destination_state;
+   public:
+      Effect(const string &dest) : _destination_state(dest) { }
+      void SetDestinationState(const string &dest) {
+         _destination_state = dest;
+      }
+      string GetDestinationState() const {
+         return _destination_state;
+      }
+
+   };
+   class PushDownEffect : public Effect {
+   public:
+      StackSymbol _symbol;
+      enum Type { PUSH, POP, REWRITE };
+      Type _type;
+      PushDownEffect( const Type &type  ) : Effect(""), _symbol(""), _type(type) { }
+      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
+      StackSymbol GetSymbol() const { return _symbol; }
+   };
+
    class Action : public Showable {
    public:
       enum Type { REGULAR, PUSH, POP, REWRITE } _type;
    private:
       string _action_name;
       StackSymbol _symbol;
+      Effect _effect;
    public:
-      Action(const string &name) : _action_name(name) { }
+      Action(const string &name, const Effect &effect) : _action_name(name), _effect(effect) { }
       const string &GetName() const { return _action_name; }
       string ToString() const {
          return _action_name;
@@ -37,15 +61,12 @@ namespace AST {
       void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
       StackSymbol GetSymbol() const { return _symbol; }
    };
-   class PushDownEffect { };
-
    class State : public Showable {
    public:
       enum Type { BASIC, KRIPKE, PUSHDOWN, PUSHDOWN_KRIPKE };
    private:
       string _state_name;
       vector<string> _propositions;
-      StackSymbol _symbol;
       Type _type;
    public:
       State(const string &state_name, Type type) : _state_name(state_name), _type(type) { }
@@ -58,17 +79,30 @@ namespace AST {
       }
 
       vector<string> GetPropositions() const { return _propositions; }
-      StackSymbol GetSymbol() const { return _symbol; }
-      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
       string ToString() const {
          stringstream s;
          s << _state_name;
-         if (_type == PUSHDOWN || _type == PUSHDOWN_KRIPKE) 
-            s << "[" << _symbol << "]";
+   //      if (_type == PUSHDOWN || _type == PUSHDOWN_KRIPKE) 
+   //         s << "[" << _symbol << "]";
          if (_type == KRIPKE || _type == PUSHDOWN_KRIPKE)
             s << ": " << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
          return s.str();
       }
+   };
+
+   class Configuration {
+   protected:
+      string _state_name;
+   public:
+      Configuration(const string &state_name) : _state_name(state_name) { }
+      string GetName() const { return _state_name; }
+   };
+
+   class PushDownConfiguration : public Configuration {
+   private:
+      string _stack_symbol;
+   public:
+      PushDownConfiguration(const string &state_name, const string &stack_symbol) : Configuration(state_name), _stack_symbol(stack_symbol) { }
    };
 
    class Automaton : public Showable {
@@ -76,24 +110,23 @@ namespace AST {
       bool _owns_states;
       enum Type { DFA, PDA, LTS, PDS };
       struct Rule {
-         string state1;
-         const Action *action;
-         string state2;
-         Rule(const string &s, const Action *a, const string &t) : state1(s), action(a), state2(t) { }
+         Configuration *_config;
+         Action *_action;
+         Rule(Configuration *config, Action *action) : _config(config), _action(action) { }
       };
    private:
       vector<State*> _states;
       vector<Rule> _rules;
       Type _type;
 
+
    public:
       Automaton(State *state) : _owns_states(true) {
          _states.push_back(state);
       }
 
-      Automaton(const string &state1, const Action *action, const string &state2) : _owns_states(true) {
-         Rule rule(state1, action, state2);
-         _rules.push_back(rule);
+      Automaton(Configuration *config, Action *action) : _owns_states(true) {
+         _rules.push_back(Rule(config, action));
       }
       ~Automaton() {
 
@@ -105,7 +138,7 @@ namespace AST {
             //}
             typename vector<Rule>::const_iterator rule_iter;
             for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
-               delete rule_iter->action;
+               delete rule_iter->_action;
             }
          }
       }
@@ -118,12 +151,13 @@ namespace AST {
          copy(ts._states.begin(), ts._states.end(), back_inserter(_states));
          copy(ts._rules.begin(), ts._rules.end(), back_inserter(_rules));
          ts._owns_states = false;
-         delete &ts;
+         // TODO
+         //delete &ts;
       }
 
-      const vector<State*> &GetStates() const { return _states; }
-      const vector<Rule>         &GetRules()  const { return _rules;  }
-      const Type                 &GetType()   const { return _type;   }
+      const vector<State*>  &GetStates() const { return _states; }
+      const vector<Rule> &GetRules()  const { return _rules;  }
+      const Type            &GetType()   const { return _type;   }
 
       string ToString() const {
          stringstream s;
@@ -143,7 +177,7 @@ namespace AST {
          }
          vector<Rule>::const_iterator rule_iter;
          for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
-            s << "(" << rule_iter->state1 << ", " << (*rule_iter).action->ToString() << ", " << rule_iter->state2 << ")" << endl;
+            //s << "(" << rule_iter->state1 << ", " << (*rule_iter).action->ToString() << ", " << rule_iter->state2 << ")" << endl;
          }
          return s.str();
       }

@@ -44,20 +44,6 @@ public:
    virtual ~TransitionSystem() = 0;
 };
 
-<<<<<<< HEAD
-class KripkeStructure : public Showable {
-public:
-   typedef const KripkeStructure &const_reference;
-   KripkeStructure(const set<KripkeState *> &states, KripkeState *initial_state);
-   set<KripkeState> GetStates() const;
-   string ToString() const;
-}; 
-
-class PushDownSystem : public Showable {
-public:
-   PushDownSystem(const set<KripkeState *> &states, KripkeState *initial_state);
-   set<KripkeState> GetStates() const;
-=======
 class KripkeStructure : public FiniteAutomaton<RegularAction, KripkeState>, public TransitionSystem {
 public:
    typedef const KripkeStructure &const_reference;
@@ -68,7 +54,6 @@ public:
 class PushDownSystem : public FiniteAutomaton<PushDownAction, KripkeState>, public TransitionSystem {
 public:
    PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state);
->>>>>>> parent of 0b52dbb... more;
    string ToString() const;
 };
 
