@@ -35,10 +35,6 @@ void CheckResults::AddResult(const Result &result) {
    // TODO
 }
 
-string CheckResults::ToString() const {
-   return "TODO";
-}
-
 // PREDECESSOR CONFIGURATIONS
 
 template <class A>
@@ -80,6 +76,7 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    Formula::Formula::const_reference y
 ) {
 
+<<<<<<< HEAD
    set<KripkeState*> product_states;
    Valuation v;
    KripkeState *initial_state = new KripkeState("temp",v); // Temp
@@ -89,12 +86,17 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    Valuation v(lookup);
    KripkeState *k = new KripkeState("temp", v); // Temp
    product_states.insert(k); // TEMP! 
+=======
+   vector<KripkeState*> product_states;
+   KripkeState *k = new KripkeState("temp", Valuation()); // Temp
+   product_states.push_back(k); // TEMP! 
+>>>>>>> parent of 0b52dbb... more;
 
-   set<KripkeState> system_states = _system.GetStates();
-   set<State>  automaton_states = automaton.GetStates();
+   vector<KripkeState> system_states = _system.GetStates();
+   vector<State>  automaton_states = automaton.GetStates();
 
-   set<KripkeState>::const_iterator system_state_iter;
-   set<State >::const_iterator  dummy_state_iter;
+   vector<KripkeState>::const_iterator system_state_iter;
+   vector<State >::const_iterator  dummy_state_iter;
    for ( system_state_iter = system_states.begin(); system_state_iter != system_states.end(); ++system_state_iter ) {
       for ( dummy_state_iter = automaton_states.begin(); dummy_state_iter != automaton_states.end(); ++dummy_state_iter) {
          // TODO
@@ -117,7 +119,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
    CheckResults results;
 
-   set<KripkeState>::const_iterator iter;
+   vector<KripkeState>::const_iterator iter;
    for (iter = _system.GetStates().begin(); iter != _system.GetStates().end(); ++iter) {
       //PredecessorConfigurations<NondeterministicPushDownAction> pc; // Compute predecessor configurations
 

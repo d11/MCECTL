@@ -132,7 +132,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %type <automaton_ref> rule_dfa rule_lts rule_pda rule_pds rule_automaton
 %type <automaton_ref> automaton_component state kripke_state pushdown_kripke_state regular_action pushdown_action
 %type <state_ref> pushdown_state_identifier
-%type <action_ref> pushdown_state_destination pushdown_stack_manipulation push pop rewrite
+%type <pushdown_effect_ref> pushdown_state_destination
 %type <string> stack_symbol
 
 %type <command_ref> null_command load_command quit_command show_command xshow_command
@@ -431,10 +431,8 @@ regular_action:
 pushdown_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier DFA_TRANSITION pushdown_state_destination DFA_RPAREN
    {
-      AST::Action *action = $7;
-      AST::State *predecessor = $5;
+      //AST::Action *effect = $7;
 
-      $$ = new AST::Automaton(
       //AST::Action *action = new AST::Action(*$3, $5->
       // TODO!!
    };
@@ -452,8 +450,6 @@ pushdown_state_identifier:
 pushdown_state_destination:
    state_name AUTOMATON_LBRACKET pushdown_stack_manipulation AUTOMATON_RBRACKET
    {
-      AST::Action *action = $3;
-      action
    };
 
 stack_symbol:
@@ -464,27 +460,21 @@ stack_symbol:
 pushdown_stack_manipulation:
    push | pop | rewrite
    {
-      $$ = $1;
    };
 
 push:
    AUTOMATON_PUSH stack_symbol
    {
-      $$ = new AST::Action(PUSH);
-      $$->SetSymbol(*$2);
    };
 
 pop:
    AUTOMATON_POP
    {
-      $$ = new AST::Action(POP);
    };
 
 rewrite:
-   AUTOMATON_REWRITE stack_symbol
+   AUTOMATON_REWRITE
    {
-      $$ = new AST::Action(REWRITE, *$2);
-      $$->SetSymbol(*$2);
    };
 
 action_name:

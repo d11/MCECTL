@@ -36,11 +36,10 @@ public:
    Result(const KripkeState &, bool);
 };
 
-class CheckResults : public Showable {
+class CheckResults {
    public:
       CheckResults();
       void AddResult( const Result &result );
-      string ToString() const;
 };
 
 class ResultsTable {
