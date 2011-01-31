@@ -13,8 +13,8 @@
 
 #include "Automata.h"
 
-string EpsilonAction::ToString() const {
-   return "ε";
-}
+//string EpsilonAction::ToString() const {
+//   return "ε";
+//}
 
 Automaton::~Automaton() { }

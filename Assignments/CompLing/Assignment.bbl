@@ -1,0 +1,75 @@
+\begin{thebibliography}{10}
+
+\bibitem{Chiang2006}
+David Chiang.
+\newblock {An Introduction to Synchronous Grammars}.
+\newblock pages 1--16, 2006.
+
+\bibitem{Collins2002}
+Michael Collins.
+\newblock Discriminative training methods for hidden markov models: theory and
+  experiments with perceptron algorithms.
+\newblock In {\em Proceedings of the ACL-02 conference on Empirical methods in
+  natural language processing - Volume 10}, EMNLP '02, pages 1--8, Stroudsburg,
+  PA, USA, 2002. Association for Computational Linguistics.
+
+\bibitem{Collins2004}
+Michael Collins and Brian Roark.
+\newblock {Incremental parsing with the perceptron algorithm}.
+\newblock {\em Proceedings of the 42nd Annual Meeting on Association for
+  Computational Linguistics - ACL '04}, pages 111--es, 2004.
+
+\bibitem{Freund1999}
+Yoav Freund and Robert~E. Schapire.
+\newblock Large margin classification using the perceptron algorithm.
+\newblock {\em Machine Learning}, 37:277--296, 1999.
+\newblock 10.1023/A:1007662407062.
+
+\bibitem{Moore2000}
+Robert~C. Moore.
+\newblock Removing left recursion from context-free grammars.
+\newblock In {\em Proceedings of the 1st North American chapter of the
+  Association for Computational Linguistics conference}, pages 249--255, San
+  Francisco, CA, USA, 2000. Morgan Kaufmann Publishers Inc.
+
+\bibitem{Nasukawa2003}
+Tetsuya Nasukawa and Jeonghee Yi.
+\newblock Sentiment analysis: capturing favorability using natural language
+  processing.
+\newblock In {\em Proceedings of the 2nd international conference on Knowledge
+  capture}, K-CAP '03, pages 70--77, New York, NY, USA, 2003. ACM.
+
+\bibitem{Pang2008}
+Bo~Pang and Lillian Lee.
+\newblock Opinion mining and sentiment analysis.
+\newblock {\em Found. Trends Inf. Retr.}, 2:1--135, January 2008.
+
+\bibitem{Pang2002}
+Bo~Pang, Lillian Lee, and Shivakumar Vaithyanathan.
+\newblock Thumbs up?: sentiment classification using machine learning
+  techniques.
+\newblock In {\em Proceedings of the ACL-02 conference on Empirical methods in
+  natural language processing - Volume 10}, EMNLP '02, pages 79--86,
+  Stroudsburg, PA, USA, 2002. Association for Computational Linguistics.
+
+\bibitem{Roark2001}
+Brian Roark.
+\newblock Robust probabilistic predictive syntactic processing.
+\newblock {\em CoRR}, cs.CL/0105019, 2001.
+
+\bibitem{Whitelaw2005}
+Casey Whitelaw, Navendu Garg, and Shlomo Argamon.
+\newblock Using appraisal groups for sentiment analysis.
+\newblock In {\em Proceedings of the 14th ACM international conference on
+  Information and knowledge management}, CIKM '05, pages 625--631, New York,
+  NY, USA, 2005. ACM.
+
+\bibitem{Wilson2005}
+Theresa Wilson, Janyce Wiebe, and Paul Hoffmann.
+\newblock Recognizing contextual polarity in phrase-level sentiment analysis.
+\newblock In {\em Proceedings of the conference on Human Language Technology
+  and Empirical Methods in Natural Language Processing}, HLT '05, pages
+  347--354, Stroudsburg, PA, USA, 2005. Association for Computational
+  Linguistics.
+
+\end{thebibliography}

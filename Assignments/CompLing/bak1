@@ -44,6 +44,7 @@ system is trained on a set of examples.
    \item{A parameter vector $\bar{\alpha} \in \mathbb{R}^d$}
    \end{itemize}
 \end{figure}
+%TODO
 
 In the linear model for NLP used, the question of training equates to finding
 the `best' parameter vector $\bar{\alpha}$, where `best' can be taken to mean
@@ -65,10 +66,10 @@ See below for a more detailed description of the training process.
 
 \subsubsection*{External input}
 The training data will consist of sentences paired with their corresponding
-correct parse trees.  The system will clearly also need to be given some
-sentences to parse.
+correct parse trees.
 
-The final input data required is the grammar used to generate the list of valid parse candidates (\textbf{GEN}) - this could be induced from the training data or a larger corpus.
+In addition to the training data, the system will clearly also need to be given
+some sentences to parse.
 
 \subsubsection*{Internal data structures}
 
@@ -76,52 +77,22 @@ The goal of the training stage is to produce a parameter vector containing
 perceptron weights. Since the only operation required on this vector is a
 scalar product, it can be simply stored as an array.
 
-Depending on the implementation, the set of features used for classification
-might be considered to be data - however, it is probably safe to assume that
-this is hard-coded.
+Although there is some flexibility in the ruleset used for classification, we
+shall assume that this is hardcoded - however, 
 
 \subsection*{Training}
-
 The representation function maps from a sentence paired with a corresponding
 candidate parse tree into a real vector space with dimension equal to the
 number of discrete features under consideration.
 
 The parameter vector $\bar{\alpha}$ encodes the weights of a single-layer
 perceptron which is to be trained to separate correct parses for a sentence (as
-seen by the representation function) from incorrect ones.  This means that
-$\bar{\alpha}$ will come to encode the relative significance (positive or
-negative) of each feature in performing this classification.
+seen by the representation function) from incorrect ones.
 
-The feature set primarily consists of labels which refer to relative positions
-in the parse tree. There are also some special features such as a flag
-indicating the presence or otherwise of a question mark, and labels for the
-lexical head of the constituent and similar significant nodes.
+This means that $\bar{\alpha}$ will come to encode the relative significance
+(positive or negative) of each feature in performing this classification.
 
-To train an example $(x, y)$, firstly $y$ is transformed to remove
-left-recursion (see below). Then the system iterates through the words of $x$;
-at each word, the relevant features are checked for. A present feature implies
-that the representation function will have the value $1$ in the dimension
-corresponding to that feature; absent features have $0$. This is how the output
-of the representation function is calculated - this is then used in the
-averaged perceptron algorithm as described in the paper.
-
-One great advantage of perceptron training in this situation is that it is
-generally \emph{faster} than a lot of other machine learning techniques - such
-as maximum entropy classifiers or support vector machines - and this is
-important when dealing with the large corpora necessary for training an
-effective natural language parser for any real-world purposes.
-
-(Collins and Roark 2004)\cite{Collins2004} also use two refinements to this
-training system, for greater efficiency: repeated use of hypotheses, and `early
-update'. The former involves keeping a cache of examples, and reiterating over
-them to prevent errors from being introduced. The latter concerns the point at
-which the parameters are updated. In the case where the parameters being used
-in the training process are bad to the extent that using them as part of the
-beam-search heuristic results in the desired parse not being found at all, the
-parameters are updated immediately rather than at the end of the sentence. This
-takes advantage of the greater information available at that time, and produces
-a significant improvement in accuracy.
-
+%TODO
 
 \subsubsection*{Averaged Perceptron Improvement}
 
@@ -133,18 +104,13 @@ processed. Intuitively, this is a good idea since it reduces the degree to
 which the produced parameters depend on the ordering of the example data (which
 ought not to be significant).
 
-As described in (Collins 2004)\cite{Collins2004}, the averaged perceptron
-approximates Freund and Schapire's\cite{Freund1999} \emph{voted perceptron}
-method.  The essence of the voted perceptron method is that the perceptron
-algorithm is applied as if to every training example individually, producing a
-whole array of corresponding parameter vectors. When later using the perceptron
-to find the best parse of a sentence, each of these parameter sets are tried
-separately, and the final parse chosen is the one which occurs most frequently
-in the results of this.
+As described in (Collins 2004)\cite{Collins2004}, the averaged perceptron approximates Freund and Schapire's\cite{Freund1999} \emph{voted perceptron} method. 
+
+%TODO
 
 \subsubsection*{Parsing}
 Parsing can be seen as the problem of searching the space of possible parse
-trees for a sentence for the one which scores best according to the model
+trees for a sentence to find the one which scores best according to the model
 trained from the example data. This space can be very large, but the perceptron
 approach allows for a heuristic search strategy. The parser proceeds
 incrementally, from left to right through the sentence. After each word, the
@@ -158,57 +124,31 @@ $x$. This is in fact the parse $z$ for which the vector $\Phi(x, z)$ is closest
 to being perpendicular to the hyperplane which forms the perceptron's decision
 boundary. Hence we seek $\operatorname{arg max}_{z \in \textbf{GEN}(x)} \Phi(x, z) \cdot \bar{\alpha}$.
 
-`Decoding' is the process of trying to find the parse $z$ of a sentence $x$ which maximises the value of $\Phi(x,z) \cdot \bar{\alpha}$. This where the search procedure is required.
+`Decoding' is the process of trying to find the parse $z$ of a sentence $x$ which maximises the value of $\Phi(x,z) \cdot \bar{\alpha}$.
 
 The filtering process after each word has been processed means that the overall
 strategy amounts to a beam search: low-scoring partial hypotheses will be
-dropped from consideration to ensure that space and time costs remain
-manageable. When dealing with grammars sufficiently large to be useful for
-general parsing, this is essential in order to make the problem tractable.
+dropped from consideration to ensure that space costs remain manageable.
 
 The filter used is essentially a threshold whose level increases with the cube
-of the rank of the hypothesis. This means that lower ranked hypothesis are much
-more likely to be dropped, and reflects a general `level of confidence' in the
-heuristic. If the top ranked hypotheses have similar scores, they will most
-likely all be kept - if one hypothesis outshines the rest, then perhaps only
-that one will be used.
+of the rank of the hypothesis.
 
-The other main component of the parser is the `advance' function, ADV. This
-determines how the nodes of the hypothesis space are expanded - it can be
-considered an efficient way of computing adjacency in this graph. Formally, ADV
-should be equivalent to a function returning the elements of $\textbf{GEN}$
-which differ from its argument only in the position of the word being added.
-Computing this by brute force would be intractable due to the size of
-$\textbf{GEN}$. Instead, we use the fact that any word being added to the right
-of the sentence must be added to the parse tree by attachment to one of its
-`left-child chains'. So we need only check all of the possible attachment sites
-for each of these such chains. The left-child chains can be enumerated
-exhaustively by a left-right breadth first search (or similar) of the
-transformed grammar.
-
-This gives us our new set of expanded partial hypotheses, whose scores are
-calculated according to the perceptron. FILTER is applied, and the results are
-expanded again, and so on, for the whole of the sentence.  The final stage is
-to de-transform and return the parse tree of the top-ranked hypothesis for the
-full sentence.
+%TODO
 
 \subsubsection*{Grammar Transformations}
 
 Although using beam search makes the problem more tractable, there may still be
-very many possible parses to consider at each iteration of the search, depending
+very many possible parses to consider at each iteration of the search depending
 on the grammar used in the generation of candidates. The technique of
 \emph{grammar transformations} is employed to ameliorate these difficulties.
-The general aim is to restrict the left-child chains of the grammar in both
-number and length.
+ %TODO
 
-The transform used first is a left-corner transformation, which removes
-left-recursion from the grammar. This is essential because otherwise the number
-of left-child chains will be infinite, and the process of enumerating them will
-not even terminate\cite{Roark2001}. The details of an efficient method for this
-are given by (Moore 2000)\cite{Moore2000}, although for our purposes we only
-wish to transform rules which are actually left-recursive productions.
 
-The second transformation is a flattening which unambiguously removes parent nodes, reducing the amount of space required.
+
+
+
+
+
 
 
 
@@ -411,10 +351,12 @@ One option is as follows: if $W$ is the set of words in the document, $f:W \to
 \mathbb{N}$ maps words to their normalized frequencies, and $\Phi:W \to [-1,
 1]$ their polarities, then an overall sentiment value is given by $\alpha =
 \sum_{w \in W} f(w)\cdot\Phi(w)$.  \footnote{Note that this can be considered
-as a scalar product in a real vector space; the situation is in fact analogous
+as a scalar product in a real vector space; the situation is in fact analagous
 to the linear NLP model used in question 1. This suggests the possibility of
 learning word polarities using the averaged perceptron algorithm. However, there are
 better options.}
+
+%TODO markov stuff ..?
 
 \subsubsection*{Word presence}
 
@@ -428,7 +370,7 @@ deserving of consideration.
 There are a wide variety of machine learning algorithms that have been adapted to the task of determining word sentiment. More detail is given in (Pang 2002)\cite{Pang2002}.
 
 \textbf{Naive Bayes classifier}
-A Bayes classifier relies on a strong independence assumption - i.e. that the
+A Bayes classifier relies on the an independence assumption - i.e. that the
 frequency of any one word does not depend on the frequency of any other word.
 This is generally not an entirely valid assumption, but Bayes classifiers have
 been shown to be surprisingly effective all the same.
@@ -467,7 +409,7 @@ ignoring word ordering involves considering `appraisal
 groups'\cite{Whitelaw2005} rather than individual words. This means that the
 system attempts to group adjectives with their preceding modifiers - for
 example, `tremendously boring' would be treated as one unit. The orientation
-score for a group is then computed via a pre-constructed appraisal taxonomy (a
+score for a group is then computed via a preconstructed appraisal taxonomy (a
 set of rules which assign base scores for adjectives and describe the effects
 of various modifiers) applied to the group's component words.
 
@@ -541,40 +483,17 @@ into a full system can make it difficult to determine what is useful and what
 isn't.
 
 The main two factors affecting the precision of a system are: a) the amount of
-semantic information that is preserved in the process of reducing a document
-from its raw text to the format used for analysis and b) the scope and quality
-of the rules or features used to determine the sentiment value from this
-format.  Provided both elements are sufficiently favourable, precision in
-excess of 90\% should be achievable.
+semantic information that is preserved when reducing a document from its raw
+text to the format used for the analysis and b) the scope and quality of the
+rules or features used to determine the sentiment value from this format.
+Provided both elements are sufficiently good, precision in excess of 90\%
+should be achievable.
 
 With this in mind, we consider a system which combines a detailed sentiment
 lexicon as used for appraisal groups\cite{Whitelaw2005} with the semantic
-information produced by a probabilistic natural language parser. This allows
-the sentiment rules to depend on arbitrary features of the parse tree - for
-instance, a rule might specify that the word `not' inverts the sentiment of its
-sibling adjectival phrase.
+information produced by a probabilistic natural language parser.
 
-Applying the various sentiment rules to the candidate parse trees will produce
-a set of trees which are `tagged' with sentiment values. We then apply machine
-learning to this data. The features used for learning can include the position
-in the document as well as key words, so that the system can learn to give
-extra weight to opinions given at the end of a review, or near the word
-`overall', for example - should this prove to be helpful for classifying
-documents.
-
-As with appraisal groups, there is some difficulty in constructing a good
-sentiment lexicon. One approach might be to use crowd-sourcing to tag parts of
-documents according to perceived sentiment, and then compare the results with
-the document's parse tree. It should be possible to extract rules from this
-data using machine learning techniques (again). For example, a rule that `good'
-reflects positive sentiment when used as an adjective but not as a noun could
-be inferred from assigned sentiment values which reflect this usage.
-
-This should be a very flexible system and, since it only builds on top of the
-ideas of appraisal groups, should be no less effective. The extra information
-conferred by a parser might even allow for improvements in accuracy, provided
-similar care is taken over lexicon construction, so this direction seems like
-one which is generally worthy of exploration.
+%TODO
 
 \subsubsection*{Testing and usage}
 In addition to the usual assessment practices (see above), a sensible policy

@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Arch Linux)
+The top-level auxiliary file: Assignment.aux
+The style file: plain.bst
+Database file #1: Refs.bib
+Warning--empty journal in Chiang2006
+You've used 11 entries,
+            2118 wiz_defined-function locations,
+            586 strings with 6207 characters,
+and the built_in function-call counts, 4277 in all, are:
+= -- 471
+> -- 134
+< -- 8
++ -- 53
+- -- 42
+* -- 254
+:= -- 658
+add.period$ -- 40
+call.type$ -- 11
+change.case$ -- 54
+chr.to.int$ -- 0
+cite$ -- 12
+duplicate$ -- 198
+empty$ -- 348
+format.name$ -- 42
+if$ -- 967
+int.to.chr$ -- 0
+int.to.str$ -- 11
+missing$ -- 11
+newline$ -- 59
+num.names$ -- 22
+pop$ -- 51
+preamble$ -- 1
+purify$ -- 43
+quote$ -- 0
+skip$ -- 158
+stack$ -- 0
+substring$ -- 303
+swap$ -- 70
+text.length$ -- 8
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 44
+warning$ -- 1
+while$ -- 49
+width$ -- 13
+write$ -- 141
+(There was 1 warning)
