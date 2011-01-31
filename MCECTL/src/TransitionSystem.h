@@ -32,16 +32,18 @@ public:
    virtual ~TransitionSystem() = 0;
 };
 
-class KripkeStructure : public FiniteAutomaton<RegularAction, RegularConfiguration, KripkeState>, public TransitionSystem {
+class KripkeStructure : public Showable {
 public:
    typedef const KripkeStructure &const_reference;
    KripkeStructure(const set<KripkeState *> &states, KripkeState *initial_state);
+   set<KripkeState> GetStates() const;
    string ToString() const;
 }; 
 
-class PushDownSystem : public FiniteAutomaton<PushDownAction, PushDownConfiguration, KripkeState>, public TransitionSystem {
+class PushDownSystem : public Showable {
 public:
    PushDownSystem(const set<KripkeState *> &states, KripkeState *initial_state);
+   set<KripkeState> GetStates() const;
    string ToString() const;
 };
 

@@ -179,4 +179,15 @@ public:
 };
 
 
+typedef string StackSymbol;
+
+class PushDownState {
+
+};
+
+class PDA { 
+
+};
+
+
 #endif

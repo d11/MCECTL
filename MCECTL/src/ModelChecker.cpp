@@ -81,6 +81,9 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
 ) {
 
    set<KripkeState*> product_states;
+   Valuation v;
+   KripkeState *initial_state = new KripkeState("temp",v); // Temp
+   /*
    set<string*> propositions;
    Lookup<string> lookup(propositions);
    Valuation v(lookup);
@@ -98,10 +101,12 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
       }
    }
 
-   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, k));
+   */
+   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, initial_state));
 }
 
 void ModelChecker::Visit(const Formula::Until &until) {
+   /*
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
    const Automaton *a(until.GetAutomaton());
@@ -129,6 +134,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
    }
 
    _environment.SetCheckResults(_system, results);
+   */
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {
