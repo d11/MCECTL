@@ -15,32 +15,32 @@ PDS test_pds {
 }
 
 # A Labelled Transition System test
-LTS test_lts {
-   STATE ( initial:    hungry, thirsty )
-   STATE ( hungry:     hungry )
-   STATE ( thirsty:    thirsty )
-   STATE ( toast_a:    hungry, thirsty, toast )
-   STATE ( tea_a:      hungry, thirsty, tea )
-   STATE ( toast_tea:  hungry, thirsty, toast, tea )
-   STATE ( tea_b:      thirsty, tea )
-   STATE ( toast_b:    hungry, toast )
-   STATE ( fulfilled:  full )
-
-   ACTION ( make_toast: initial   -> toast_a   )
-   ACTION ( make_toast: tea_a     -> toast_tea )
-   ACTION ( make_toast: hungry    -> toast_b   )
-   ACTION ( make_tea:   initial   -> tea_a     )
-   ACTION ( make_tea:   toast_a   -> toast_tea )
-   ACTION ( make_tea:   thirsty   -> tea_b     )
-
-   ACTION ( eat_toast:  toast_a   -> thirsty   )
-   ACTION ( eat_toast:  toast_tea -> tea_b     )
-   ACTION ( eat_toast:  toast_b   -> fulfilled )
-
-   ACTION ( drink_tea:  tea_a     -> hungry    )
-   ACTION ( drink_tea:  toast_tea -> toast_b   )
-   ACTION ( drink_tea:  tea_b     -> fulfilled )
-}
+#LTS test_lts {
+#   STATE ( initial:    hungry, thirsty )
+#   STATE ( hungry:     hungry )
+#   STATE ( thirsty:    thirsty )
+#   STATE ( toast_a:    hungry, thirsty, toast )
+#   STATE ( tea_a:      hungry, thirsty, tea )
+#   STATE ( toast_tea:  hungry, thirsty, toast, tea )
+#   STATE ( tea_b:      thirsty, tea )
+#   STATE ( toast_b:    hungry, toast )
+#   STATE ( fulfilled:  full )
+#
+#   ACTION ( make_toast: initial   -> toast_a   )
+#   ACTION ( make_toast: tea_a     -> toast_tea )
+#   ACTION ( make_toast: hungry    -> toast_b   )
+#   ACTION ( make_tea:   initial   -> tea_a     )
+#   ACTION ( make_tea:   toast_a   -> toast_tea )
+#   ACTION ( make_tea:   thirsty   -> tea_b     )
+#
+#   ACTION ( eat_toast:  toast_a   -> thirsty   )
+#   ACTION ( eat_toast:  toast_tea -> tea_b     )
+#   ACTION ( eat_toast:  toast_b   -> fulfilled )
+#
+#   ACTION ( drink_tea:  tea_a     -> hungry    )
+#   ACTION ( drink_tea:  toast_tea -> toast_b   )
+#   ACTION ( drink_tea:  tea_b     -> fulfilled )
+#}
 
 
 #DFA test_dfa { # DFA test
@@ -57,13 +57,13 @@ LTS test_lts {
 #}
 
 # some regex
-REGULAR all {
-   .*
-}
-
-REGULAR eat_nonexistent_toast {
-   .* eat_toast .* make_toast
-}
+#REGULAR all {
+#   .*
+#}
+#
+#REGULAR eat_nonexistent_toast {
+#   .* eat_toast .* make_toast
+#}
 
 # some formulas
 

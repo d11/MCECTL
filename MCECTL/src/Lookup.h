@@ -19,7 +19,6 @@
 #include <set>
 #include <boost/checked_delete.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include "AutomataConcrete.h"
 using namespace std;
 
 template <class T_Entry, class T_Index = unsigned int>
