@@ -421,15 +421,5 @@ class RegularConfiguration {
 //
 
 
-typedef string StackSymbol;
-
-class PushDownState {
-
-};
-
-class PDA { 
-
-};
-
 
 #endif
