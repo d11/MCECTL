@@ -111,17 +111,20 @@ namespace Command {
                if (iter == _state_map.end()) {
                   throw runtime_error("Transition refers to state which hasn't been added");
                }
-               State *converted_to = iter->second;
+               //State *converted_to = iter->second;
+
                if (trans->min == 0 && trans->max == 0) {
-                  RegularAction *action = new RegularAction(".");
-                  dfa->AddRule(converted, action, converted_to);
-                  cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
+                  //RegularAction *action = new RegularAction(".");
+                  //dfa->AddRule(converted, action, converted_to);
+                  //dfa->AddRule(converted, action); TODO
+                  //cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                } else {
                   uchar c = trans->min;
                   while (c <= trans->max) {
-                     RegularAction *action = new RegularAction(ActionNameFromChar(c));
-                     dfa->AddRule(converted, action, converted_to);
-                     cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
+                   //  RegularAction *action = new RegularAction(ActionNameFromChar(c));
+                  //dfa->AddRule(converted, action, converted_to);
+                   //  dfa->AddRule(converted, action); TODO
+                  //   cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                      ++c;
                   }
                }
@@ -224,7 +227,11 @@ namespace Command {
             }
 
             State *initial_state = *(_states.begin());
-            DFA *dfa = new DFA(_states, initial_state);
+            // TODO
+            vector<string> state_names;
+            vector<string> stack_alphabet;
+            ConfigurationSpace *config_space = new ConfigurationSpace(state_names, stack_alphabet);
+            DFA *dfa = new DFA(_states, initial_state, config_space);
 
             // Add rules
             libfa_state = _fa->initial;

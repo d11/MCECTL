@@ -79,6 +79,9 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    vector<KripkeState*> product_states;
    Valuation v;
    KripkeState *initial_state = new KripkeState("temp",v); // Temp
+	vector<string> product_state_names; // Temp; TODO
+	vector<string> stack_alphabet; // Temp; TODO
+	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
    /*
    set<string*> propositions;
    Lookup<string> lookup(propositions);
@@ -98,7 +101,7 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    }
 
    */
-   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, initial_state));
+   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, initial_state, config_space));
 }
 
 void ModelChecker::Visit(const Formula::Until &until) {

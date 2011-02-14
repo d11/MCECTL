@@ -24,6 +24,64 @@
 
 #include "Showable.h"
 
+class ConfigurationSpace {
+private:
+   vector<string> _states;
+   vector<string> _stack_alphabet;
+public:
+   ConfigurationSpace(const vector<string> &states, const vector<string> &stack_alphabet)
+      : _states(states), _stack_alphabet(stack_alphabet) { }
+   const vector<string> &GetStates() const { return _states; }
+   const vector<string> &GetStackAlphabet() const { return _stack_alphabet; }
+
+   unsigned int GetStateID(const string &state_name) const {
+      typename vector<string>::const_iterator iter = _states.begin();
+      unsigned int id = 0;
+      while (iter->compare(state_name) != 0) {
+         if (iter == _states.end()) {
+            stringstream s;
+            s << "Can't find ID for state " << state_name << " in configuration space";
+            throw runtime_error(s.str());
+         }
+         ++id;
+         ++iter;
+      }
+      return id;
+   }
+   unsigned int GetSymbolID(const string &stack_symbol) const {
+      typename vector<string>::const_iterator iter = _stack_alphabet.begin();
+      unsigned int id = 0;
+      while (iter->compare(stack_symbol) != 0) {
+         if (iter == _stack_alphabet.end()) {
+            stringstream s;
+            s << "Can't find ID for symbol " << stack_symbol << " in configuration space";
+            throw runtime_error(s.str());
+         }
+         ++id;
+         ++iter;
+      }
+      return id;
+   }
+
+   string GetStateName(unsigned int state_id) const {
+      return _states.at(state_id / _stack_alphabet.size());
+   }
+   string GetSymbolName(unsigned int symbol_id) const {
+      return _stack_alphabet.at(symbol_id % _stack_alphabet.size());
+   }
+
+   string ToString() const {
+      stringstream s;
+      s << "State names: " << endl;
+      copy( _states.begin(), _states.end(), ostream_iterator<string>(s, " "));
+      s << endl << "Stack alphabet:" << endl;
+      copy( _stack_alphabet.begin(), _stack_alphabet.end(), ostream_iterator<string>(s, " "));
+      s << endl;
+      return s.str();
+   }
+   
+};
+
 using namespace std;
 class Automaton : public Showable {
 public:
@@ -53,11 +111,21 @@ public:
 class RegularAction : public NondeterministicAction {
 private:
    string _action_name;
+   unsigned int _dest_id;
 public:
-   RegularAction(const string &action_name) : _action_name(action_name) {}
+   RegularAction(const string &action_name, unsigned int dest_id) : _action_name(action_name), _dest_id(dest_id) {}
    const string &GetName() const { return _action_name; }
    string ToString() const {
-      return _action_name;
+      stringstream s;
+      s << _action_name << " -> (" << _dest_id << ")";
+      return s.str();
+   }
+   string GetDestStateName(const ConfigurationSpace &config_space) const {
+      return config_space.GetStateName(_dest_id);
+   }
+
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
+      return "_"; // TODO
    }
 };
 
@@ -72,22 +140,38 @@ class NondeterministicPushDownAction : public Action {
 class PushDownAction : public NondeterministicPushDownAction {
 protected:
    string _action_name;
-   StackSymbol _top_symbol;
+   unsigned int _dest_id;
 public:
-   PushDownAction(const string &action_name, const StackSymbol &top_symbol) : _action_name(action_name), _top_symbol(top_symbol) { }
+   PushDownAction(const string &action_name, unsigned int dest_id) : _action_name(action_name), _dest_id(dest_id) { }
    virtual ~PushDownAction() {}
+   const string &GetName() const { return _action_name; }
+   string ToString() const {
+      stringstream s;
+      s << _action_name << " -> (" << _dest_id << ")";
+      return s.str();
+   }
+   string GetDestStateName(const ConfigurationSpace &config_space) const {
+      return config_space.GetStateName(_dest_id);
+   }
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
+      return "_";
+   }
 };
 
 class PushAction : public PushDownAction {
 private:
    StackSymbol _push_symbol;
 public:
-   PushAction(const string &action_name, const StackSymbol &top_symbol, const StackSymbol &push_symbol)
-      : PushDownAction(action_name, top_symbol), _push_symbol(push_symbol) { }
+   PushAction(const string &action_name, unsigned int dest_id, const StackSymbol &push_symbol)
+      : PushDownAction(action_name, dest_id), _push_symbol(push_symbol) { }
    string ToString() const {
       stringstream s;
-      s << _action_name << ": Push " << _push_symbol;
+      s << PushDownAction::ToString() << ": Push " << _push_symbol;
       return s.str();
+   }
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
+      return _push_symbol;
+      //return config_space.GetSymbolName(_push_symbol);
    }
 };
 
@@ -95,22 +179,26 @@ class RewriteAction : public PushDownAction {
 private:
    StackSymbol _rewrite_symbol;
 public:
-   RewriteAction(const string &action_name, const StackSymbol &top_symbol, const StackSymbol &rewrite_symbol)
-      : PushDownAction(action_name, top_symbol), _rewrite_symbol(rewrite_symbol) { }
+   RewriteAction(const string &action_name, unsigned int dest_id, const StackSymbol &rewrite_symbol)
+      : PushDownAction(action_name, dest_id), _rewrite_symbol(rewrite_symbol) { }
    string ToString() const {
       stringstream s;
-      s << _action_name << ": Rewrite " << _top_symbol << " to " << _rewrite_symbol;
+      s << PushDownAction::ToString() << ": Rewrite to " << _rewrite_symbol;
       return s.str();
+   }
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
+      return _rewrite_symbol;
+      //return config_space.GetSymbolName(_rewrite_symbol);
    }
 };
 
 class PopAction : public PushDownAction {
 public:
-   PopAction(const string &action_name, const StackSymbol &top_symbol)
-      : PushDownAction(action_name, top_symbol) { }
+   PopAction(const string &action_name, unsigned int dest_id)
+      : PushDownAction(action_name, dest_id) { }
    string ToString() const {
       stringstream s;
-      s << _action_name << ": Pop";
+      s << PushDownAction::ToString() << ": Pop";
       return s.str();
    }
 };
@@ -133,19 +221,18 @@ public:
    }
 };
 
+
 template <class A, class S>
 class RuleBook : public Showable {
 public:
    struct Rule {
-      const S *state1;
+      unsigned int configuration;
       const A *action;
-      const S *state2;
-      Rule(const S *s1, const A *a, const S *s2) : state1(s1), action(a), state2(s2) {}
+      Rule(unsigned int config, const A *a) : configuration(config), action(a) {}
    };
 private:
    map<const S*, size_t> _index_lookup;
-   typedef boost::numeric::ublas::matrix< vector< A* > > TransitionTable;
-   TransitionTable *_transition_table;
+//TransitionTable *_transition_table;
    vector<Rule> _rule_list;
 public:
    RuleBook( const vector<S*> &states ) {
@@ -155,24 +242,28 @@ public:
          _index_lookup.insert( make_pair<S*, size_t>(*iter, index));
          ++index;
       }
-      _transition_table = new TransitionTable(index, index);
+      //_transition_table = new TransitionTable(index, index);
    }
 
-   void AddRule( const S* state1, A *action, const S* state2 ) {
+   void AddRule(unsigned int start_id, A *action) {
+      /*
       typename map<const S*, size_t>::const_iterator iter;
       iter = _index_lookup.find(state1);
       if (iter == _index_lookup.end()) {
          throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
       }
-      size_t i = iter->second;
+      */
+      //size_t i = iter->second;
+      /*
       iter = _index_lookup.find(state2);
       if (iter == _index_lookup.end()) {
          throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
-      }
-      size_t j = iter->second;
-      TransitionTable &tt = *_transition_table;
-      tt(i, j).push_back(action);
-      _rule_list.push_back(Rule(state1, action, state2));
+      }*/
+      //size_t j = iter->second;
+      //TransitionTable &tt = *_transition_table;
+      //tt(i, j).push_back(action);
+      //_rule_list.push_back(Rule(state1, action));
+      _rule_list.push_back(Rule(start_id, action));
    }
 
    const vector<Rule> &GetRules() const {
@@ -183,6 +274,18 @@ public:
 
    string ToString() const {
       stringstream s;
+      typename vector<Rule>::const_iterator iter;
+      for (iter = _rule_list.begin(); iter != _rule_list.end(); ++iter) {
+         s << "(" << iter->configuration << ") -> [";
+         if (iter->action) {
+            s << iter->action->ToString();
+         } else {
+            s << "?? NULL !!";
+         }
+         s << "]" << endl;
+      }
+
+      /*
       size_t columns = _transition_table->size2();
 
       size_t col = 0;
@@ -212,6 +315,7 @@ public:
          s << endl;
          row++;
       }
+      */
       return s.str();
    }
 
@@ -223,12 +327,14 @@ protected:
    vector<S*>     _states;
    S *            _initial_state;
    RuleBook<A, S> _rules;
+   const ConfigurationSpace *_config_space;
 public:
+   typedef unsigned int ConfigID;
 	typedef       FiniteAutomaton &reference;
 	typedef const FiniteAutomaton &const_reference;
 
-   FiniteAutomaton(const vector<S*> &states, S *initial_state)
-      : _states(states), _initial_state(initial_state), _rules(states) 
+   FiniteAutomaton(const vector<S*> &states, S *initial_state, const ConfigurationSpace *config_space)
+      : _states(states), _initial_state(initial_state), _rules(states), _config_space(config_space)
    { }
 
    FiniteAutomaton(const FiniteAutomaton<A,S> &automaton) {
@@ -236,6 +342,7 @@ public:
       _states = automaton._states;
       _initial_state = automaton._initial_state;
       _rules = automaton._rules;
+      _config_space = automaton._config_space;
    }
 
    virtual ~FiniteAutomaton() {
@@ -246,8 +353,8 @@ public:
       }
    }
 
-   void AddRule( const S *state1, A *action, const S *state2 ) {
-      _rules.AddRule(state1, action, state2);
+   void AddRule(unsigned int start_id, A *action) {
+      _rules.AddRule(start_id, action);
    };
 
    vector<S> GetStates() const {
@@ -269,7 +376,7 @@ public:
       typename vector<S*>::const_iterator iter; size_t index = 0;
       for (iter = _states.begin(); iter != _states.end(); ++iter) {
          s << (*iter == _initial_state ? "*" : " ")
-            << " " << index << ": " << (*iter)->ToString() << endl;
+            << " " << _config_space->GetStateID((*iter)->GetName()) << ": " << (*iter)->ToString() << endl;
          index++;
       }
 
@@ -280,6 +387,11 @@ public:
 
    string ToDot() const {
 
+      cout << "DOTTING!" << endl;
+
+      cout << "config space:" << endl;
+      cout << _config_space->ToString() << endl;
+
       stringstream s;
       s << "digraph automaton { " << endl
         << "rankdir=LR;"          << endl
@@ -287,6 +399,9 @@ public:
 
       typename vector<S*>::const_iterator state_iter;
       for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
+         if (!(*state_iter)) {
+            throw runtime_error("bad state");
+         }
          s << "node [shape = circle"; //s << "doublecircle";
          s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
          s << (*state_iter)->GetName() << endl;
@@ -301,11 +416,22 @@ public:
 
       typename vector<Rule>::const_iterator rule_iter;
       for (rule_iter = rules.begin(); rule_iter != rules.end(); ++rule_iter) {
-         s << rule_iter->state1->GetName()
-           << " -> "
-           << rule_iter->state2->GetName()
-           << "[ label = \""
-           << rule_iter->action->ToString()
+
+         if (!rule_iter->action) {
+            throw runtime_error("Bad action");
+         }
+         if (!rule_iter->configuration) {
+            throw runtime_error("Bad configuration");
+         }
+         s << _config_space->GetStateName(rule_iter->configuration)
+           << " -> ";
+         s << rule_iter->action->GetDestStateName(*_config_space)
+           << "[ label = \"";
+         s << rule_iter->action->GetName()
+           << ", ";
+         s << _config_space->GetSymbolName(rule_iter->configuration)
+           << "/";
+         s  << rule_iter->action->GetDestSymbolName(*_config_space)
            << "\" ];"
            << endl;
       }

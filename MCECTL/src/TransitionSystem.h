@@ -47,13 +47,13 @@ public:
 class KripkeStructure : public FiniteAutomaton<RegularAction, KripkeState>, public TransitionSystem {
 public:
    typedef const KripkeStructure &const_reference;
-   KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state);
+   KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space);
    string ToString() const;
 }; 
 
 class PushDownSystem : public FiniteAutomaton<PushDownAction, KripkeState>, public TransitionSystem {
 public:
-   PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state);
+   PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space);
    string ToString() const;
 };
 

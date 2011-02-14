@@ -394,7 +394,8 @@ pushdown_kripke_state:
    DFA_STATE DFA_LPAREN pushdown_state_identifier DFA_COLON proposition_list DFA_RPAREN
    {
       AST::State *state = new AST::State($3->GetName(), AST::State::PUSHDOWN_KRIPKE);
-      //state->SetSymbol($3->GetSymbol());
+      //AST::State *state = new AST::State($3->GetName(), AST::State::KRIPKE);
+      state->SetSymbol($3->GetSymbol());
       state->AddPropositions(*$5);
       cout << "Creating pushdown kripke state: " << state->ToString() << endl;
       delete $3;
@@ -427,9 +428,10 @@ single_proposition:
 regular_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
    {
-      AST::Effect effect(*$7);
+      AST::Effect *effect = new AST::Effect(*$7);
       AST::Configuration *config = new AST::Configuration(*$5);
       AST::Action *action = new AST::Action(*$3, effect);
+      action->SetType(AST::Action::REGULAR);
       $$ = new AST::Automaton(config, action);
       delete($3);
       delete($5);
@@ -439,10 +441,25 @@ regular_action:
 pushdown_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier DFA_TRANSITION pushdown_state_destination DFA_RPAREN
    {
-      AST::Effect *effect($7);
+      AST::PushDownEffect *effect($7);
 
       AST::Configuration *config = $5;
-      AST::Action *action = new AST::Action(*$3, *effect);
+      AST::Action *action = new AST::Action(*$3, effect);
+
+      switch(effect->GetType()) {
+         case AST::PushDownEffect::PUSH:
+            action->SetType(AST::Action::PUSH);
+            break;
+         case AST::PushDownEffect::POP:
+            action->SetType(AST::Action::POP);
+            break;
+         case AST::PushDownEffect::REWRITE:
+            action->SetType(AST::Action::REWRITE);
+            break;
+         default:
+            throw runtime_error("Bad effect type");
+            break;
+      }
 
       $$ = new AST::Automaton(config, action);
       
@@ -489,6 +506,8 @@ push:
          AST::PushDownEffect::PUSH 
       );
       effect->SetSymbol(*$2);
+      cout << "!!!!!!!!!" << endl;
+      cout << "Makin' a push: " << effect->ToString() << endl;
       $$ = effect;
    };
 
