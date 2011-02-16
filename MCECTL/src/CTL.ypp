@@ -21,6 +21,7 @@
 #include "command/DeclareFormula.h"
 #include "command/DeclareDFA.h"
 #include "command/DeclareRegex.h"
+#include "command/RunCheck.h"
 #include "exception/ParseException.h"
 
 using namespace std;
@@ -96,8 +97,8 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token REGEX_DECLARATION 
 
 // Other command tokens
-%token LOAD SHOW XSHOW QUIT
-%token EMPTY LBRACE RBRACE LPAREN RPAREN
+%token LOAD SHOW XSHOW QUIT CHECK
+%token EMPTY LBRACE RBRACE LPAREN RPAREN COMMA
 
 // General identifier
 %token <string> IDENTIFIER 
@@ -136,7 +137,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %type <push_down_effect_ref> pushdown_state_destination
 %type <string> stack_symbol
 
-%type <command_ref> null_command load_command quit_command show_command xshow_command
+%type <command_ref> null_command load_command quit_command show_command xshow_command check_command
 %token <string> QUOTED
 %type <string> filename
 %type <string> show_item 
@@ -186,7 +187,7 @@ cons_command_list:
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | null_command
+   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | check_command | null_command
    {
    };
 
@@ -194,7 +195,17 @@ null_command:
    EMPTY
    {
       $$ = new NullCommand();
-   }
+   };
+
+check_command:
+   CHECK LPAREN formula_name COMMA automaton_name RPAREN
+   {
+      string formula(*$3);
+      string system(*$5);
+      $$ = new RunCheck(system, formula);
+      delete $3;
+      delete $5;
+   };
 
 load_command:
    LOAD LPAREN filename RPAREN

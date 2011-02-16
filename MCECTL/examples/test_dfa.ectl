@@ -1,0 +1,7 @@
+DFA test_dfa {
+   STATE ( empty )
+   STATE ( fulfilled )
+   STATE ( toast_ready )
+   ACTION ( make_toast: empty -> toast_ready )
+   ACTION ( eat_toast: toast_ready -> fulfilled )
+}

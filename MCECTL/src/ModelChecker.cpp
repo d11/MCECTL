@@ -35,6 +35,13 @@ void CheckResults::AddResult(const Result &result) {
    // TODO
 }
 
+string CheckResults::ToString() const {
+   stringstream s;
+   s << "Check results:" << endl;
+   s << "TODO" << endl;
+   return s.str();
+}
+
 // PREDECESSOR CONFIGURATIONS
 
 template <class A>

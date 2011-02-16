@@ -40,8 +40,8 @@ namespace AST {
       }
 
       virtual StackSymbol GetSymbol() const {
-         throw runtime_error("Can't get symbol; not pushdown effect");
-         return 0;
+         //throw runtime_error("Can't get symbol; not pushdown effect");
+         return "_";
       }
    };
    class PushDownEffect : public Effect {
@@ -144,6 +144,7 @@ namespace AST {
          s << "Regular configuration; state name " << _state_name;
          return s.str();
       }
+      virtual StackSymbol GetSymbol() const { return "_"; }
    };
 
    class PushDownConfiguration : public Configuration {

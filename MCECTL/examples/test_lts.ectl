@@ -25,3 +25,17 @@ LTS test_lts {
    ACTION ( drink_tea:  toast_tea -> toast_b   )
    ACTION ( drink_tea:  tea_b     -> fulfilled )
 }
+
+PDA test_pda {
+   STATE ( empty )
+   STATE ( fulfilled )
+   STATE ( toast_ready )
+   ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
+   ACTION ( eat_toast: toast_ready[toast] -> fulfilled[POP] )
+}
+
+FORMULA not_always_hungry {
+   !E( 0 R[test_pda] hungry )
+}
+
+:check(not_always_hungry, test_lts)

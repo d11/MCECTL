@@ -36,6 +36,7 @@ public:
 };
 
 // Abstract
+/*
 class TransitionSystem {
 public:   
    typedef const TransitionSystem &const_reference;
@@ -55,6 +56,10 @@ class PushDownSystem : public FiniteAutomaton<PushDownAction, KripkeState>, publ
 public:
    PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space);
    string ToString() const;
-};
+};*/
+
+typedef FiniteAutomaton<RegularAction, KripkeState> KripkeStructure;
+typedef FiniteAutomaton<PushDownAction, KripkeState> PushDownSystem;
+
 
 #endif

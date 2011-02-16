@@ -290,6 +290,15 @@ namespace Command {
                bind2nd(StateCreator<A, S>(), *this)
             );
 
+            typename vector<AST::Automaton::Rule>::const_iterator iter;
+            for (iter = _ast_automaton->GetRules().begin();
+                 iter != _ast_automaton->GetRules().end();
+                 ++iter) {
+               AddStackSymbol(iter->_config->GetSymbol());
+               AddStackSymbol(iter->_action->GetSymbol());
+            }
+
+
             _initial_state = *(_states.begin()); // TODO
 
             vector<string> state_names_ordered;
@@ -322,11 +331,28 @@ namespace Command {
 
             CreateAutomaton();
 
-            environment.SetAutomaton( _automaton_name, _automaton );
+            /*
+            switch(_ast_automaton->GetType()) {
+               case AST::Automaton::DFA:
+                  break;
+               case AST::Automaton::PDA:
+                  environment.SetAutomaton<A,S>( _automaton_name, _automaton );
+                  break;
+               case AST::Automaton::LTS:
+                  environment.SetLTS( _automaton_name, _automaton );
+                  break;
+               case AST::Automaton::PDS:
+                  environment.SetPDS( _automaton_name, _automaton );
+                  break;
+               default:
+                  throw runtime_error("Bad automaton type"); break;
+            }
+            */
             if (!_automaton) {
                throw runtime_error("Failed to construct automaton");
             }
             cout << _automaton->ToString() << endl;
+            environment.SetAutomaton( _automaton_name, _automaton );
          }
          virtual ~DeclareAutomatonCommand() {
             delete _ast_automaton;

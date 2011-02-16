@@ -48,37 +48,46 @@ namespace Command {
                return;
             }
             
-            bool found_automaton = true;
+            bool found = false;
             try {
-               const Automaton *automaton(environment.GetAutomaton(_identifier));
+               const DFA *automaton = environment.GetDFA(_identifier);
                cout << "Found automaton '" << _identifier << "':" << endl;
                cout << automaton->ToString() << endl;
+               found = true;
             }
-            catch (NonExistentAutomatonException e) {
-               found_automaton = false;
+            catch (NonExistentAutomatonException e) { }
+            try {
+               const PDA *automaton = environment.GetPDA(_identifier);
+               cout << "Found automaton '" << _identifier << "':" << endl;
+               cout << automaton->ToString() << endl;
+               found = true;
             }
+            catch (NonExistentAutomatonException e) { }
+            try {
+               const PushDownSystem *automaton = environment.GetPDS(_identifier);
+               cout << "Found pushdown system '" << _identifier << "':" << endl;
+               cout << automaton->ToString() << endl;
+               found = true;
+            }
+            catch (NonExistentAutomatonException e) { }
 
-            bool found_formula = true;
+            try {
+               const KripkeStructure *transition_system = environment.GetLTS(_identifier);
+               cout << "Found kripke system '" << _identifier << "':" << endl;
+               cout << transition_system->ToString() << endl;
+               found = true;
+            }
+            catch (NonExistentTransitionSystemException e) { }
+
             try {
                Formula::Formula::const_reference formula(environment.GetFormula(_identifier));
                cout << "Found formula '" << _identifier << "':" << endl;
                cout << formula.ToString() << endl;
+               found = true;
             }
-            catch (NonExistentFormulaException e) {
-               found_formula = false;
-            }
+            catch (NonExistentFormulaException e) { }
 
-            bool found_system = true;
-            try {
-               KripkeStructure::const_reference transition_system(environment.GetSystem(_identifier));
-               cout << "Found system '" << _identifier << "':" << endl;
-               cout << transition_system.ToString() << endl;
-            }
-            catch (NonExistentTransitionSystemException e) {
-               found_system = false;
-            }
-
-            if (!found_automaton && !found_formula && !found_system) {
+            if (!found) {
                cout << "Couldn't find anything with the name '" << _identifier << "'." << endl;
                return;
             }

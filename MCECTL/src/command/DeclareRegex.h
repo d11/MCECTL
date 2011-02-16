@@ -240,7 +240,7 @@ namespace Command {
                libfa_state = libfa_state->next;
             }
 
-            environment.SetAutomaton( _identifier, dfa );
+            environment.SetDFA( _identifier, dfa );
             cout << dfa->ToString() << endl;
 
          }

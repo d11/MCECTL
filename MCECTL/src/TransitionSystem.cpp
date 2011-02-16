@@ -30,6 +30,7 @@ string KripkeState::ToString() const {
 
 // TRANSITION SYSTEM
 
+/*
 TransitionSystem::~TransitionSystem() { }
 
 // KRIPKE STRUCTURE
@@ -55,4 +56,4 @@ string PushDownSystem::ToString() const {
      << FiniteAutomaton<PushDownAction, KripkeState>::ToString();
    return s.str();
 }
-
+*/
