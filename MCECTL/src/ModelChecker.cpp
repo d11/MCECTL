@@ -21,23 +21,31 @@ using namespace std;
 
 // RESULT
 
-Result::Result(const KripkeState &state, bool result) {
+Result::Result(unsigned int config_id, bool result) : _config_id(config_id), _evaluation(result) {
    // TODO
 }
 
+string Result::ToString() const {
+   stringstream s;
+   s << _config_id << ": " << (_evaluation ? "T" : "F");
+   return s.str();
+}
 // CHECK RESULTS
 
-CheckResults::CheckResults() {
+CheckResults::CheckResults() { }
 
-}
-
-void CheckResults::AddResult(const Result &result) {
+void CheckResults::AddResult(Result *result) {
    // TODO
+   _result_map[result->GetID()] = result;
 }
 
 string CheckResults::ToString() const {
    stringstream s;
    s << "Check results:" << endl;
+   map<unsigned int, Result*>::const_iterator iter;
+   for (iter = _result_map.begin(); iter != _result_map.end(); ++iter) {
+      cout << (*iter).first << " -> " << (*iter).second->ToString() << endl;
+   }
    s << "TODO" << endl;
    return s.str();
 }
@@ -65,6 +73,7 @@ CheckResults ResultsTable::GetEntry( Formula::Formula::const_reference formula )
 }
 
 void ResultsTable::SetEntry(const CheckResults &check_results) {
+   cout << "Setting results table entry" << endl;
    // TODO
 }
 
@@ -82,7 +91,7 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
-
+   cout << "Constructing product system" << endl;
    vector<KripkeState*> product_states;
    Valuation v;
    KripkeState *initial_state = new KripkeState("temp",v); // Temp
@@ -108,10 +117,12 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    }
 
    */
+   cout << "TODO" << endl;
    return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, initial_state, config_space));
 }
 
 void ModelChecker::Visit(const Formula::Until &until) {
+   cout << "visiting UNTIL" << endl;
    /*
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
@@ -141,25 +152,62 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
    _environment.SetCheckResults(_system, results);
    */
+   cout << "TODO" << endl;
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {
+   cout << "visiting RELEASE" << endl;
    // TODO
+   cout << "TODO" << endl;
 }
-void ModelChecker::Visit(const Formula::PVar &release) {
+void ModelChecker::Visit(const Formula::PVar &pvar) {
+   cout << "visiting PVAR" << endl;
+   CheckResults results;
+
    // TODO
+   cout << "TODO" << endl;
+
+   _environment.SetCheckResults(_system, results);
 }
 void ModelChecker::Visit(const Formula::False &formula_false) {
+   cout << "visiting FALSE" << endl;
    // TODO
+   cout << "TODO" << endl;
 }
 void ModelChecker::Visit(const Formula::True &formula_true) {
-   // TODO
+   cout << "visiting TRUE" << endl;
+
+   CheckResults results;
+
+   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration>::const_iterator iter;
+   for (iter = ids.begin(); iter != ids.end(); ++iter) {
+      Configuration id = *iter;
+      Result *res = new Result(id, true);
+      results.AddResult(res);
+   }
+   _environment.SetCheckResults(_system, results);
 }
 void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
+   cout << "visiting CONJUNCTION" << endl;
+
+   CheckResults left_results  = Check(conjunction.GetLeft());
+   CheckResults right_results = Check(conjunction.GetRight());
+
+   CheckResults results;
+
+   cout << "TODO" << endl;
    // TODO
+
+   _environment.SetCheckResults(_system, results);
 }
 void ModelChecker::Visit(const Formula::Negation &negation) {
+   cout << "visiting NEGATION" << endl;
+   CheckResults sub_results = Check(negation.GetSubFormula());
+   CheckResults results;
    // TODO
+   cout << "TODO" << endl;
+   _environment.SetCheckResults(_system, results);
 }
 
 CheckResults ModelChecker::Check( Formula::Formula::const_reference formula ) {
@@ -169,7 +217,6 @@ CheckResults ModelChecker::Check( Formula::Formula::const_reference formula ) {
    }
 
    formula.Accept(*this);
-
    return results_table.GetEntry( formula );
 }
 

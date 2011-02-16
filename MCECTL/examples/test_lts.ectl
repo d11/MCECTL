@@ -38,4 +38,9 @@ FORMULA not_always_hungry {
    !E( 0 R[test_pda] hungry )
 }
 
-:check(not_always_hungry, test_lts)
+FORMULA problem {
+   (hungry & !toast)
+}
+
+#:check(not_always_hungry, test_lts)
+:check(problem, test_lts)

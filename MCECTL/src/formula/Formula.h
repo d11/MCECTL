@@ -61,10 +61,9 @@ namespace Formula {
    private:
       Formula::const_reference _before;
       Formula::const_reference _after;
-   protected:
+   public:
       Formula::const_reference GetLeft() const { return _before; }
       Formula::const_reference GetRight() const { return _after; }
-   public:
       BinaryFormula(
          Formula::const_reference before,
          Formula::const_reference after

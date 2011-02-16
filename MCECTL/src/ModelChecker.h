@@ -31,15 +31,23 @@ public:
 
 
 // Will contain example/counterexample if available
-class Result {
+class Result : public Showable {
+private:
+   Configuration _config_id;
+   bool _evaluation;
 public:
-   Result(const KripkeState &, bool);
+   Configuration GetID() const { return _config_id; }
+   bool GetEvaluation() const { return _evaluation; }
+   Result(unsigned int, bool);
+   string ToString() const;
 };
 
 class CheckResults : public Showable {
+private:
+   map<unsigned int, Result*> _result_map; // from configuration to value
 public:
    CheckResults();
-   void AddResult( const Result &result );
+   void AddResult(Result *result );
    string ToString() const;
 };
 

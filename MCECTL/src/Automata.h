@@ -13,6 +13,7 @@
 
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 
 #include <vector>
 #include <string>
@@ -23,6 +24,8 @@
 #include <algorithm>
 
 #include "Showable.h"
+
+typedef unsigned int Configuration;
 
 class ConfigurationSpace {
 private:
@@ -79,6 +82,15 @@ public:
       s << endl;
       return s.str();
    }
+
+   vector<Configuration> GetConfigurations() const {
+      vector<Configuration> ids;
+      std::copy(boost::counting_iterator<int>(0),
+         boost::counting_iterator<int>(_states.size()*_stack_alphabet.size()),
+         std::back_inserter(ids));
+      return ids;
+   }
+
    
 };
 
@@ -351,6 +363,10 @@ public:
          delete *iter;
          *iter = NULL;
       }
+   }
+
+   vector<Configuration> GetConfigurations() const {
+      return _config_space->GetConfigurations();
    }
 
    void AddRule(unsigned int start_id, A *action) {
