@@ -303,6 +303,7 @@ namespace Command {
 
             vector<string> state_names_ordered;
             copy(_state_names.begin(), _state_names.end(), back_inserter(state_names_ordered));
+            sort(state_names_ordered.begin(), state_names_ordered.end());
             vector<string> stack_alphabet_ordered;
             copy(_stack_alphabet.begin(), _stack_alphabet.end(), back_inserter(stack_alphabet_ordered));
 
@@ -312,6 +313,34 @@ namespace Command {
             cout << endl << "stack alphabet" << endl;
             copy( _stack_alphabet.begin(), _stack_alphabet.end(), std::ostream_iterator<string>(std::cout, " "));
             cout << endl;
+
+            sort(_states.begin(), _states.end(), less_state_name());
+            typename vector<S*>::const_iterator itr;
+            for (itr = _states.begin(); itr != _states.end(); ++itr) {
+               cout << (*itr)->GetName() << " ";
+            }
+            cout << endl;
+
+            copy( state_names_ordered.begin(), state_names_ordered.end(), std::ostream_iterator<string>(std::cout, " "));
+
+            cout << _states.size() << endl;
+            // Check names and states are ordered the same way
+            typename vector<S*>::const_iterator i1;
+            vector<string>::const_iterator i2;
+            i2 = state_names_ordered.begin();
+            for(i1 = _states.begin(); i1 != _states.end(); ++i1) {
+               if (i2 == state_names_ordered.end()) {
+                  throw runtime_error("state mismatch! - duplicate state names? [1]");
+               }
+               cout << (*i1)->GetName() << " | " << *i2 << endl;
+               if (0 != (*i1)->GetName().compare(*i2)) {
+                  throw runtime_error("state name mismatch!");
+               }
+               ++i2;
+            }
+            if (i2 != state_names_ordered.end()) {
+               throw runtime_error("state mismatch! - duplicate state names? [2]");
+            }
 
             _config_space = new ConfigurationSpace(state_names_ordered, stack_alphabet_ordered);
 

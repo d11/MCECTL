@@ -51,13 +51,15 @@ public:
    string ToString() const;
 };
 
-class ResultsTable {
+class ResultsTable : public Showable {
 private:
+   map<unsigned int, CheckResults *> _entries;
 public:
    ResultsTable();
    bool HasEntry( Formula::Formula::const_reference formula ) const;
-	CheckResults GetEntry( Formula::Formula::const_reference formula ) const;
-	void SetEntry( const CheckResults &formula );
+	const CheckResults *GetEntry( Formula::Formula::const_reference formula ) const;
+	void SetEntry( Formula::Formula::const_reference formula, CheckResults *check_results );
+   string ToString() const;
 };
 
 class Environment;
@@ -88,7 +90,7 @@ public:
    void Visit(const Formula::Until       &until);
    void Visit(const Formula::Release     &release);
 
-   CheckResults Check( Formula::Formula::const_reference formula );
+   const CheckResults *Check( Formula::Formula::const_reference formula );
 };
 
 #endif

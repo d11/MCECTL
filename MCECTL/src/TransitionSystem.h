@@ -14,6 +14,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <algorithm>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
@@ -26,11 +27,17 @@ typedef vector<string> Valuation;
 
 class KripkeState : public State, Showable {
 private:
-   Valuation _valuation;
+   vector<string> _valuation;
 public:
    typedef const KripkeState &const_reference;
    typedef const KripkeState *const_ptr;
    KripkeState(const string &name, const Valuation &valuation) : State(name), _valuation(valuation) { }
+
+   bool Evaluate(const string &pvar) const {
+      vector<string>::const_iterator iter;
+      iter = find(_valuation.begin(), _valuation.end(), pvar);
+      return iter != _valuation.end();
+   }
 
    string ToString() const;
 };

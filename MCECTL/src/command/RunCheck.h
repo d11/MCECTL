@@ -43,8 +43,8 @@ namespace Command {
             ModelChecker model_checker(environment, *lts);
 
             Formula::Formula::const_reference formula = environment.GetFormula(_formula_name);
-            CheckResults results = model_checker.Check(formula);
-            cout << results.ToString() << endl;
+            const CheckResults *results = model_checker.Check(formula);
+            cout << results->ToString() << endl;
          }
    };
 

@@ -11,12 +11,15 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <numeric>
 
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
 #include "TransitionSystem.h"
 #include "ModelChecker.h"
+#include "Util.h"
 using namespace std;
 
 // RESULT
@@ -41,12 +44,13 @@ void CheckResults::AddResult(Result *result) {
 
 string CheckResults::ToString() const {
    stringstream s;
+   s << "--------------" << endl;
    s << "Check results:" << endl;
    map<unsigned int, Result*>::const_iterator iter;
    for (iter = _result_map.begin(); iter != _result_map.end(); ++iter) {
       cout << (*iter).first << " -> " << (*iter).second->ToString() << endl;
    }
-   s << "TODO" << endl;
+   s << "--------------" << endl;
    return s.str();
 }
 
@@ -60,23 +64,40 @@ bool PredecessorConfigurations<A>::Contains( const KripkeState *state_1, const K
 
 // RESULTS TABLE
 
-ResultsTable::ResultsTable() { }
+ResultsTable::ResultsTable() : _entries() { 
+   _entries.insert(make_pair(3, new CheckResults()));
+}
 
 bool ResultsTable::HasEntry( Formula::Formula::const_reference formula ) const {
-   // TODO
-   return false;
+   map<unsigned int, CheckResults *>::const_iterator iter;
+   iter = _entries.find(formula.GetID());
+   return iter != _entries.end();
 }
 
-CheckResults ResultsTable::GetEntry( Formula::Formula::const_reference formula ) const {
+const CheckResults *ResultsTable::GetEntry( Formula::Formula::const_reference formula ) const {
    // TODO
-   return CheckResults();
+   cout << ToString();
+   cout << endl;
+   return _entries.find(formula.GetID())->second;
 }
 
-void ResultsTable::SetEntry(const CheckResults &check_results) {
+void ResultsTable::SetEntry(Formula::Formula::const_reference formula, CheckResults *check_results) {
    cout << "Setting results table entry" << endl;
+   _entries.insert(make_pair(formula.GetID(), check_results));
+   cout << ToString();
+   cout << endl;
    // TODO
 }
 
+string ResultsTable::ToString() const {
+   stringstream s;
+   s << "==================" << endl;
+   s << "FULL RESULTS TABLE" << endl;
+   s << accumulate(_entries.begin(), _entries.end(), string(""), JoinPairsWithColon<unsigned int,CheckResults*>);
+//<Formula::Formula*,CheckResults*>
+   s << "==================" << endl;
+   return s.str();
+}
 
 // MODEL CHECKER
 
@@ -162,12 +183,18 @@ void ModelChecker::Visit(const Formula::Release &release) {
 }
 void ModelChecker::Visit(const Formula::PVar &pvar) {
    cout << "visiting PVAR" << endl;
-   CheckResults results;
+   CheckResults *results = new CheckResults();
 
-   // TODO
-   cout << "TODO" << endl;
+   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration>::const_iterator iter;
+   for (iter = ids.begin(); iter != ids.end(); ++iter) {
+      Configuration id = *iter;
+      const KripkeState &state = _system.GetState(id);
+      Result *res = new Result(id, state.Evaluate(pvar.GetVarName()));
+      results->AddResult(res);
+   }
 
-   _environment.SetCheckResults(_system, results);
+   _environment.SetCheckResults(&_system, pvar, results);
 }
 void ModelChecker::Visit(const Formula::False &formula_false) {
    cout << "visiting FALSE" << endl;
@@ -177,41 +204,41 @@ void ModelChecker::Visit(const Formula::False &formula_false) {
 void ModelChecker::Visit(const Formula::True &formula_true) {
    cout << "visiting TRUE" << endl;
 
-   CheckResults results;
+   CheckResults *results = new CheckResults();
 
    vector<Configuration> ids(_system.GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
       Result *res = new Result(id, true);
-      results.AddResult(res);
+      results->AddResult(res);
    }
-   _environment.SetCheckResults(_system, results);
+   _environment.SetCheckResults(&_system, formula_true, results);
 }
 void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
    cout << "visiting CONJUNCTION" << endl;
 
-   CheckResults left_results  = Check(conjunction.GetLeft());
-   CheckResults right_results = Check(conjunction.GetRight());
+   const CheckResults *left_results  = Check(conjunction.GetLeft());
+   const CheckResults *right_results = Check(conjunction.GetRight());
 
-   CheckResults results;
+   CheckResults *results = new CheckResults();
 
    cout << "TODO" << endl;
    // TODO
 
-   _environment.SetCheckResults(_system, results);
+   _environment.SetCheckResults(&_system, conjunction, results);
 }
 void ModelChecker::Visit(const Formula::Negation &negation) {
    cout << "visiting NEGATION" << endl;
-   CheckResults sub_results = Check(negation.GetSubFormula());
-   CheckResults results;
+   const CheckResults *sub_results = Check(negation.GetSubFormula());
+   CheckResults *results = new CheckResults();
    // TODO
    cout << "TODO" << endl;
-   _environment.SetCheckResults(_system, results);
+   _environment.SetCheckResults(&_system, negation, results);
 }
 
-CheckResults ModelChecker::Check( Formula::Formula::const_reference formula ) {
-   const ResultsTable &results_table = _environment.GetCheckResults(_system);
+const CheckResults *ModelChecker::Check( Formula::Formula::const_reference formula ) {
+   const ResultsTable &results_table = _environment.GetCheckResults(&_system);
    if ( results_table.HasEntry( formula ) ) {
       return results_table.GetEntry( formula );
    }

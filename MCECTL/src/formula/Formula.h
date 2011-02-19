@@ -23,6 +23,7 @@ namespace Formula {
       typedef const Formula &const_reference;
       virtual ~Formula() {};
       virtual void Accept(Visitor &visitor) const = 0;
+      virtual unsigned int GetID() const { return 1; }
    };
 
    class False : public Formula {
@@ -44,6 +45,7 @@ namespace Formula {
       PVar(const string &name) : _name(name) {};
       virtual void Accept(Visitor &visitor) const;
       string ToString() const { return _name; }
+      string GetVarName() const { return _name; }
    };
 
    class Negation : public Formula {

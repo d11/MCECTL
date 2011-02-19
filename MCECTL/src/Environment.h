@@ -35,12 +35,13 @@ private:
    map<string, const KripkeStructure*>         _ltss; 
    map<string, const PushDownSystem*>         _pdss; 
 
+   map<unsigned int, ResultsTable *> _computed_results;
 public:
    Environment();
    ~Environment();
 
-   const ResultsTable &GetCheckResults(const KripkeStructure &transition_system)     const;
-	void  SetCheckResults(const KripkeStructure &transition_system, const CheckResults &results);
+   const ResultsTable &GetCheckResults(const Automaton *transition_system)     ;
+	void  SetCheckResults(const Automaton *transition_system, Formula::Formula::const_reference formula, CheckResults *results);
 
    Formula::Formula::const_reference GetFormula(const string &identifier)   const;
 

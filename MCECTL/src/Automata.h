@@ -73,6 +73,10 @@ public:
       return _stack_alphabet.at(symbol_id % _stack_alphabet.size());
    }
 
+   size_t GetStackAlphabetSize() const {
+      return _stack_alphabet.size();
+   }
+
    string ToString() const {
       stringstream s;
       s << "State names: " << endl;
@@ -101,6 +105,7 @@ public:
    typedef const Automaton &const_reference;
    virtual string ToDot() const = 0;
    virtual ~Automaton() = 0;
+   virtual unsigned int GetID() const { return 14; }
 };
 
 // Abstract
@@ -233,6 +238,13 @@ public:
    }
 };
 
+struct less_state_name
+{
+   inline bool operator() (const State* s1, const State* s2)
+   {
+      return (s1->GetName() < s2->GetName());
+   }
+};
 
 template <class A, class S>
 class RuleBook : public Showable {
@@ -381,6 +393,10 @@ public:
       }
       return states;
    };
+
+   const S &GetState(Configuration c) const {
+      return *(_states.at(c / _config_space->GetStackAlphabetSize()));
+   }
 
    S GetInitialState() const {
       return *_initial_state;
