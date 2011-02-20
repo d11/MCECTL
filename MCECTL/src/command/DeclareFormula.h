@@ -61,8 +61,28 @@ namespace Command {
                _current_formula = new Formula::Conjunction( left, right );
             } 
 
-            virtual void Visit(const AST::Formula::Disjunction &disjunction) { throw runtime_error("TODO"); } 
-            virtual void Visit(const AST::Formula::Implication &implication) { throw runtime_error("TODO"); } 
+				// (A | B) == !(!A & !B)
+            virtual void Visit(const AST::Formula::Disjunction &disjunction) { 
+               disjunction.GetSubFormula1().Accept(*this);
+               Formula::Formula::reference left(*_current_formula);
+               disjunction.GetSubFormula2().Accept(*this);
+               Formula::Formula::reference right(*_current_formula);
+					Formula::Formula *neg_left = new Formula::Negation(left);
+					Formula::Formula *neg_right = new Formula::Negation(right);
+					Formula::Formula *conj = new Formula::Conjunction(*neg_left, *neg_right);
+					_current_formula = new Formula::Negation(*conj);
+
+				} 
+				// (A -> B) == !(A & !B)
+            virtual void Visit(const AST::Formula::Implication &implication) { 
+               implication.GetSubFormula1().Accept(*this);
+               Formula::Formula::reference left(*_current_formula);
+               implication.GetSubFormula2().Accept(*this);
+               Formula::Formula::reference right(*_current_formula);
+					Formula::Formula *neg_right = new Formula::Negation(right);
+					Formula::Formula *conj = new Formula::Conjunction(left, *neg_right);
+					_current_formula = new Formula::Negation(*conj);
+				} 
             virtual void Visit(const AST::Formula::AX &ax)                   { throw runtime_error("TODO"); } 
             virtual void Visit(const AST::Formula::Until &until)             {
                until.GetSubFormula1().Accept(*this);

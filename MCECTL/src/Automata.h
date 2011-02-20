@@ -100,12 +100,16 @@ public:
 
 using namespace std;
 class Automaton : public Showable {
+private:
+	unsigned int _id;
+	static unsigned int _next_id;
 public:
    typedef Automaton &reference;
    typedef const Automaton &const_reference;
+	Automaton() : _id(_next_id++) { }
    virtual string ToDot() const = 0;
    virtual ~Automaton() = 0;
-   virtual unsigned int GetID() const { return 14; }
+   virtual unsigned int GetID() const { return _id; }
 };
 
 // Abstract
@@ -380,6 +384,12 @@ public:
    vector<Configuration> GetConfigurations() const {
       return _config_space->GetConfigurations();
    }
+
+	string GetConfigurationByID(unsigned int config_id) const {
+		stringstream s;
+		s << "(" << _config_space->GetStateName(config_id) + ", " << _config_space->GetSymbolName(config_id) << ")";
+		return s.str();
+	}
 
    void AddRule(unsigned int start_id, A *action) {
       _rules.AddRule(start_id, action);

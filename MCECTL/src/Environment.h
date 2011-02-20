@@ -27,9 +27,10 @@ using namespace std;
 class ResultsTable;
 class CheckResults;
 
-class Environment : public Showable {
+class Environment : public Showable, Formula::Visitor {
 private:
    map<string, const Formula::Formula*>  _formulas; 
+   map<unsigned int, const Formula::Formula*>  _formulas_by_id; 
    map<string, const DFA*>         _dfas; 
    map<string, const PDA*>         _pdas; 
    map<string, const KripkeStructure*>         _ltss; 
@@ -40,14 +41,11 @@ public:
    Environment();
    ~Environment();
 
-   const ResultsTable &GetCheckResults(const Automaton *transition_system)     ;
-	void  SetCheckResults(const Automaton *transition_system, Formula::Formula::const_reference formula, CheckResults *results);
+   const ResultsTable &GetCheckResults(const KripkeStructure *transition_system)     ;
+	void  SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results);
 
    Formula::Formula::const_reference GetFormula(const string &identifier)   const;
-
-   /*
-   void GetAutomaton(const Automaton *automaton, const string &identifier) const {
-   }*/
+	Formula::Formula::const_reference GetFormulaByID(unsigned int formula_id) const;
 
    const DFA *GetDFA(const string &identifier) const {
       map<string, const DFA*>::const_iterator iter(_dfas.find(identifier));
@@ -74,6 +72,15 @@ public:
    //const Automaton *GetSystem(const string &identifier)    const;
 
    void SetFormula(  const string &identifier, Formula::Formula::const_reference formula );
+	void SetFormulaByID( Formula::Formula::const_reference formula );
+
+	void Visit(const Formula::False       &formula_false);
+   void Visit(const Formula::True        &formula_true);
+   void Visit(const Formula::PVar        &release);
+   void Visit(const Formula::Negation    &negation);
+   void Visit(const Formula::Conjunction &conjunction);
+   void Visit(const Formula::Until       &until);
+   void Visit(const Formula::Release     &release);
 
    void SetAutomaton( const string &identifier, const FiniteAutomaton<RegularAction,State> *automaton ) {
       SetDFA(identifier, automaton);

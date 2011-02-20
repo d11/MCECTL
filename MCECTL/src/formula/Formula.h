@@ -18,12 +18,16 @@ namespace Formula {
    class Visitor;
 
    class Formula : public Showable {
+	private:
+		unsigned int _id;
+		static unsigned int _next_id;
    public:
       typedef Formula &reference;
       typedef const Formula &const_reference;
+		Formula() : _id(_next_id++) { };
       virtual ~Formula() {};
       virtual void Accept(Visitor &visitor) const = 0;
-      virtual unsigned int GetID() const { return 1; }
+      virtual unsigned int GetID() const { return _id; }
    };
 
    class False : public Formula {

@@ -49,13 +49,17 @@ public:
    CheckResults();
    void AddResult(Result *result );
    string ToString() const;
+   const Result &GetResult(unsigned int id) const;
+   const map<unsigned int, Result *> &GetResults() const;
 };
 
 class ResultsTable : public Showable {
 private:
    map<unsigned int, CheckResults *> _entries;
+   const Environment &_environment;
+   const KripkeStructure &_system;
 public:
-   ResultsTable();
+   ResultsTable(const Environment &env, const KripkeStructure &lts);
    bool HasEntry( Formula::Formula::const_reference formula ) const;
 	const CheckResults *GetEntry( Formula::Formula::const_reference formula ) const;
 	void SetEntry( Formula::Formula::const_reference formula, CheckResults *check_results );
