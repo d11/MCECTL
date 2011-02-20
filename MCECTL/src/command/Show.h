@@ -77,7 +77,7 @@ namespace Command {
                cout << transition_system->ToString() << endl;
                found = true;
             }
-            catch (NonExistentTransitionSystemException e) { }
+            catch (NonExistentAutomatonException e) { }
 
             try {
                Formula::Formula::const_reference formula(environment.GetFormula(_identifier));

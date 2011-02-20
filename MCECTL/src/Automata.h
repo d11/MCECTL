@@ -11,10 +11,8 @@
 #ifndef _AUTOMATA_H_
 #define _AUTOMATA_H_
 
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-#include <boost/numeric/ublas/io.hpp>
 #include <boost/iterator/counting_iterator.hpp>
-
+#include <boost/checked_delete.hpp>
 #include <vector>
 #include <string>
 #include <map>
@@ -22,6 +20,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
 
 #include "Showable.h"
 
@@ -192,7 +191,6 @@ public:
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
       return _push_symbol;
-      //return config_space.GetSymbolName(_push_symbol);
    }
 };
 
@@ -209,7 +207,6 @@ public:
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
       return _rewrite_symbol;
-      //return config_space.GetSymbolName(_rewrite_symbol);
    }
 };
 
@@ -229,6 +226,7 @@ public:
    string ToString() const;
 };
 
+/// Standard automaton state (as opposed to labelled)
 class State {
 protected:
    string _name;
@@ -242,8 +240,8 @@ public:
    }
 };
 
-struct less_state_name
-{
+/// Compare two state pointers by referrant name
+struct less_state_name {
    inline bool operator() (const State* s1, const State* s2)
    {
       return (s1->GetName() < s2->GetName());
@@ -365,20 +363,16 @@ public:
       : _states(states), _initial_state(initial_state), _rules(states), _config_space(config_space)
    { }
 
+   // TODO - needed ?
    FiniteAutomaton(const FiniteAutomaton<A,S> &automaton) {
-      // TODO - needed ?
-      _states = automaton._states;
+      _states        = automaton._states;
       _initial_state = automaton._initial_state;
-      _rules = automaton._rules;
-      _config_space = automaton._config_space;
+      _rules         = automaton._rules;
+      _config_space  = automaton._config_space;
    }
 
    virtual ~FiniteAutomaton() {
-      typename vector<S*>::iterator iter;
-      for ( iter = _states.begin(); iter != _states.end(); ++iter ) {
-         delete *iter;
-         *iter = NULL;
-      }
+      for_each(_states.begin(), _states.end(), boost::checked_deleter<S>() );
    }
 
    vector<Configuration> GetConfigurations() const {

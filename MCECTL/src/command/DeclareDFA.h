@@ -323,6 +323,7 @@ namespace Command {
 
             copy( state_names_ordered.begin(), state_names_ordered.end(), std::ostream_iterator<string>(std::cout, " "));
 
+            /*
             cout << _states.size() << endl;
             // Check names and states are ordered the same way
             typename vector<S*>::const_iterator i1;
@@ -341,6 +342,7 @@ namespace Command {
             if (i2 != state_names_ordered.end()) {
                throw runtime_error("state mismatch! - duplicate state names? [2]");
             }
+            */
 
             _config_space = new ConfigurationSpace(state_names_ordered, stack_alphabet_ordered);
 

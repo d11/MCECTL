@@ -21,9 +21,16 @@ string JoinWithComma(const string &a, const string &b);
 
 template <class K, class V>
 string JoinPairsWithColon( const string &a, const pair<K,V> &b ) {
-//string JoinPairsWithColon( const string &a, const pair<const Formula::Formula*,CheckResults*> &b ) {
    stringstream bs;
    bs << b.first << ": " << b.second->ToString() << endl;
+   if (a.empty()) return bs.str();
+   return a + bs.str();
+}
+
+template <class K, class V>
+string JoinKeysWithSquareBrackets(const string &a, const pair<K,V> &b ) {
+   stringstream bs;
+   bs << "[" << b.first << "]" << endl;
    if (a.empty()) return bs.str();
    return a + bs.str();
 }
