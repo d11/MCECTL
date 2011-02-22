@@ -152,7 +152,7 @@ ModelChecker::ModelChecker(
 ) : _environment(environment), _system(transition_system) { }
 
 // combine _system and automata
-boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
+PushDownSystem *ModelChecker::ConstructProductSystem(
    const PDA &automaton,
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
@@ -160,15 +160,41 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
    cout << "Constructing product system" << endl;
    vector<KripkeState*> product_states;
    Valuation v;
-   KripkeState *initial_state = new KripkeState("temp",v); // Temp
-	vector<string> product_state_names; // Temp; TODO
-	vector<string> stack_alphabet; // Temp; TODO
+   KripkeState *initial_state = NULL;
+
+	vector<string> product_state_names;
+	
+	vector<KripkeState> system_states(_system.GetStates());
+	vector<State> automaton_states(automaton.GetStates());
+	vector<KripkeState>::const_iterator i1;
+	vector<State>::const_iterator i2;
+	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
+		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
+			stringstream new_state_name;
+			new_state_name << "(" << i1->GetName() << "," << i2->GetName() << ")";
+			KripkeState *new_state = new KripkeState(new_state_name.str(), i1->GetValuation());
+			product_states.push_back(new_state);
+			product_state_names.push_back(new_state_name.str());
+			if (i1->GetName() == _system.GetInitialState().GetName()
+				&& i2->GetName() == automaton.GetInitialState().GetName()) {
+				initial_state = new_state;
+			}
+		}
+	}
+
+	if (initial_state == NULL) {
+		throw runtime_error("Failed to find initial state..!");
+	}
+
+	const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
+	vector<string> stack_alphabet = automaton_config_space.GetStackAlphabet();
 	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
+
+	PushDownSystem *product_system = new PushDownSystem(product_states, initial_state, config_space);
+
    /*
    set<string*> propositions;
    Lookup<string> lookup(propositions);
-   Valuation v(lookup);
-   KripkeState *k = new KripkeState("temp", v); // Temp
    product_states.insert(k); // TEMP! 
 
    vector<KripkeState> system_states = _system.GetStates();
@@ -184,20 +210,27 @@ boost::shared_ptr<PushDownSystem> ModelChecker::ConstructProductSystem(
 
    */
    cout << "TODO" << endl;
-   return boost::shared_ptr<PushDownSystem>(new PushDownSystem(product_states, initial_state, config_space));
+   return product_system;
 }
 
 void ModelChecker::Visit(const Formula::Until &until) {
    cout << "visiting UNTIL" << endl;
-   /*
    Formula::Formula::const_reference before = until.GetBefore();
    Formula::Formula::const_reference after  = until.GetAfter();
-   const Automaton *a(until.GetAutomaton());
-   const PDA &automaton = *static_cast<const PDA *>(a); // temp
-   // automata is a PDA - - TODO
+	const string &automaton_name = until.GetAutomaton();
+	cout << "getting automaton: " << automaton_name << endl;
+	cout << "looking for a PDA" << endl;
+	const PDA &automaton = *_environment.GetPDA(automaton_name);
 
-   boost::shared_ptr<PushDownSystem> pds(ConstructProductSystem(automaton, before, after)); 
+	cout << "found automaton" << endl;
+	cout << automaton.ToString() << endl;
 
+
+   const PushDownSystem *pds = ConstructProductSystem(automaton, before, after); 
+	cout << "PRODUCT SYSTEM:" << endl;
+	cout << pds->ToString() << endl;
+
+	/*
    CheckResults results;
 
    vector<KripkeState>::const_iterator iter;

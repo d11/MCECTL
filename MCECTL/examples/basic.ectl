@@ -18,7 +18,7 @@ PDS test_pds {
    ACTION ( eat_toast: eaten_toast[toast]  -> eaten_toast[ POP ] )
 }
 
-#:xshow(test_pds)
+:xshow(test_pds)
 
 #DFA test_dfa { # DFA test
 #   STATE ( empty )

@@ -9,6 +9,9 @@ LTS test_lts {
    STATE ( tea_b:      thirsty, tea )
    STATE ( toast_b:    hungry, toast )
    STATE ( fulfilled:  full )
+	STATE ( stuck: hungry )
+
+	ACTION ( destroy_toaster: initial -> stuck  )
 
    ACTION ( make_toast: initial   -> toast_a   )
    ACTION ( make_toast: tea_a     -> toast_tea )
@@ -38,9 +41,16 @@ FORMULA not_always_hungry {
    !E( 0 R[test_pda] hungry )
 }
 
+FORMULA foo {
+	E( 1 U[test_pda] full )
+}
+
 FORMULA problem {
    (hungry & !toast)
 }
 
 #:check(not_always_hungry, test_lts)
-:check(problem, test_lts)
+#:check(problem, test_lts)
+:check(foo, test_lts)
+
+

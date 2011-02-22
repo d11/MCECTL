@@ -39,6 +39,8 @@ public:
       return iter != _valuation.end();
    }
 
+	const vector<string> &GetValuation() const { return _valuation; }
+
    string ToString() const;
 };
 

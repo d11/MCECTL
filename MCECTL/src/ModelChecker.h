@@ -14,13 +14,11 @@
 #define MODELCHECKER_H
 
 #include <boost/shared_ptr.hpp>
-
 #include "Environment.h"
-
 #include "formula/Formula.h"
-using namespace Formula;
-
 #include "Automata.h"
+
+using namespace Formula;
 
 template <class A>
 class PredecessorConfigurations {
@@ -28,7 +26,6 @@ private:
 public:
    bool Contains(const KripkeState *state_1, const KripkeState *state_2, const A *action) const;
 };
-
 
 // Will contain example/counterexample if available
 class Result : public Showable {
@@ -80,7 +77,7 @@ public:
    );
 
    // combine _system and automata
-   boost::shared_ptr<PushDownSystem> ConstructProductSystem(
+   PushDownSystem *ConstructProductSystem(
       const PDA &automaton,
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y

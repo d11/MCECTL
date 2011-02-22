@@ -68,6 +68,9 @@ public:
    string GetStateName(unsigned int state_id) const {
       return _states.at(state_id / _stack_alphabet.size());
    }
+   string GetStateNameByID(unsigned int state_id) const {
+      return _states.at(state_id);
+   }
    string GetSymbolName(unsigned int symbol_id) const {
       return _stack_alphabet.at(symbol_id % _stack_alphabet.size());
    }
@@ -93,7 +96,6 @@ public:
          std::back_inserter(ids));
       return ids;
    }
-
    
 };
 
@@ -145,7 +147,7 @@ public:
    }
 
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
-      return "_"; // TODO
+      return config_space.GetSymbolName(_dest_id); // TODO
    }
 };
 
@@ -171,11 +173,9 @@ public:
       return s.str();
    }
    string GetDestStateName(const ConfigurationSpace &config_space) const {
-      return config_space.GetStateName(_dest_id);
+      return config_space.GetStateNameByID(_dest_id);
    }
-   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
-      return "_";
-   }
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const = 0;
 };
 
 class PushAction : public PushDownAction {
@@ -189,8 +189,8 @@ public:
       s << PushDownAction::ToString() << ": Push " << _push_symbol;
       return s.str();
    }
-   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
-      return _push_symbol;
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
+      return "push " + _push_symbol; // TODO
    }
 };
 
@@ -205,7 +205,7 @@ public:
       s << PushDownAction::ToString() << ": Rewrite to " << _rewrite_symbol;
       return s.str();
    }
-   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) {
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return _rewrite_symbol;
    }
 };
@@ -218,6 +218,9 @@ public:
       stringstream s;
       s << PushDownAction::ToString() << ": Pop";
       return s.str();
+   }
+   virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
+      return "_";
    }
 };
 
@@ -375,6 +378,10 @@ public:
       for_each(_states.begin(), _states.end(), boost::checked_deleter<S>() );
    }
 
+   const ConfigurationSpace &GetConfigurationSpace() const {
+      return *_config_space;
+   }
+
    vector<Configuration> GetConfigurations() const {
       return _config_space->GetConfigurations();
    }
@@ -439,7 +446,8 @@ public:
             throw runtime_error("bad state");
          }
          s << "node [shape = circle"; //s << "doublecircle";
-         s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
+         //s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
+         s << ", label = \"" << (*state_iter)->GetName() << "\"]; ";
          s << (*state_iter)->GetName() << endl;
          if (*state_iter == _initial_state) {
             s << "null [shape = plaintext label=\"\"]" << endl
