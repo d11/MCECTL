@@ -14,12 +14,12 @@
 #include <algorithm>
 #include <numeric>
 
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-#include <boost/numeric/ublas/io.hpp>
-
 #include "TransitionSystem.h"
 #include "ModelChecker.h"
 #include "Util.h"
+
+#include "wpds.h"
+
 using namespace std;
 
 // RESULT

@@ -1,0 +1,88 @@
+This archive contains the source code for the weighted pushdown
+library (WPDS).
+
+This library provides functions to compute finite automata for the set
+of forwards or backwards reachable configurations in a weighted
+pushdown system.  The interested programmer may make use of this
+library in other programs (see also the file Copying).
+
+For the theoretical background, see either of the following papers:
+
+    Stefan Schwoon, Somesh Jha, Thomas Reps, and Stuart Stubblebine.
+    On generalized authorization problems. In Proceedings of the 16th
+    IEEE Computer Security Foundations Workshop (CSFW), pages 202-218.
+    IEEE Computer Society, June 2003.
+
+    or
+
+    Thomas Reps, Stefan Schwoon, Somesh Jha, and David Melski. Weighted
+    pushdown systems and their application to interprocedural dataflow
+    analysis. Science of Computer Programming, 58(1-2), pages 206-263,
+    October 2005. Special issue on the Static Analysis Symposium 2003.
+
+To build the library, type "make" in this, the main directory.  The
+Makefile is set up to work for gcc under Linux and Cygwin.
+
+To try out the examples provided with the library, go to the
+directories "Examples/linfunc", "Examples/wpdstest", and
+"Examples/spkitest", and type "make" in each of them.  See the
+comments in Examples/linfunc/linconst.c,
+Examples/wpdstest/wpdstest1.c, Examples/wpdstest/wpdstest2.c
+Examples/spkitest/spkitest1.c, and Examples/spkitest/spkitest2.c for
+more background on these examples.
+
+If you want to use this library in your own projects, see the file wpds.h
+for documentation. The programs in Examples/ will also show you how to use
+the library. Questions regarding the use of the library should be directed
+to Stefan Schwoon <schwoosn@fmi.uni-stuttgart.de>.
+
+** History **
+
+24.03.2003: First public release.
+
+	IMPORTANT change from previous inoffical releases: fa_prestar
+	and fa_poststar now return the newly created automaton; they
+	no longer modify the automaton given to them as an argument.
+	Change your calls to these to functions accordingly!
+	(You may not get a warning from gcc if you don't!)
+
+15.05.2003:
+
+	Bugfix in sat_add_rule_post (thanks to David Melski)
+	Moved wpds homepage to Stuttgart
+
+21.05.2003:
+
+	Another bugfix in delete_hash_table (reported by David Melski)
+
+06.04.2004:
+
+	Complete code overhaul. Changed all names of functions and data
+	structures to a unified naming scheme; changed data structures
+	and some arguments to functions (compat.h is provided to ease the
+	transition from earlier library versions). Fixed reference counting.
+	Added differential mode and quasione function. Witness generation
+	is now optional. Added readout algorithm and wConfigValue function.
+	More and different functionality for generating witness information.
+	More extensive documentation in wpds.h. Introduced some new bugs
+	(probably).
+
+22.07.2004:
+
+	Function wSatAddTrans now returns the added or modified transition.
+
+15.12.2004, 21.12.2004:
+
+	Added user fields to wPDS and wFA structures.
+
+April 2005:
+
+	New code in sat.c to support abstraction refinement.
+
+15.03.2006:
+
+	Bugfix in heads.c (dereferencing wrong value).
+
+17.04.2006:
+
+	Added new modes for generating witness traces.
