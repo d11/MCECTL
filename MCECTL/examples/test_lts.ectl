@@ -1,3 +1,19 @@
+#LTS test_lts {
+#   STATE ( initial:    hungry, thirsty )
+#	STATE ( stuck: hungry )
+#	STATE ( magic: nothing)
+#
+#	ACTION ( destroy_toaster: initial -> stuck  )
+#	ACTION ( make_toast: initial -> magic )
+#}
+#
+#PDA test_pda {
+#   STATE ( empty )
+#   STATE ( toast_ready )
+#   ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
+#   ACTION ( make_toast: toast_ready[toast] -> toast_ready[PUSH toast] )
+#}
+
 # A Labelled Transition System test
 LTS test_lts {
    STATE ( initial:    hungry, thirsty )

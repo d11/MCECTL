@@ -21,6 +21,7 @@
 #include <exception>
 #include <numeric>
 #include <functional>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace Command {
 
@@ -223,7 +224,11 @@ namespace Command {
          }
 
          void AddStackSymbol(const string &symbol) {
-            _stack_alphabet.insert(symbol);
+            string trimmed_symbol = boost::algorithm::trim_copy(symbol);
+
+            if (trimmed_symbol != "") {
+               _stack_alphabet.insert(trimmed_symbol);
+            }
          }
          void CreateAction(PushDownAction **action, AST::Action *ast_action) {
             cout << "CREATING PUSHDOWN ACTION" << endl;

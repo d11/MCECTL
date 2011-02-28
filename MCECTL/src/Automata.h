@@ -26,7 +26,33 @@
 
 typedef unsigned int Configuration;
 
-class ConfigurationSpace {
+/*struct numbering_ostream_iterator : public ostream_iterator<string> {
+   private:
+      unsigned int _count;
+   public:
+   numbering_ostream_iterator(ostream &s) : ostream_iterator<string>(s, "\n"), _count(0) { }
+   numbering_ostream_iterator(const numbering_ostream_iterator& iter) : ostream_iterator<string>(iter), _count(iter._count) { }
+         numbering_ostream_iterator&
+      operator=(const string& s)
+      {
+         return *this;
+      }
+         
+      ostream_iterator&
+      operator*()
+      { 
+         return *this; }
+
+      ostream_iterator&
+      operator++()
+      { return *this; }
+
+      ostream_iterator&
+      operator++(int)
+      { return *this; }
+};*/
+
+class ConfigurationSpace : public Showable {
 private:
    vector<string> _states;
    vector<string> _stack_alphabet;
@@ -82,9 +108,19 @@ public:
    string ToString() const {
       stringstream s;
       s << "State names: " << endl;
-      copy( _states.begin(), _states.end(), ostream_iterator<string>(s, " "));
+      //copy( _states.begin(), _states.end(), ostream_iterator<string>(s, " "));
+      //copy( _states.begin(), _states.end(), numbering_ostream_iterator(s));
+      vector<string>::const_iterator iter;
+      int index = 0;
+      for (iter = _states.begin(); iter != _states.end(); ++iter) {
+         s << index++ << ": " << *iter << endl;
+      }
       s << endl << "Stack alphabet:" << endl;
-      copy( _stack_alphabet.begin(), _stack_alphabet.end(), ostream_iterator<string>(s, " "));
+      //copy( _stack_alphabet.begin(), _stack_alphabet.end(), ostream_iterator<string>(s, " "));
+      index = 0;
+      for (iter = _stack_alphabet.begin(); iter != _stack_alphabet.end(); ++iter) {
+         s << index++ << ": " << *iter << endl;
+      }
       s << endl;
       return s.str();
    }
@@ -145,6 +181,9 @@ public:
    string GetDestStateName(const ConfigurationSpace &config_space) const {
       return config_space.GetStateName(_dest_id);
    }
+   unsigned int GetDestStateID() const {
+      return _dest_id;
+   }
 
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return config_space.GetSymbolName(_dest_id); // TODO
@@ -174,6 +213,9 @@ public:
    }
    string GetDestStateName(const ConfigurationSpace &config_space) const {
       return config_space.GetStateNameByID(_dest_id);
+   }
+   unsigned int GetDestStateID() const {
+      return _dest_id;
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const = 0;
 };
@@ -405,6 +447,10 @@ public:
       return states;
    };
 
+   const RuleBook<A,S> &GetRules() const {
+      return _rules;
+   }
+
    const S &GetState(Configuration c) const {
       return *(_states.at(c / _config_space->GetStackAlphabetSize()));
    }
@@ -415,6 +461,8 @@ public:
 
    string ToString() const {
       stringstream s;
+      s << "CONFIGURATION SPACE:" << endl;
+      s << _config_space->ToString() << endl;
       s << "STATES:" << endl;
       typename vector<S*>::const_iterator iter; size_t index = 0;
       for (iter = _states.begin(); iter != _states.end(); ++iter) {

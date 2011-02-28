@@ -192,23 +192,83 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 
 	PushDownSystem *product_system = new PushDownSystem(product_states, initial_state, config_space);
 
-   /*
-   set<string*> propositions;
-   Lookup<string> lookup(propositions);
-   product_states.insert(k); // TEMP! 
+	cout << product_system->ToString() << endl;
 
-   vector<KripkeState> system_states = _system.GetStates();
-   vector<State>  automaton_states = automaton.GetStates();
+	const ConfigurationSpace &system_config_space(_system.GetConfigurationSpace());
+	typedef RuleBook<PushDownAction,State>::Rule AutomatonRule;
+	typedef RuleBook<RegularAction,KripkeState>::Rule SystemRule;
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
+	const vector<SystemRule> &system_rules = _system.GetRules().GetRules();
 
-   vector<KripkeState>::const_iterator system_state_iter;
-   vector<State >::const_iterator  dummy_state_iter;
-   for ( system_state_iter = system_states.begin(); system_state_iter != system_states.end(); ++system_state_iter ) {
-      for ( dummy_state_iter = automaton_states.begin(); dummy_state_iter != automaton_states.end(); ++dummy_state_iter) {
-         // TODO
-      }
-   }
+	//temp
+	const vector<unsigned int> &system_configurations = system_config_space.GetConfigurations();
+	const vector<unsigned int> &automaton_configurations = automaton_config_space.GetConfigurations();
+	vector<unsigned int>::const_iterator e1;
+	vector<unsigned int>::const_iterator e2;
+	cout << "1\tn1\t2\tn2\t3\tn3" << endl;
+	cout << "----------------------------------------" << endl;
+	for (e1 = system_configurations.begin(); e1 != system_configurations.end(); ++e1) {
+		for (e2 = automaton_configurations.begin(); e2 != automaton_configurations.end(); ++e2) {
+			cout << *e1 << "\t" << system_config_space.GetStateName(*e1) << "\t";
+			cout << *e2 << "\t" << automaton_config_space.GetStateName(*e2) << "\t";
+			unsigned int start_id;
+			start_id = *e1 * automaton_configurations.size() + *e2;
+			cout << start_id << "\t" << config_space->GetStateName(start_id) << endl; 
+		}
+	}
 
-   */
+
+
+	vector<AutomatonRule>::const_iterator j1;
+	vector<SystemRule>::const_iterator j2;
+	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
+		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
+			if (j1->action->GetName() == j2->action->GetName()) {
+				cout << "automaton rule: " << endl;
+				cout << "config: " << j1->configuration << endl;
+				cout << "AKA " << automaton_config_space.GetStateName(j1->configuration) << endl;
+				cout << "(with symbol " << automaton_config_space.GetSymbolName(j1->configuration) << ")" << endl;
+				cout << "to state: " << j1->action->GetDestStateName(automaton_config_space) << endl;
+				cout << "action: " << j1->action->ToString() << endl;
+
+				cout << "system rule: " << endl;
+				cout << "config: " << j2->configuration << endl;
+				cout << "AKA " << system_config_space.GetStateName(j2->configuration) << endl;
+				cout << "to state: " << j2->action->GetDestStateName(system_config_space) << endl;
+				cout << "action: " << j2->action->ToString() << endl;
+
+				cout << endl;
+
+
+				unsigned int start_id;
+				start_id = j1->configuration + j2->configuration * automaton_configurations.size();
+				cout << "product rule:" << endl;
+				cout << "config: " << start_id << endl;
+				cout << "AKA " << config_space->GetStateName(start_id) << endl;
+				cout << "(with symbol " << config_space->GetSymbolName(start_id) << ")" << endl;
+
+				unsigned int dest_id;
+				dest_id = j1->action->GetDestStateID() + j2->action->GetDestStateID() * automaton_states.size();
+				cout << "to state: " << config_space->GetStateNameByID(dest_id) << endl;
+
+				cout << endl;
+
+				/*
+
+				 PushDownAction *action = j1->action->Clone();
+					action->SetDestState(
+
+					product_system->AddRule(start_id, action);
+*/
+			}
+			else {
+				cout << "names don't match" << endl;
+			}
+		}
+	}
+
+
+
    cout << "TODO" << endl;
    return product_system;
 }
