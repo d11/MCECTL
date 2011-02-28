@@ -214,9 +214,13 @@ public:
    string GetDestStateName(const ConfigurationSpace &config_space) const {
       return config_space.GetStateNameByID(_dest_id);
    }
+   void SetDestStateID(unsigned int dest_id) {
+      _dest_id = dest_id;
+   }
    unsigned int GetDestStateID() const {
       return _dest_id;
    }
+   virtual PushDownAction *Clone() const = 0;
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const = 0;
 };
 
@@ -230,6 +234,9 @@ public:
       stringstream s;
       s << PushDownAction::ToString() << ": Push " << _push_symbol;
       return s.str();
+   }
+   virtual PushDownAction *Clone() const {
+      return new PushAction(_action_name, _dest_id, _push_symbol);
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return "push " + _push_symbol; // TODO
@@ -247,6 +254,9 @@ public:
       s << PushDownAction::ToString() << ": Rewrite to " << _rewrite_symbol;
       return s.str();
    }
+   virtual PushDownAction *Clone() const {
+      return new RewriteAction(_action_name, _dest_id, _rewrite_symbol);
+   }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return _rewrite_symbol;
    }
@@ -260,6 +270,9 @@ public:
       stringstream s;
       s << PushDownAction::ToString() << ": Pop";
       return s.str();
+   }
+   virtual PushDownAction *Clone() const {
+      return new PopAction(_action_name, _dest_id);
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return "_";

@@ -217,7 +217,7 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 		}
 	}
 
-
+	const CheckResults *x_results  = Check(x);
 
 	vector<AutomatonRule>::const_iterator j1;
 	vector<SystemRule>::const_iterator j2;
@@ -239,6 +239,12 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 
 				cout << endl;
 
+				// Check system state satisfies x
+				const Result &res = x_results->GetResult(j2->configuration);
+				if (!res.GetEvaluation()) {
+					cout << "x not in l(s)" << endl;
+					continue;
+				}
 
 				unsigned int start_id;
 				start_id = j1->configuration + j2->configuration * automaton_configurations.size();
@@ -253,13 +259,9 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 
 				cout << endl;
 
-				/*
-
-				 PushDownAction *action = j1->action->Clone();
-					action->SetDestState(
-
-					product_system->AddRule(start_id, action);
-*/
+				PushDownAction *action = j1->action->Clone();
+				action->SetDestStateID(dest_id);
+				product_system->AddRule(start_id, action);
 			}
 			else {
 				cout << "names don't match" << endl;
@@ -267,9 +269,6 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 		}
 	}
 
-
-
-   cout << "TODO" << endl;
    return product_system;
 }
 
