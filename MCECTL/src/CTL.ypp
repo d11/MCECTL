@@ -145,7 +145,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token <string> REGEX_ACTION
 %type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
 
-%token DFA_LPAREN DFA_RPAREN DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
+%token DFA_LPAREN DFA_RPAREN DFA_ASTERISK DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
 %token <string> DFA_IDENTIFIER
 
 %type <command_list> top rule_command_list unit_command_list cons_command_list
@@ -383,10 +383,17 @@ automaton_component:
 state:
    DFA_STATE DFA_LPAREN state_name DFA_RPAREN
    {
-      //string state_name($3);
-      //free($3);
       AST::State *state = new AST::State(*$3, AST::State::BASIC);
       cout << "Creating normal STATE" << endl;
+      $$ = new AST::Automaton(state);
+   };
+
+state:
+   DFA_STATE DFA_LPAREN DFA_ASTERISK state_name DFA_RPAREN
+   {
+      AST::State *state = new AST::State(*$4, AST::State::BASIC);
+      cout << "Creating accepting STATE" << endl;
+		state->SetAccepting();
       $$ = new AST::Automaton(state);
    };
 

@@ -288,14 +288,16 @@ public:
 class State {
 protected:
    string _name;
+   bool _accepting;
 public:
-   State(const string &name) : _name(name) {}
+   State(const string &name, bool accepting) : _name(name), _accepting(accepting) {}
    const string &GetName() const { return _name; }
    string ToString() const {
       stringstream s;
       s << "[" << _name << "]";
       return s.str();
    }
+   bool GetAccepting() const { return _accepting; }
 };
 
 /// Compare two state pointers by referrant name
@@ -506,7 +508,14 @@ public:
          if (!(*state_iter)) {
             throw runtime_error("bad state");
          }
-         s << "node [shape = circle"; //s << "doublecircle";
+         s << "node [shape = \"";
+         if ((*state_iter)->GetAccepting()) {
+            s << "doublecircle";
+         }
+         else {
+            s << "circle";   
+         }
+         s << "\"";
          //s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
          s << ", label = \"" << (*state_iter)->GetName() << "\"]; ";
          s << (*state_iter)->GetName() << endl;
@@ -525,9 +534,9 @@ public:
          if (!rule_iter->action) {
             throw runtime_error("Bad action");
          }
-         if (!rule_iter->configuration) {
-            throw runtime_error("Bad configuration");
-         }
+         //if (!rule_iter->configuration) {
+         //   throw runtime_error("Bad configuration");
+         //}
          s << _config_space->GetStateName(rule_iter->configuration)
            << " -> ";
          s << rule_iter->action->GetDestStateName(*_config_space)

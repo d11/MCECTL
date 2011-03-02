@@ -82,7 +82,7 @@ namespace Command {
             stringstream s;
             s << "re_" << id++; 
 
-            State *state = new State(s.str());
+            State *state = new State(s.str(), libfa_state->accept);
             _states.push_back(state);
             _state_map.insert(make_pair<struct state*,State*>(libfa_state,state));
             return state;

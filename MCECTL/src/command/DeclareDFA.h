@@ -43,7 +43,7 @@ namespace Command {
 
          if (ast_state->GetType() == AST::State::BASIC) {
             cout << "creating normal state" << endl;
-            State *state = new State(ast_state->GetName());
+            State *state = new State(ast_state->GetName(), ast_state->GetAccepting());
             command.CreateState(state);
          }
          else {

@@ -68,7 +68,8 @@ link_directories(".")
 include_directories("lib/libfa/augeas/src/")
 include_directories("lib/wpds/")
 #find_library(fa PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/libfa/augeas/src/.libs)
-target_link_libraries(MCECTL fa wpds)
+target_link_libraries(MCECTL wpds)
+target_link_libraries(MCECTL fa)
 
 add_executable(
    MCECTL-REPL

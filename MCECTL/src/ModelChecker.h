@@ -77,7 +77,7 @@ public:
    );
 
    // combine _system and automata
-   PushDownSystem *ConstructProductSystem(
+   ProductSystem *ConstructProductSystem(
       const PDA &automaton,
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y

@@ -105,10 +105,14 @@ namespace AST {
       vector<string> _propositions;
       Type _type;
       StackSymbol _symbol;
+		bool _accepting;
    public:
-      State(const string &state_name, Type type) : _state_name(state_name), _type(type) { }
+      State(const string &state_name, Type type)
+			: _state_name(state_name), _type(type), _accepting(false) { }
+
       const string &GetName() const { return _state_name; }
       void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
+
       StackSymbol GetSymbol() const { return _symbol; }
 
       Type GetType() const { return _type; }
@@ -116,8 +120,11 @@ namespace AST {
       void AddPropositions(const vector<string> &propositions) {
          copy(propositions.begin(), propositions.end(), back_inserter(_propositions));
       }
-
       vector<string> GetPropositions() const { return _propositions; }
+
+		void SetAccepting() { _accepting = true; }
+		bool GetAccepting() const { return _accepting; }
+
       string ToString() const {
          stringstream s;
          s << _state_name;

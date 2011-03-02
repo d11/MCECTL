@@ -18,7 +18,26 @@
 #include "ModelChecker.h"
 #include "Util.h"
 
+extern "C" {
 #include "wpds.h"
+} // End 'extern C'
+
+// taken from libwpds example
+void print_automaton (wFA *fa, const string &s)
+{
+	wTrans *t;
+	cout << "Automaton " << s << ":" << endl;
+	for (t = fa->transitions; t; t = t->next) {
+      cout << "  "    << wIdentString(t->from)
+           << " -- "  << wIdentString(t->name)
+           << " --> " << wIdentString(t->to)
+           << " (" << (int)t->label << ")"
+           << endl;
+   }
+   cout << endl;
+}
+
+#include <string.h>
 
 using namespace std;
 
@@ -152,15 +171,15 @@ ModelChecker::ModelChecker(
 ) : _environment(environment), _system(transition_system) { }
 
 // combine _system and automata
-PushDownSystem *ModelChecker::ConstructProductSystem(
+ProductSystem *ModelChecker::ConstructProductSystem(
    const PDA &automaton,
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
    cout << "Constructing product system" << endl;
-   vector<KripkeState*> product_states;
+   vector<ProductState<State,KripkeState>*> product_states;
    Valuation v;
-   KripkeState *initial_state = NULL;
+   ProductState<State,KripkeState> *initial_state = NULL;
 
 	vector<string> product_state_names;
 	
@@ -170,11 +189,13 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 	vector<State>::const_iterator i2;
 	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
 		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
-			stringstream new_state_name;
-			new_state_name << "(" << i1->GetName() << "," << i2->GetName() << ")";
-			KripkeState *new_state = new KripkeState(new_state_name.str(), i1->GetValuation());
+			//stringstream new_state_name;
+			//new_state_name << "(" << i1->GetName() << "," << i2->GetName() << ")";
+			ProductState<State, KripkeState> *new_state;
+         new_state = new ProductState<State,KripkeState>(*i2, *i1);
 			product_states.push_back(new_state);
-			product_state_names.push_back(new_state_name.str());
+			product_state_names.push_back(new_state->GetName());
+			//product_state_names.push_back(new_state_name.str());
 			if (i1->GetName() == _system.GetInitialState().GetName()
 				&& i2->GetName() == automaton.GetInitialState().GetName()) {
 				initial_state = new_state;
@@ -190,7 +211,7 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
 	vector<string> stack_alphabet = automaton_config_space.GetStackAlphabet();
 	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
 
-	PushDownSystem *product_system = new PushDownSystem(product_states, initial_state, config_space);
+	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
 
 	cout << product_system->ToString() << endl;
 
@@ -272,6 +293,11 @@ PushDownSystem *ModelChecker::ConstructProductSystem(
    return product_system;
 }
 
+// Used by libwpds semiring - TODO ??
+void *nullfn (void *a, void *b) { return NULL; }
+int   eqfn (void *a, void *b)   { return a==b;    }
+void *null ()			{ return NULL; }
+
 void ModelChecker::Visit(const Formula::Until &until) {
    cout << "visiting UNTIL" << endl;
    Formula::Formula::const_reference before = until.GetBefore();
@@ -285,9 +311,87 @@ void ModelChecker::Visit(const Formula::Until &until) {
 	cout << automaton.ToString() << endl;
 
 
-   const PushDownSystem *pds = ConstructProductSystem(automaton, before, after); 
+   const ProductSystem *product_system = ConstructProductSystem(automaton, before, after); 
 	cout << "PRODUCT SYSTEM:" << endl;
-	cout << pds->ToString() << endl;
+	cout << product_system->ToString() << endl;
+
+	const CheckResults *y_results  = Check(after);
+
+   wPDS *pds;
+   wFA *fa;
+   wFA *fa_pre;
+   // TODO - figure out what this is about
+   wSemiring semiring = { &nullfn, &nullfn, NULL, &null, &null, NULL, &eqfn, NULL, NULL };
+   wSemiring *p_semiring = &semiring;
+
+   // initialise libwpds
+   wInit();
+
+   // create idents for states
+   map<string,wIdent> state_idents;
+   vector<string>::const_iterator f;
+   const vector<string> &state_names = product_system->GetConfigurationSpace().GetStates();
+   for (f = state_names.begin(); f != state_names.end(); ++f) {
+      char *temp = strdup(f->c_str());
+      state_idents[*f] = wIdentCreate(temp);
+      free(temp);
+   }
+
+   // create idents for stack symbols
+   map<string,wIdent> stack_idents;
+   vector<string>::const_iterator g;
+   const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
+   for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
+      char *temp = strdup(g->c_str());
+      stack_idents[*g] = wIdentCreate(temp);
+      free(temp);
+   }
+
+   // todo convert pds to a libwpds one
+   pds = wPDSCreate(p_semiring);
+   //wPDSInsert(...) for each rule
+
+   // Construct a libwpds 'P-automaton' representing the set of configurations
+   // see http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.EHRS00b.shtml
+	// find the accepting & after-satisfying configurations
+   fa = wFACreate(p_semiring);
+	const vector<Configuration> &product_configurations = product_system->GetConfigurations();
+   Configuration system_configuration = 0;
+   Configuration automaton_configuration = 0;
+   cout << "accepting & satisfying product states:" << endl;
+	vector<Configuration>::const_iterator iter;
+	for (iter = product_configurations.begin(); iter != product_configurations.end(); ++iter) {
+      const ProductState<State,KripkeState> &state = product_system->GetState(*iter);
+      bool accepting = state.GetFirst().GetAccepting();
+      const Result &result_after = y_results->GetResult(system_configuration);
+      bool satisfying = result_after.GetEvaluation();
+
+      if (accepting && satisfying) {
+         cout << *iter << " " << state.ToString() << endl;
+         wIdent state_ident = state_idents[state.GetName().c_str()];
+         vector<string>::const_iterator gamma;
+         for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
+            // add self-loop via gamma
+            wFAInsert(fa, state_ident, stack_idents[*gamma], state_ident, NULL, NULL);
+         }
+      }
+
+      automaton_configuration++;
+      if (automaton_configuration >= automaton.GetConfigurations().size()) {
+         automaton_configuration = 0;
+         system_configuration++;
+      }
+	}
+
+   print_automaton(fa, "before pre*");
+   fa_pre = wPrestar(pds, fa, TRACE_YES);
+   print_automaton(fa_pre, "after pre*");
+
+   // Clean up libwpds data
+   wFADelete(fa);
+   wFADelete(fa_pre);
+   wPDSDelete(pds);
+   wFinish();
 
 	/*
    CheckResults results;

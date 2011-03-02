@@ -110,6 +110,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 
 <automaton>\(           return DFA_LPAREN; /* Automata */
 <automaton>\)           return DFA_RPAREN;
+<automaton>\*           return DFA_ASTERISK;
 <automaton>STATE        return DFA_STATE;
 <automaton>:            return DFA_COLON;
 <automaton>,            return DFA_COMMA;

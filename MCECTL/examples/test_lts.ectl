@@ -47,8 +47,8 @@ LTS test_lts {
 
 PDA test_pda {
    STATE ( empty )
-   STATE ( fulfilled )
    STATE ( toast_ready )
+   STATE ( *fulfilled )
    ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
    ACTION ( eat_toast: toast_ready[toast] -> fulfilled[POP] )
 }
@@ -64,6 +64,8 @@ FORMULA foo {
 FORMULA problem {
    (hungry & !toast)
 }
+
+:xshow(test_pda)
 
 #:check(not_always_hungry, test_lts)
 #:check(problem, test_lts)
