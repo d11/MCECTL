@@ -340,16 +340,40 @@ void ModelChecker::Visit(const Formula::Until &until) {
    // create idents for stack symbols
    map<string,wIdent> stack_idents;
    vector<string>::const_iterator g;
+   stack_idents["_"] = 0;
    const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
    for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
       char *temp = strdup(g->c_str());
-      stack_idents[*g] = wIdentCreate(temp);
+      if (stack_idents.find(*g) != stack_idents.end()) {
+         stack_idents[*g] = wIdentCreate(temp);
+      }
       free(temp);
    }
 
    // todo convert pds to a libwpds one
    pds = wPDSCreate(p_semiring);
    //wPDSInsert(...) for each rule
+	typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
+   const vector<ProductRule> &product_rules = product_system->GetRules().GetRules();
+   vector<ProductRule>::const_iterator rule_iter;
+   for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
+      wIdent from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident;
+      Configuration from_configuration = rule_iter->configuration;
+      string from_state_name = product_system->GetConfigurationSpace().GetStateName(from_configuration);
+      from_state_ident = state_idents[from_state_name];
+      string from_stack_symbol = product_system->GetConfigurationSpace().GetSymbolName(from_configuration);
+      from_stack_ident = stack_idents[from_stack_symbol];
+      const PushDownAction *action = rule_iter->action;
+      string to_state_name = product_system->GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
+      to_state_ident = state_idents[to_state_name];
+      string to_symbol_name1(from_stack_symbol);
+      string to_symbol_name2("_");
+      action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
+      to_stack1_ident = stack_idents[to_symbol_name1];
+      to_stack2_ident = stack_idents[to_symbol_name2];
+      // TODO extract 'to' state/stack symbols - use polymorphism
+      wPDSInsert(pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, NULL);
+   }
 
    // Construct a libwpds 'P-automaton' representing the set of configurations
    // see http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.EHRS00b.shtml
@@ -387,34 +411,50 @@ void ModelChecker::Visit(const Formula::Until &until) {
    fa_pre = wPrestar(pds, fa, TRACE_YES);
    print_automaton(fa_pre, "after pre*");
 
+   CheckResults *results = new CheckResults();
+
+   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration>::const_iterator state_iter;
+   for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
+
+      bool found = false;
+      wTrans *t;
+
+      const KripkeState &system_state(_system.GetState(*state_iter));
+      ProductState<State,KripkeState> pre_state(automaton.GetInitialState(), system_state);
+      string pre_state_name = pre_state.GetName();
+
+      cout << "looking for configuration " << pre_state_name << endl;
+
+      for (t = fa_pre->transitions; t; t = t->next) {
+         string state_name(wIdentString(t->from));
+         cout << "found " << state_name << "... ";
+         if (state_name == pre_state_name) {
+            Result *result = new Result(*state_iter, true);
+            results->AddResult( result );
+            cout << "yeehaw!" << endl;
+            found = true;
+         }
+         cout << "no good" << endl;
+      }
+      if (!found) {
+         Result *result = new Result(*state_iter, false);
+         results->AddResult( result );
+      }
+   }
+
    // Clean up libwpds data
    wFADelete(fa);
    wFADelete(fa_pre);
    wPDSDelete(pds);
    wFinish();
 
+   _environment.SetCheckResults(&_system, until, results);
+
 	/*
-   CheckResults results;
-
-   vector<KripkeState>::const_iterator iter;
-   for (iter = _system.GetStates().begin(); iter != _system.GetStates().end(); ++iter) {
-      //PredecessorConfigurations<NondeterministicPushDownAction> pc; // Compute predecessor configurations
-
-      // TODOO!!
-      //if ( pc.Contains(_system.GetInitialState(), *iter, new PushDownEpsilonAction()) ) {
-      //   // Here, *iter |= E( before U[automata] after )
-      //   Result result(*iter, true);
-      //   results.AddResult( result );
-      //}
-      //else {
-      //   Result result(*iter, false); // TODO: counterexample
-      //   results.AddResult( result );
-      //}
-   }
-
-   _environment.SetCheckResults(_system, results);
+      PredecessorConfigurations<NondeterministicPushDownAction> pc; // Compute predecessor configurations
+      if ( pc.Contains(_system.GetInitialState(), *iter, new PushDownEpsilonAction()) ) {
    */
-   cout << "TODO" << endl;
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {

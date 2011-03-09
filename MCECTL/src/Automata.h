@@ -222,6 +222,8 @@ public:
    }
    virtual PushDownAction *Clone() const = 0;
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const = 0;
+
+   virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const = 0;
 };
 
 class PushAction : public PushDownAction {
@@ -240,6 +242,9 @@ public:
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return "push " + _push_symbol; // TODO
+   }
+   virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
+      symbol_2 = _push_symbol;
    }
 };
 
@@ -260,6 +265,9 @@ public:
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return _rewrite_symbol;
    }
+   virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
+      symbol_1 = _rewrite_symbol;
+   }
 };
 
 class PopAction : public PushDownAction {
@@ -276,6 +284,9 @@ public:
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
       return "_";
+   }
+   virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
+      symbol_1 = "_";
    }
 };
 
@@ -482,7 +493,11 @@ public:
       typename vector<S*>::const_iterator iter; size_t index = 0;
       for (iter = _states.begin(); iter != _states.end(); ++iter) {
          s << (*iter == _initial_state ? "*" : " ")
-            << " " << _config_space->GetStateID((*iter)->GetName()) << ": " << (*iter)->ToString() << endl;
+            << " " << _config_space->GetStateID((*iter)->GetName()) << ": " << (*iter)->ToString();
+         if ((*iter)->GetAccepting()) {
+            s << " [accepting]";
+         }
+         s << endl;
          index++;
       }
 
