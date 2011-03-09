@@ -1,0 +1,28 @@
+LTS lts {
+   STATE ( alpha: nil )
+   STATE ( beta: nil )
+   STATE ( gamma: nil, p )
+   STATE ( delta: nil )
+
+   ACTION ( a: alpha -> beta )
+   ACTION ( a: beta -> gamma )
+   ACTION ( a: beta -> delta )
+}
+
+PDA pda {
+   STATE ( one )
+   STATE ( *two )
+   ACTION ( a: one[_] -> two[REWRITE _] )
+}
+
+PDA pda2 {
+   STATE ( one )
+   STATE ( *two )
+   ACTION ( a: one[_] -> one[PUSH s] )
+   ACTION ( a: one[s] -> two[POP] )
+}
+
+FORMULA exp {
+   E( 1 U[pda2] p )
+}
+
