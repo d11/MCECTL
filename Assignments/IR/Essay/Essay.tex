@@ -1,0 +1,198 @@
+\documentclass{acm_proc_article-sp}
+\usepackage{cite}
+
+\begin{document}
+
+\title{Information Retrieval Assignment: Question 7}
+
+%\numberofauthors{1} 
+\author{
+%\alignauthor
+Candidate 680817
+}
+
+\maketitle
+\begin{abstract}
+This paper is a concise survey of methods for image edge detection. A number of
+different techniques are described, followed by a look at some of the
+directions that current methods are investigating, and a more detailed review
+of Canny's ever-popular approach to the problem.
+\end{abstract}
+
+\section*{Introduction}
+
+Typically digital images consist of grids of pixel data without any
+accompanying clues as to the semantic content. An information retrieval system
+which accepts images as documents must therefore be able to extract some level
+of meaning from the given pixel data. Broadly, this problem is a subdomain of
+the field of Computer Vision, and a wide variety of techniques have been
+developed to tackle it. The techniques used to initially transform the data aim
+to simplify the image without removing any information that is useful for the
+purposes of information retrieval. Such techniques include Fourier Analysis,
+\textbf{TODO} and Edge Detection. While each of these is valuable in its own right, and
+an effective system may well combine multiple techniques for more accurate
+results, this paper will focus only on methods for Edge Detection.
+
+
+
+\section*{Background}
+
+The first significant work on edge detection was published in the early 1970s,
+with the paper presenting Sobel's method \cite{Sobel:1970:CMM:905376} --
+perhaps still one of the best known approaches -- being one of the most
+important early contributions. As with much of the work that followed, this
+approach is based on \textit{convolving} the image with a small `kernel' or
+`mask' matrix which is designed so that the result at each pixel is an
+approximation of the gradient of the image intensity. 
+
+Convolution is a powerful operation which, in its general form, is central to
+functional analysis and signal processing of all kinds. Still, as applied to 2D
+images the concept is simple enough -- even if the implications are not. For each
+pixel $p$ in the source image, the corresponding value in the output is
+calculated by centering the kernel matrix on $p$, multiplying the pairs of
+thusly coincident values, and summing the results.
+
+Sobel used two separate kernels -- $S_H$ and $S_V$ detect horizontal and vertical edges respectively:
+\begin{displaymath}
+S_H = \begin{bmatrix} 
+-1 & 0 & +1 \\
+-2 & 0 & +2 \\
+-1 & 0 & +1 
+\end{bmatrix}
+\quad
+S_V = \begin{bmatrix} 
+-1 & -2 & -1  \\
+\ \ 0 & \ \ 0 & \ \ 0 \\
++1 & +2 & +1 
+\end{bmatrix}
+\end{displaymath}
+
+After obtaining the results of both convolutions, the values are combined to
+give a crude approximation of the gradient. If the magnitude of the gradient
+exceeds a given threshold, the corresponding pixel can be deemed to form part
+of an edge.
+
+% prewitt, kirsch etc
+Prewitt's operator\cite{prewitt1970object} works in a very similar way, but
+uses a different kernel. It is difficult to evaluate the effectiveness of these
+techniques objectively without any clearly defined mathematical model of what
+an edge actually \emph{is} -- no such model was initially available, and a
+number of alternative kernels are available which have different performance
+characteristics depending on the properties of the source image. The Kirsch
+operator attempts to detect diagonal edges as well as horizontal and vertical
+ones, for example.
+
+% non-maximum supression
+
+These classical methods are simple to implement and can be very efficient.  The
+time complexity is $\mathcal{O}(mn)$ where $m$ is the number of pixels in the
+input image and $n$ is the number of pixels in the kernel matrix, and since
+only local data is used, the computation can easily be parallelised. The
+advantage of good performance should not be underestimated in this problem;
+edge detection algorithms may commonly be applied to very large amounts of data
+-- perhaps from many frames of video, for example -- so very computationally
+intensive approaches are often impractical even if they produce higher quality 
+results.
+
+However, by themselves, these operators are (for many purposes) overly
+simplistic. They do not, in themselves, apply any kind of smoothing to the
+input image -- real world images are frequently noisy, and unless this is
+accounted for, the edge detector is likely to produce many false positives.
+
+% Marr+ Hildreth, gaussian
+% LOG !!
+
+% Canny
+The next major development -- and perhaps \emph{the} major paper on edge
+detection -- was Canny's detector\cite{4767851}. The first achievement of Canny's work was to
+explicitly develop a precise mathematical description of the problem of edge
+detection and the types of property that putative solutions should possess. The
+second was to use this model to successfully derive an improved algorithm for
+edge detection. The paper analysis below focuses on Canny's approach in more
+detail, so for now a brief outline of the improvements will suffice.
+
+% canny TODO **
+
+Canny's improvements result in a significantly more robust method for edge
+detection, and his algorithm is still a popular choice for many applications.
+It is not perfect; according to \cite{1097737}, there are situations where it
+still suffers from false edges in the presence of reasonably small amounts of
+noise.  However, if a linear solution is required, it is difficult to beat.
+
+Another difficulty is choosing appropriate values for the threshold parameters,
+as well as for the size of the smoothing mask. This must be done carefully to
+have any hope of obtaining useful results, and one might argue that a more
+sophisticated algorithm ought not to require this manual fine-tuning.
+
+A deeper problem, which Canny's method also does not account for directly, is
+that the edges in an image are often not the ideal, thin lines that these
+techniques are good at finding. For the purposes of object detection or image
+segmentation, it may be desirable to interpret a line of several pixels width
+as a single edge -- the edge detection operators described hitherto will
+generally take this to be two or more parallel edges, instead.
+
+%scale space
+`Multi-resolution' methods set out to handle this problem by considering the
+image at a variety of scales. A key concept is that of an image's \emph{scale
+space}: this space consists of versions of the image to which have increasingly
+large Gaussian filters have been applied. Performing edge detection on the more
+filtered versions will then find the broader edges. These techniques vary in
+the range of scales used and the way they combine the results of the different
+scales.
+
+\section*{State of the art}
+
+More recently, a wide selection of more exotic approaches have been explored,
+with varying degrees of success.
+
+% Phase congruence
+Borrowing from Fourier analysis, the \emph{phase congruency}
+technique\cite{Kovesi} involves examining the frequency components of the
+image. This information can be used for edge detection since the components of
+the edges tend to be in the same phase. Phase congruency has the advantage of
+performing well under varied lighting and contrast conditions, but is
+significantly more computationally expensive.
+
+% anisotropic diffusion
+Another interesting non-linear method is based on \emph{anisotropic diffusion}
+
+
+% machine learning
+As with many of the more non-trivial tasks in computer science, efforts have
+been made to apply the techniques of machine learning to edge detection. Fuzzy
+neural networks\cite{Lu20032395}, Support Vector Machines\cite{Zheng20041143},
+and genetic algorithms\cite{Bhandarkar19941159} have all been used with some
+success. Although it is generally not possible to analytically confirm that
+these techniques provide a canonical, correct solution, the results are
+nevertheless very promising and have the potential to be faster than Canny's
+method.
+
+% SUSAN
+Another practically efficacious method is known (rather affably) as SUSAN
+
+
+% wavelets
+Finally, 
+
+This summary is not exhaustive, but provides a taste of some of the areas into
+which modern edge detection methods are progressing. For a more detailed
+survey, please see Oskoei & Hu\cite{oskoei2010survey}.
+
+\section*{Paper analysis}
+
+In the following section we take a more detailed look at Canny's original paper\cite{4767851} and the detection method described therein.
+
+% canny ?
+ % theory
+ % gpu ?
+
+
+
+\bibliographystyle{abbrv}
+\bibliography{Refs}{}
+
+
+
+\balancecolumns
+% That's all folks!
+\end{document}

@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage{cite}
+\usepackage{amsmath}
 \begin{document}
 \title{Information Retrieval Assignment}
 \author{Candidate 680817}
@@ -7,11 +8,69 @@
 
 \section*{Question 1}
 % TODO: Why is it useful to convert queries into DNF ? 2-3 sentences
+Converting queries to Disjunctive Normal Form is helpful since it allows
+evaluation to be performed in one simple left-to-right pass.  It does not
+necessarily reduce the number of evaluations that need to be performed, indeed,
+it may increase the size of the formula, but the simpler form may allow
+calculations to be done more efficiently -- for example, after normalization,
+the disjuncts can be evaluated independently. 
 
 % TODO: DNF conversion
+\begin{align*}
+& \quad (t_a \wedge \neg (t_b \wedge t_c)) \wedge (t_a \vee t_d)                                                   & \\
+& \equiv (t_a \wedge (\neg t_b \vee \neg t_c)) \wedge (t_a \vee t_d)                                               & \text{by De Morgan} \\
+& \equiv (t_a \wedge (\neg t_b \vee \neg t_c) \wedge t_a) \vee ( (t_a \wedge (\neg t_b \vee \neg t_c) \wedge t_d ) & \text{by distributivity} \\
+& \equiv (t_a \wedge (\neg t_b \vee \neg t_c)) \vee ( (t_a \wedge (\neg t_b \vee \neg t_c) \wedge t_d ) & \text{as } \phi \wedge \phi \equiv \phi \\
+& \equiv (t_a \wedge (\neg t_b \vee \neg t_c)) & \text{as } \phi \vee (\phi \wedge \psi) \equiv \phi \\
+& \equiv (t_a \wedge \neg t_b) \vee (t_a \wedge \neg t_c) & \text{by distributivity} \\
+\end{align*}
 
 \section*{Question 2}
 % TODO: Explain vector space model
+The problem of text-based information retrieval involves determining the
+relevancy of documents to a given query. A natural approach is to situate both
+queries and documents in a single `topic space', wherein some appropriate
+measure of distance will then correspond to the desired indicator of relevancy:
+points close together in the space are considered to be more relevant to
+one another than points far apart. Perhaps surprisingly, given its simplicity,
+the ordinary vector space proves to be a very effective choice for modelling
+this. The key to this effectiveness is the use of a large number of dimensions
+- one for every term which appears in the document set.
+
+The components of a document or query vector in the space are then determined
+by the weighting scheme. The TF-IDF weighting scheme is a standard way to do
+this: the component of the document vector which corresponds to a given term is
+calculated by multiplying the relevant \emph{term frequency} by the
+\emph{inverse document frequency} for that term. The term frequency is the
+number of times the term appears in the document. The inverse document
+frequency is the logarithm of the reciprocal of the proportion of the documents
+in the set which contain the relevant term. Consequently, a document
+will have a large component for a term if that term appears frequently in that
+document and is otherwise not very common in the document set. The position
+vector of a document or query in the space is therefore determined by which
+terms are most unique to it. With the standard Euclidean metric, documents
+which share terms which are relatively unusual will then be closer in the
+vector space.
+
+This is our model of the notion of relevancy referred to above: we assume that
+a document is more likely to be relevant to a query if they contain the same,
+distinctive terms.  In fact, for comparing documents with queries, the
+discrepant lengths mean it is sensible to normalize both vectors first. In this
+case the cosine similarity measure is equivalent to the Euclidean distance, and
+is more efficient to calculate, so it is typically used instead.
+
+While the vector space model has been very fruitful as a basis of modern
+information retrieval systems, some of the assumptions involved are
+oversimplifications, and as such the model is not without its problems. For
+example, in using terms as basis vectors for the space there is an implicit
+assumption that these terms are in some sense semantically orthogonal. In cases
+such as synonymy, this is far from true: `football' and `soccer' mean
+essentially the same thing, so it would be expedient for this to be reflected
+in the model. With the basic vector space model, a query containing one will
+not return documents which contain only the other. Supplementary techniques
+like query expansion can ameliorate these difficulties to some extent, but it
+is nevertheless important to be aware of problems that can result from the
+underlying `bag of words' assumption.
 
 \section*{Question 3}
 
@@ -22,40 +81,183 @@
 \section*{Question 4}
 
 % TODO: Why precision @ recall? 
-
 % TODO: How to achieve fairness when comparing systems evaluated on
-% differently-sized datasets?
+% differently-sized datasets? [2-3 sentences]
+We evaluate performance by calculating precision at recall values because we
+wish to be able to compare systems which make different trade-offs for
+precision and recall against rank. In addition, taking a straight average of
+precision at rank values gives a value which, since precision as a function of
+rank is likely to be far from linear, will be affected strongly by the size of
+the document set and the number of relevant documents. Choosing a fixed set of
+recall values, calculating the precision at these, and taking the average of
+the results eliminates those confounding variables, and is therefore a sensible
+way of comparing the performance of different systems.
+
 
 % TODO: Calc prec @ rec for given data
+\begin{tabular}{c l c l l}
+Rank & Document & Relevant & Recall & Precision \\
+\hline
+1 & $d_{77}$  & Y & 1/15 = 0.0666 & 1/1 \\
+2 & $d_{19}$  & Y & 2/15 = 0.133  & 2/2 = 1.00 \\
+3 & $d_{14}$  & N & 2/15          & 2/3 \\
+4 & $d_{123}$ & Y & 3/15 = 0.200  & 3/4 = 0.75 \\
+5 & $d_{92}$  & Y & 4/15 = 0.267  & 4/5 \\
+6 & $d_{4}$   & N & 4/15          & 4/6 \\
+7 & $d_{104}$ & Y & 5/15 = 0.333  & 5/7 = 0.714 \\
+8 & $d_{36}$  & Y & 6/15 = 0.400  & 6/8 = 0.75 \\
+9 & $d_{173}$ & N & 6/15          & 6/9 \\
+10 & $d_{37}$ & N & 6/15          & 6/10 \\
+\end{tabular}
+
+So the precision @ recall values are
+
+\begin{tabular}{l l}
+Recall & Precision \\
+\hline
+0.1 & 1.00 \\
+0.2 & 0.75 \\
+0.3 & 0.714 \\
+0.4 & 0.75 \\
+\end{tabular}
 
 \section*{Question 5}
 
 % TODO: Do K-means clustering
+Means:
+
+$\bar{a} = (0.9, 0.3)$
+
+$\bar{b} = (0.6, 0.2)$
+
+Calculate bisector, where $y = m \cdot x + c$:
+
+$m = \frac{(a_x - b_x)}{(b_y - a_y)} = -3.0$
+
+$c = \frac{((a_y+b_y) - m \cdot (a_x+b_x))}{2} = 2.5$
+
+\begin{tabular}{c | c | c | c}
+Doc. No. & $t_1$ & $t_2$ & $m \cdot t_1 + c - t_2$ \\
+\hline
+1 & 0.9 & 0.3 & -0.5 \\
+2 & 0.6 & 0.2 & 0.5 \\
+3 & 0.1 & 0.8 & 1.4 \\
+4 & 0.3 & 0.9 & 0.7 \\
+5 & 0.2 & 0.7 & 1.2 \\
+6 & 0.1 & 0.8 & 1.4 \\
+7 & 0.7 & 0.3 & 0.1 \\
+8 & 0.8 & 0.3 & -0.2 \\
+\end{tabular}
+
+Clusters:
+
+$A = \{1,8\}$
+$B = \{2,3,4,5,6,7\}$
+Means:
+
+$\bar{a} = (0.85, 0.3)$
+
+$\bar{b} = (0.333333333333, 0.616666666667)$
+
+Calculate bisector, where $y = m \cdot x + c$:
+
+$m = \frac{(a_x - b_x)}{(b_y - a_y)} = 1.63157894737$
+
+$c = \frac{((a_y+b_y) - m \cdot (a_x+b_x))}{2} = -0.50701754386$
+
+\begin{tabular}{c | c | c | c}
+Doc. No. & $t_1$ & $t_2$ & $m \cdot t_1 + c - t_2$ \\
+\hline
+1 & 0.9 & 0.3 & 0.661403508772 \\
+2 & 0.6 & 0.2 & 0.271929824561 \\
+3 & 0.1 & 0.8 & -1.14385964912 \\
+4 & 0.3 & 0.9 & -0.917543859649 \\
+5 & 0.2 & 0.7 & -0.880701754386 \\
+6 & 0.1 & 0.8 & -1.14385964912 \\
+7 & 0.7 & 0.3 & 0.335087719298 \\
+8 & 0.8 & 0.3 & 0.498245614035 \\
+\end{tabular}
+
+Clusters:
+
+$A = \{3,4,5,6\}$
+$B = \{1,2,7,8\}$
+Means:
+
+$\bar{a} = (0.175, 0.8)$
+
+$\bar{b} = (0.75, 0.275)$
+
+Calculate bisector, where $y = m \cdot x + c$:
+
+$m = \frac{(a_x - b_x)}{(b_y - a_y)} = 1.09523809524$
+
+$c = \frac{((a_y+b_y) - m \cdot (a_x+b_x))}{2} = 0.0309523809524$
+
+\begin{tabular}{c | c | c | c}
+Doc. No. & $t_1$ & $t_2$ & $m \cdot t_1 + c - t_2$ \\
+\hline
+1 & 0.9 & 0.3 & 0.716666666667 \\
+2 & 0.6 & 0.2 & 0.488095238095 \\
+3 & 0.1 & 0.8 & -0.659523809524 \\
+4 & 0.3 & 0.9 & -0.540476190476 \\
+5 & 0.2 & 0.7 & -0.45 \\
+6 & 0.1 & 0.8 & -0.659523809524 \\
+7 & 0.7 & 0.3 & 0.497619047619 \\
+8 & 0.8 & 0.3 & 0.607142857143 \\
+\end{tabular}
+
+Clusters:
+
+$A = \{3,4,5,6\}$
+$B = \{1,2,7,8\}$
+
+
 
 \section*{Question 6}
 
-% TODO: Apply opening & closure to given data ( showing intermediate results)
+% TODO: Apply opening  to given data ( showing intermediate results)
+
+Initial data, $X$:
+
+\begin{tabular}{c c c c c c c}
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+0 & 1 & 0 & 1 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+0 & 1 & 1 & 1 & 1 & 1 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+\end{tabular}
+
+After applying an erosion:
+
+\begin{tabular}{c c c c c c c}
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{tabular}
+
+Final result, after applying a dilation to the previous output:
+
+\begin{tabular}{c c c c c c c}
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+0 & 1 & 1 & 1 & 1 & 1 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+\end{tabular}
 
 % TODO: Comment on results
+As can be seen from these results, the opening transformation removes any
+isolated `handles' which are not strongly connected to the core of the object.
+In this case, the pixels at coordinates (2,1) and (2,5) are set to zero because
+there are no non-zero pixels horizontally or vertically adjacent to them.
 
-\section*{Question 7}
-
-% TODO: Edge detection paper .. !
-
-\subsection*{Introduction}
-
-
-\subsection*{Background}
-
-
-\subsection*{State of the art}
-
-
-\subsection*{Paper analysis}
-
-
-
-
-\bibliography{Refs}{}
-\bibliographystyle{plain}
 \end{document}

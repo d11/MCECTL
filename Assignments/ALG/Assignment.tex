@@ -1,0 +1,126 @@
+\documentclass[11pt]{article}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{graphviz}
+\begin{document}
+\title{Automata, Logic and Games Assignment}
+\author{Candidate 680817}
+\maketitle
+
+\section*{Question 1}
+\subsection*{a)}
+
+%TODO Buchi automaton for L1
+
+$A_1$:
+
+\digraph[scale=1.0]{Buchi1}{
+%   rankdir=LR; 
+	node [shape = doublecircle, width=0.3]; {rank=same;  3; 6};
+	node [shape = circle,  width=0.3] 1 2 4 5 7 8 9;
+	node [shape = plaintext, label=""]; INIT;
+	INIT -> 1 [ label = "" ];
+	1 -> 1 [ label = "a, b, c" ];
+	1 -> 2 [ label = "a" ];
+	2 -> 2 [ label = "a" ];
+	2 -> 3 [ label = "b" ];
+	7 -> 3 [ label = "b" ];
+	3 -> 4 [ label = "b" ];
+	4 -> 4 [ label = "b" ];
+	5 -> 4 [ label = "b" ];
+	3 -> 5 [ label = "a" ];
+	4 -> 5 [ label = "a" ];
+	5 -> 5 [ label = "a" ];
+   2 -> 6 [ label = "c" ];
+	5 -> 6 [ label = "c" ];
+	6 -> 7 [ label = "a" ];
+	7 -> 7 [ label = "a" ];
+	8 -> 7 [ label = "a" ];
+	9 -> 7 [ label = "a" ];
+   {rank=same;8; 9}
+	6 -> 8 [ label = "c" ];
+	7 -> 8 [ label = "c" ];
+	8 -> 8 [ label = "c" ];
+	6 -> 9 [ label = "b" ];
+	8 -> 9 [ label = "b" ];
+	9 -> 9 [ label = "b" ];
+}
+
+
+%TODO Buchi automaton for L2
+$A_2$:
+
+\digraph[scale=1.0]{MyGraph}{
+   rankdir=LR; 
+	node [shape = doublecircle, width=0.3]; 1 3; 
+	node [shape = circle, width=0.3] 2;
+	node [shape = plaintext, label=""]; SECRET;
+	SECRET -> 1 [ label = "" ];
+	1 -> 1 [ label = "b, c" ];
+	1 -> 2 [ label = "a" ];
+	2 -> 2 [ label = "b, c" ];
+	2 -> 3 [ label = "a" ];
+	3 -> 2 [ label = "a, b, c" ];
+}
+
+\subsection*{b)}
+
+%TODO is L1 LTL-definable?
+$L_1$ is LTL-definable: let $p_1, p_2, p_3$ be the proposition variables corresponding to occurrences of the letters $a, b, c$ respectively. Then $L_1$ is defined by the LTL formula $\phi_1 := \textbf{GF}(p_1 \wedge \textbf{X} p_2) \wedge \textbf{GF}(p_1 \wedge \textbf{X} p_3) \wedge \neg \textbf{GF}(p_2 \wedge \textbf{X} p_3)$
+
+
+%TODO is L2 LTL-definable?
+
+$L_2$ is LTL-definable: let $p_1, p_2, p_3$ be the proposition variables corresponding to occurrences of the letters $a, b, c$ respectively. Then $L_2$ is defined by the LTL formula $\phi_2 := \textbf{F}p_1 \rightarrow \textbf{GF}p_1$.
+
+\section*{Question 2}
+
+\subsection*{a)}
+
+Consider the following Buchi automaton.
+
+$A:$
+
+\digraph[scale=1.0]{Buchi3}{
+   rankdir=LR; 
+	node [shape = doublecircle, width=0.3]; 2 3; 
+	node [shape = circle, width=0.3] 1;
+	node [shape = plaintext, label=""]; SECRET;
+	SECRET -> 1 [ label = "" ];
+	1 -> 2 [ label = "a" ];
+	1 -> 3 [ label = "b" ];
+	2 -> 2 [ label = "a" ];
+	3 -> 3 [ label = "b" ];
+}
+
+This automaton accepts the language $L = a^\omega \cup b^\omega$, so $L$ is clearly Buchi recognisable. Now suppose for a contradiction that $L$ is strongly Buchi-recognisable. Then there exists a Buchi automaton $\mathcal{A} = (Q, \Sigma, q_0, \Delta, F)$ such that $\alpha \in L \iff $ there is a run $\phi$ of $\mathcal{A}$ on $\alpha$ such that $\textbf{inf}(\phi) \cap F = F$.
+We have $a^\omega \in L $ and $b^\omega \in L$, so let $\rho$ and $\sigma$ be runs of $\mathcal{A}$ on $a^\omega$ and $b^\omega$ respectively, such that $\textbf{inf}(\rho) \cap F = F = \textbf{inf}(\sigma) \cap F$.
+
+$F \neq \emptyset$, so let $s \in F$. Since $s \in \textbf{inf}(\rho)$, $\exists n \in \mathbb{N}$ such that $\rho(n) = s$. Similarly, $\exists m \in \mathbb{N}$ such that $\sigma(m) = s$.
+
+Now let \begin{displaymath}
+\tau(k) = \left\{
+     \begin{array}{lr}
+       \rho(k) &   k \leq n \\
+       \sigma(k-n+m) & k > n \\
+     \end{array}
+   \right.
+   \end{displaymath}
+
+But then $\tau$ is a run of $\mathcal{A}$ on $a^n b^\omega \notin L$, which is a contradiction. So $L$ is not strongly-Buchi recognisable.
+Therefore Buchi recognisability does \emph{not} imply strong Buchi recognisability.
+
+\subsection*{b)}
+
+Suppose $L$ is strongly Buchi recognisable; then there is a Buchi automaton $\mathcal{A} = (Q, \Sigma, q_0, \Delta, F)$ such that $\alpha \in L \iff $ there is a run $\rho$ of $\mathcal{A}$ on $\alpha$ such that $\textbf{inf}(\rho) \cap F = F$. But $\mathcal{A}$ also Buchi recognises $L$ via $\rho$ since it is sufficient that $\textbf{inf}(\rho) \cap F \neq \emptyset$, and $F \neq \emptyset \Rightarrow \textbf{inf}(\rho) \cap F \neq \emptyset$. Hence $L$ is Buchi recognisable.
+
+\section*{Question 3}
+
+\section*{Question 4}
+
+\bibliography{Refs}{}
+\bibliographystyle{plain}
+\end{document}
