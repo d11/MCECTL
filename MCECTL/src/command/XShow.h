@@ -33,8 +33,24 @@ namespace Command {
             return s + _identifier + ")" ;
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) {
-				const Automaton *automaton(environment.GetAutomaton(_identifier));
+
+				const Automaton *automaton = NULL;
+            try {
+               automaton = environment.GetDFA(_identifier);
+            } catch (NonExistentAutomatonException e) {
+               try {
+                  automaton = environment.GetPDA(_identifier);
+               } catch (NonExistentAutomatonException e) {
+                  try {
+                     automaton = environment.GetLTS(_identifier);
+                  } catch (NonExistentAutomatonException e) {
+                     automaton = environment.GetPDS(_identifier);
+                  }
+               }
+               //environment.GetAutomaton(automaton, _identifier);
+            }
 				string s(automaton->ToDot());
+            // TODO
 	
             // If verbose, display the DOT used
             if (options.IsVerbose()) {

@@ -18,11 +18,16 @@ namespace Formula {
    class Visitor;
 
    class Formula : public Showable {
+	private:
+		unsigned int _id;
+		static unsigned int _next_id;
    public:
       typedef Formula &reference;
       typedef const Formula &const_reference;
+		Formula() : _id(_next_id++) { };
       virtual ~Formula() {};
       virtual void Accept(Visitor &visitor) const = 0;
+      virtual unsigned int GetID() const { return _id; }
    };
 
    class False : public Formula {
@@ -44,6 +49,7 @@ namespace Formula {
       PVar(const string &name) : _name(name) {};
       virtual void Accept(Visitor &visitor) const;
       string ToString() const { return _name; }
+      string GetVarName() const { return _name; }
    };
 
    class Negation : public Formula {
@@ -61,10 +67,9 @@ namespace Formula {
    private:
       Formula::const_reference _before;
       Formula::const_reference _after;
-   protected:
+   public:
       Formula::const_reference GetLeft() const { return _before; }
       Formula::const_reference GetRight() const { return _after; }
-   public:
       BinaryFormula(
          Formula::const_reference before,
          Formula::const_reference after
@@ -86,18 +91,21 @@ namespace Formula {
    // Abstract
    class AutomatonFormula : public BinaryFormula {
    private:
-      const Automaton *_automaton;
+      //const Automaton *_automaton;
+      string _automaton; // (name)
    public:
       AutomatonFormula(
          Formula::const_reference before,
          Formula::const_reference after,
-         const Automaton *automaton
+         //const Automaton *automaton
+         const string &automaton
       ) : BinaryFormula(before, after), _automaton(automaton) { }
       virtual ~AutomatonFormula() {};
 
       Formula::const_reference GetBefore() const { return GetLeft(); }
       Formula::const_reference GetAfter()  const { return GetRight(); }
-      const Automaton *GetAutomaton() const { return _automaton; }
+      const string &GetAutomaton() const { return _automaton; }
+      //const Automaton *GetAutomaton() const { return _automaton; }
       virtual void Accept(Visitor &visitor) const = 0;
    };
 
@@ -106,7 +114,8 @@ namespace Formula {
       Until(
          Formula::const_reference before,
          Formula::const_reference after,
-         const Automaton *automaton
+         //const Automaton *automaton
+         const string &automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
@@ -118,7 +127,8 @@ namespace Formula {
       Release(
          Formula::const_reference before,
          Formula::const_reference after,
-         const Automaton *automaton
+         //const Automaton *automaton
+         const string &automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;

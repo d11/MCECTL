@@ -22,7 +22,7 @@
 
 namespace AST {
 
-   class Effect {
+   class Effect : public Showable {
    protected:
       string _destination_state;
    public:
@@ -33,7 +33,16 @@ namespace AST {
       string GetDestinationState() const {
          return _destination_state;
       }
+      virtual string ToString() const {
+         stringstream s;
+         s << "Regular effect: go to state " << _destination_state << endl;
+         return s.str();
+      }
 
+      virtual StackSymbol GetSymbol() const {
+         //throw runtime_error("Can't get symbol; not pushdown effect");
+         return "_";
+      }
    };
    class PushDownEffect : public Effect {
    public:
@@ -43,6 +52,20 @@ namespace AST {
       PushDownEffect( const Type &type  ) : Effect(""), _symbol(""), _type(type) { }
       void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
       StackSymbol GetSymbol() const { return _symbol; }
+
+      virtual string ToString() const {
+         stringstream s;
+         s << "Pushdown effect:" << endl
+           << "go to state " << _destination_state << endl
+           << "and ";
+         if      ( _type == PUSH    )  { s << "push symbol " << _symbol << " onto stack" << endl; } 
+         else if ( _type == POP     )  { s << "pop top symbol from stack" << endl;                } 
+         else if ( _type == REWRITE )  { s << "rewrite top stack symbol to " << _symbol << endl;  } 
+         else                          { s << "???";                                              } 
+         return s.str();
+      }
+      Type GetType() const { return _type; }
+      
    };
 
    class Action : public Showable {
@@ -50,16 +73,29 @@ namespace AST {
       enum Type { REGULAR, PUSH, POP, REWRITE } _type;
    private:
       string _action_name;
-      StackSymbol _symbol;
-      Effect _effect;
+      const Effect *_effect;
    public:
-      Action(const string &name, const Effect &effect) : _action_name(name), _effect(effect) { }
+      Action(const string &name, const Effect *effect) : _action_name(name), _effect(effect) { }
       const string &GetName() const { return _action_name; }
       string ToString() const {
-         return _action_name;
+         stringstream s;
+         s << "Action of type ";
+         if      ( _type == REGULAR )  { s << "REGULAR"; } 
+         else if ( _type == PUSH    )  { s << "PUSH";    } 
+         else if ( _type == POP     )  { s << "POP";     } 
+         else if ( _type == REWRITE )  { s << "REWRITE"; } 
+         else                          { s << "???";     } 
+         s << endl << "with name " << _action_name
+           << endl << "and effect " << _effect->ToString();
+         return s.str();
       }
-      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
-      StackSymbol GetSymbol() const { return _symbol; }
+      Type GetType() const { return _type; }
+      void SetType(Type type) { _type = type; }
+
+      unsigned int GetStateID(const ConfigurationSpace &config_space) const {
+         return config_space.GetStateID(_effect->GetDestinationState());
+      }
+      StackSymbol GetSymbol() const { return _effect->GetSymbol(); }
    };
    class State : public Showable {
    public:
@@ -68,34 +104,54 @@ namespace AST {
       string _state_name;
       vector<string> _propositions;
       Type _type;
+      StackSymbol _symbol;
+		bool _accepting;
    public:
-      State(const string &state_name, Type type) : _state_name(state_name), _type(type) { }
+      State(const string &state_name, Type type)
+			: _state_name(state_name), _type(type), _accepting(false) { }
+
       const string &GetName() const { return _state_name; }
+      void SetSymbol(StackSymbol symbol) { _symbol = symbol; }
+
+      StackSymbol GetSymbol() const { return _symbol; }
 
       Type GetType() const { return _type; }
 
       void AddPropositions(const vector<string> &propositions) {
          copy(propositions.begin(), propositions.end(), back_inserter(_propositions));
       }
-
       vector<string> GetPropositions() const { return _propositions; }
+
+		void SetAccepting() { _accepting = true; }
+		bool GetAccepting() const { return _accepting; }
+
       string ToString() const {
          stringstream s;
          s << _state_name;
-   //      if (_type == PUSHDOWN || _type == PUSHDOWN_KRIPKE) 
-   //         s << "[" << _symbol << "]";
+         if (_type == PUSHDOWN || _type == PUSHDOWN_KRIPKE) 
+            s << "[" << _symbol << "]";
          if (_type == KRIPKE || _type == PUSHDOWN_KRIPKE)
             s << ": " << accumulate(_propositions.begin(), _propositions.end(), string(""), JoinWithComma);
          return s.str();
       }
    };
 
-   class Configuration {
+   class Configuration : public Showable {
    protected:
       string _state_name;
    public:
       Configuration(const string &state_name) : _state_name(state_name) { }
       string GetName() const { return _state_name; }
+      virtual int GetID(const ConfigurationSpace &config_space) const {
+         unsigned int state_id = config_space.GetStateID(_state_name);
+         return state_id;
+      };
+      virtual string ToString() const {
+         stringstream s;
+         s << "Regular configuration; state name " << _state_name;
+         return s.str();
+      }
+      virtual StackSymbol GetSymbol() const { return "_"; }
    };
 
    class PushDownConfiguration : public Configuration {
@@ -103,6 +159,19 @@ namespace AST {
       string _stack_symbol;
    public:
       PushDownConfiguration(const string &state_name, const string &stack_symbol) : Configuration(state_name), _stack_symbol(stack_symbol) { }
+      string GetSymbol() { return _stack_symbol; }
+      virtual string ToString() const {
+         stringstream s;
+         s << "Pushdown configuration; state name " << _state_name
+           << ", stack symbol " << _stack_symbol;
+         return s.str();
+      }
+
+      virtual int GetID(const ConfigurationSpace &config_space) const {
+         unsigned int state_id = config_space.GetStateID(_state_name);
+         unsigned int symbol_id = config_space.GetSymbolID(_stack_symbol);
+         return state_id * config_space.GetStackAlphabet().size() + symbol_id;
+      };
    };
 
    class Automaton : public Showable {

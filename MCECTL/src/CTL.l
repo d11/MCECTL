@@ -63,10 +63,12 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 :show       return SHOW;
 :xshow      return XSHOW;
 :quit       return QUIT;
+:check      return CHECK;
 
 ^\n         return EMPTY;
 \(          return LPAREN;
 \)          return RPAREN;
+,           return COMMA;
 
 [a-z_][a-z_1-9]*      {
    yylval.string=new string(yytext); 
@@ -108,6 +110,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 
 <automaton>\(           return DFA_LPAREN; /* Automata */
 <automaton>\)           return DFA_RPAREN;
+<automaton>\*           return DFA_ASTERISK;
 <automaton>STATE        return DFA_STATE;
 <automaton>:            return DFA_COLON;
 <automaton>,            return DFA_COMMA;

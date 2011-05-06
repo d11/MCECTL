@@ -21,6 +21,7 @@
 #include "command/DeclareFormula.h"
 #include "command/DeclareDFA.h"
 #include "command/DeclareRegex.h"
+#include "command/RunCheck.h"
 #include "exception/ParseException.h"
 
 using namespace std;
@@ -96,8 +97,8 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token REGEX_DECLARATION 
 
 // Other command tokens
-%token LOAD SHOW XSHOW QUIT
-%token EMPTY LBRACE RBRACE LPAREN RPAREN
+%token LOAD SHOW XSHOW QUIT CHECK
+%token EMPTY LBRACE RBRACE LPAREN RPAREN COMMA
 
 // General identifier
 %token <string> IDENTIFIER 
@@ -136,7 +137,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %type <push_down_effect_ref> pushdown_state_destination
 %type <string> stack_symbol
 
-%type <command_ref> null_command load_command quit_command show_command xshow_command
+%type <command_ref> null_command load_command quit_command show_command xshow_command check_command
 %token <string> QUOTED
 %type <string> filename
 %type <string> show_item 
@@ -144,7 +145,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %token <string> REGEX_ACTION
 %type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
 
-%token DFA_LPAREN DFA_RPAREN DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
+%token DFA_LPAREN DFA_RPAREN DFA_ASTERISK DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
 %token <string> DFA_IDENTIFIER
 
 %type <command_list> top rule_command_list unit_command_list cons_command_list
@@ -186,7 +187,7 @@ cons_command_list:
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | null_command
+   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | check_command | null_command
    {
    };
 
@@ -194,7 +195,17 @@ null_command:
    EMPTY
    {
       $$ = new NullCommand();
-   }
+   };
+
+check_command:
+   CHECK LPAREN formula_name COMMA automaton_name RPAREN
+   {
+      string formula(*$3);
+      string system(*$5);
+      $$ = new RunCheck(system, formula);
+      delete $3;
+      delete $5;
+   };
 
 load_command:
    LOAD LPAREN filename RPAREN
@@ -372,10 +383,17 @@ automaton_component:
 state:
    DFA_STATE DFA_LPAREN state_name DFA_RPAREN
    {
-      //string state_name($3);
-      //free($3);
       AST::State *state = new AST::State(*$3, AST::State::BASIC);
       cout << "Creating normal STATE" << endl;
+      $$ = new AST::Automaton(state);
+   };
+
+state:
+   DFA_STATE DFA_LPAREN DFA_ASTERISK state_name DFA_RPAREN
+   {
+      AST::State *state = new AST::State(*$4, AST::State::BASIC);
+      cout << "Creating accepting STATE" << endl;
+		state->SetAccepting();
       $$ = new AST::Automaton(state);
    };
 
@@ -394,7 +412,8 @@ pushdown_kripke_state:
    DFA_STATE DFA_LPAREN pushdown_state_identifier DFA_COLON proposition_list DFA_RPAREN
    {
       AST::State *state = new AST::State($3->GetName(), AST::State::PUSHDOWN_KRIPKE);
-      //state->SetSymbol($3->GetSymbol());
+      //AST::State *state = new AST::State($3->GetName(), AST::State::KRIPKE);
+      state->SetSymbol($3->GetSymbol());
       state->AddPropositions(*$5);
       cout << "Creating pushdown kripke state: " << state->ToString() << endl;
       delete $3;
@@ -427,9 +446,10 @@ single_proposition:
 regular_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
    {
-      AST::Effect effect(*$7);
+      AST::Effect *effect = new AST::Effect(*$7);
       AST::Configuration *config = new AST::Configuration(*$5);
       AST::Action *action = new AST::Action(*$3, effect);
+      action->SetType(AST::Action::REGULAR);
       $$ = new AST::Automaton(config, action);
       delete($3);
       delete($5);
@@ -439,10 +459,25 @@ regular_action:
 pushdown_action:
    DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier DFA_TRANSITION pushdown_state_destination DFA_RPAREN
    {
-      AST::Effect *effect($7);
+      AST::PushDownEffect *effect($7);
 
       AST::Configuration *config = $5;
-      AST::Action *action = new AST::Action(*$3, *effect);
+      AST::Action *action = new AST::Action(*$3, effect);
+
+      switch(effect->GetType()) {
+         case AST::PushDownEffect::PUSH:
+            action->SetType(AST::Action::PUSH);
+            break;
+         case AST::PushDownEffect::POP:
+            action->SetType(AST::Action::POP);
+            break;
+         case AST::PushDownEffect::REWRITE:
+            action->SetType(AST::Action::REWRITE);
+            break;
+         default:
+            throw runtime_error("Bad effect type");
+            break;
+      }
 
       $$ = new AST::Automaton(config, action);
       
@@ -489,6 +524,8 @@ push:
          AST::PushDownEffect::PUSH 
       );
       effect->SetSymbol(*$2);
+      cout << "!!!!!!!!!" << endl;
+      cout << "Makin' a push: " << effect->ToString() << endl;
       $$ = effect;
    };
 

@@ -49,18 +49,26 @@ ADD_CUSTOM_COMMAND(
    OUTPUT libfa.a
    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/lib/libfa/augeas/src/.libs/libfa.a ${CMAKE_CURRENT_BINARY_DIR}/libfa.a
 )
-
 add_custom_target(libfa ALL DEPENDS libfa.a)
+
+ADD_CUSTOM_COMMAND(
+   OUTPUT libwpds.a
+   COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/lib/wpds/libwpds.a ${CMAKE_CURRENT_BINARY_DIR}/libwpds.a
+)
+add_custom_target(libwpds ALL DEPENDS libwpds.a)
+
 add_library(
    MCECTL STATIC
    ${CPPFILES}
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
 )
-add_dependencies(MCECTL libfa)
+add_dependencies(MCECTL libfa libwpds)
 link_directories(".")
 include_directories("lib/libfa/augeas/src/")
+include_directories("lib/wpds/")
 #find_library(fa PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/libfa/augeas/src/.libs)
+target_link_libraries(MCECTL wpds)
 target_link_libraries(MCECTL fa)
 
 add_executable(

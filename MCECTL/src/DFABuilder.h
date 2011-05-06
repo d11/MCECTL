@@ -2,14 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  DFABuilder.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  04/11/10 10:27:53
- *       Revision:  none
- *       Compiler:  gcc
- *
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *        Company:  
  *

@@ -21,8 +21,8 @@ namespace Command {
 
     class RunCheck : public Command {
       private:
-         string system_name;
-         string formula_name;
+         string _system_name;
+         string _formula_name;
       public:
          RunCheck(const string &system_name, const string &formula_name )
             : _system_name(system_name), _formula_name(formula_name)
@@ -34,13 +34,17 @@ namespace Command {
             return s.str();
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) {
-            TransitionSystem transition_system = environment.GetSystem(_system_name);
+            // TODO
+            const KripkeStructure *lts = environment.GetLTS(_system_name);
+            if (!lts) {
+               throw runtime_error("system is not an LTS!");
+            }
 
-            ModelChecker model_checker(environment, transition_system);
+            ModelChecker model_checker(environment, *lts);
 
             Formula::Formula::const_reference formula = environment.GetFormula(_formula_name);
-            CheckResults results = model_checker.Check(formula);
-            cout << CheckResults.ToString() << endl;
+            const CheckResults *results = model_checker.Check(formula);
+            cout << results->ToString() << endl;
          }
    };
 

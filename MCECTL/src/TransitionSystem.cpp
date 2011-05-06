@@ -23,19 +23,20 @@ string KripkeState::ToString() const {
    //vector<const string *> propositions(_valuation.GetEntries());
    s << "[" << _name << ": "
       // TODO
-    // << accumulate(propositions.begin(), propositions.end(), string(""), JoinWithComma)
+     << accumulate(_valuation.begin(), _valuation.end(), string(""), JoinWithComma)
      << "]";
    return s.str();
 }
 
 // TRANSITION SYSTEM
 
+/*
 TransitionSystem::~TransitionSystem() { }
 
 // KRIPKE STRUCTURE
 
-KripkeStructure::KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state)
-   : FiniteAutomaton<RegularAction, KripkeState>( states, initial_state ) { }
+KripkeStructure::KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space)
+   : FiniteAutomaton<RegularAction, KripkeState>( states, initial_state, config_space ) { }
 
 string KripkeStructure::ToString() const {
    stringstream s;
@@ -46,8 +47,8 @@ string KripkeStructure::ToString() const {
 
 // PUSH DOWN SYSTEM
 
-PushDownSystem::PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state)
-   : FiniteAutomaton<PushDownAction, KripkeState>( states, initial_state ) { }
+PushDownSystem::PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space)
+   : FiniteAutomaton<PushDownAction, KripkeState>( states, initial_state, config_space ) { }
 
 string PushDownSystem::ToString() const {
    stringstream s;
@@ -55,4 +56,4 @@ string PushDownSystem::ToString() const {
      << FiniteAutomaton<PushDownAction, KripkeState>::ToString();
    return s.str();
 }
-
+*/

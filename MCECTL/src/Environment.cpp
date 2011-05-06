@@ -9,6 +9,7 @@
  */
 
 #include <map>
+#include <numeric>
 
 #include "formula/Formula.h"
 #include "Environment.h"
@@ -16,20 +17,41 @@
 #include "Automata.h"
 #include "TransitionSystem.h"
 #include "exception/NonExistentFormula.h"
-#include "exception/NonExistentAutomaton.h"
-#include "exception/NonExistentTransitionSystem.h"
 #include "exception/AlreadyExistsException.h"
+#include "Util.h"
 
 Environment::Environment() { }
 
-const ResultsTable &Environment::GetCheckResults(const KripkeStructure &transition_system) const {
-   // TODO
-   return *new ResultsTable();
+const ResultsTable &Environment::GetCheckResults(const KripkeStructure *transition_system)  {
+   cout << "Getting check results for a system" << endl;
+   map<unsigned int, ResultsTable *>::const_iterator iter;
+   iter = _computed_results.find( transition_system->GetID() );
+   ResultsTable *table = NULL;
+   if (iter == _computed_results.end()) {
+      cout << "creating new results table" << endl;
+      table = new ResultsTable(*this, *transition_system);
+      _computed_results.insert(make_pair(transition_system->GetID(), table));
+   }
+   else {
+      table = iter->second;
+   }
+   return *table;
 }
 
-void Environment::SetCheckResults(const KripkeStructure &transition_system, const CheckResults &results) {
- //  _computed_results.find( system )(SetEntry( results ));
- // TODO
+void Environment::SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+   cout << "Setting check results for a system" << endl;
+   map<unsigned int, ResultsTable *>::iterator iter;
+   iter = _computed_results.find( transition_system->GetID() );
+   ResultsTable *table = NULL;
+   if (iter == _computed_results.end()) {
+      cout << "creating new results table" << endl;
+      table = new ResultsTable(*this, *transition_system);
+      _computed_results.insert(make_pair(transition_system->GetID(), table));
+   }
+   else {
+      table = iter->second;
+   }
+   table->SetEntry( formula, results );
 }
 
 Formula::Formula::const_reference Environment::GetFormula(const string &identifier) const {
@@ -40,50 +62,77 @@ Formula::Formula::const_reference Environment::GetFormula(const string &identifi
    return *(iter->second);
 };
 
-const Automaton *Environment::GetAutomaton(const string &identifier) const {
-   map<string, const Automaton*>::const_iterator iter(_automata.find(identifier));
-   if (iter == _automata.end()) {
-      throw NonExistentAutomatonException(identifier);
-   }
-   return iter->second;
-};
-
-KripkeStructure::const_reference Environment::GetSystem(const string &identifier) const {
-   map<string, const KripkeStructure*>::const_iterator iter(_systems.find(identifier));
-   if (iter == _systems.end()) {
-      throw NonExistentTransitionSystemException(identifier);
+Formula::Formula::const_reference Environment::GetFormulaByID(unsigned int formula_id) const {
+   map<unsigned int, const Formula::Formula*>::const_iterator iter(_formulas_by_id.find(formula_id));
+   if (iter == _formulas_by_id.end()) {
+      throw NonExistentFormulaException("By ID"); // TODO
    }
    return *(iter->second);
 };
 
 void Environment::SetFormula( const string &identifier, Formula::Formula::const_reference formula ) {
    bool result = _formulas.insert(make_pair(identifier, &formula)).second;
-   if (!result) {
-      throw AlreadyExistsException(identifier);
-   }
+   if (!result) { throw AlreadyExistsException(identifier); }
+	formula.Accept(*this);
 }
 
-void Environment::SetAutomaton( const string &identifier, const Automaton *automaton ) {
-   bool result = _automata.insert(make_pair(identifier, automaton)).second;
+void Environment::SetFormulaByID( Formula::Formula::const_reference formula ) {
+   bool result = _formulas_by_id.insert(make_pair(formula.GetID(), &formula)).second;
    if (!result) {
-      throw AlreadyExistsException(identifier);
-   }
+		cout << "Warning: formula with id " << formula.GetID() << " already exists!" << endl; 
+	}
 }
 
-void Environment::SetSystem( const string &identifier, KripkeStructure::const_reference transition_system) {
-   bool result = _systems.insert(make_pair(identifier, &transition_system)).second;
-   if (!result) {
-      throw AlreadyExistsException(identifier);
-   }
+void Environment::Visit(const Formula::False       &formula_false) {
+	SetFormulaByID(formula_false);
 }
+void Environment::Visit(const Formula::True        &formula_true) {
+	SetFormulaByID(formula_true);
+}
+
+void Environment::Visit(const Formula::PVar        &release) {
+	SetFormulaByID(release);
+}
+
+void Environment::Visit(const Formula::Negation    &negation) {
+	SetFormulaByID(negation);
+	negation.GetSubFormula().Accept(*this);
+}
+
+void Environment::Visit(const Formula::Conjunction &conjunction) {
+	SetFormulaByID(conjunction);
+	conjunction.GetLeft().Accept(*this);
+	conjunction.GetRight().Accept(*this);
+}
+
+void Environment::Visit(const Formula::Until       &until) {
+	SetFormulaByID(until);
+	until.GetBefore().Accept(*this);
+	until.GetAfter().Accept(*this);
+}
+
+void Environment::Visit(const Formula::Release     &release) {
+	SetFormulaByID(release);
+	release.GetBefore().Accept(*this);
+	release.GetAfter().Accept(*this);
+}
+
 
 string Environment::ToString() const {
    stringstream s;
-   s << "AUTOMATA:" << endl;
-   map<string, const Automaton*>::const_iterator iter;
-   for( iter = _automata.begin(); iter != _automata.end(); ++iter ) {
-      s << "[" << iter->first << "]" << endl;
-   }
+   s << "DFAs:" << endl
+	  << accumulate(_dfas.begin(), _dfas.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const DFA*>)
+     << "PDAs:" << endl
+	  << accumulate(_pdas.begin(), _pdas.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const PDA*>)
+     << "LTSs:" << endl
+	  << accumulate(_ltss.begin(), _ltss.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const KripkeStructure*>)
+     << "PDSs:" << endl
+	  << accumulate(_pdss.begin(), _pdss.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const PushDownSystem*>);
+
    s << "FORMULAS:" << endl;
    map<string, const Formula::Formula*>::const_iterator formula_iter;
    for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
@@ -96,10 +145,11 @@ string Environment::ToString() const {
 
 Environment::~Environment() {
 
-   map<string, const Automaton*>::const_iterator iter;
-   for( iter = _automata.begin(); iter != _automata.end(); ++iter ) {
+   map<string, const DFA*>::const_iterator iter;
+   for( iter = _dfas.begin(); iter != _dfas.end(); ++iter ) {
       delete iter->second;
    }
+   // TODO
    map<string, const Formula::Formula*>::const_iterator formula_iter;
    for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
       delete formula_iter->second;

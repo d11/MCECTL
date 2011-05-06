@@ -61,24 +61,44 @@ namespace Command {
                _current_formula = new Formula::Conjunction( left, right );
             } 
 
-            virtual void Visit(const AST::Formula::Disjunction &disjunction) { throw runtime_error("TODO"); } 
-            virtual void Visit(const AST::Formula::Implication &implication) { throw runtime_error("TODO"); } 
+				// (A | B) == !(!A & !B)
+            virtual void Visit(const AST::Formula::Disjunction &disjunction) { 
+               disjunction.GetSubFormula1().Accept(*this);
+               Formula::Formula::reference left(*_current_formula);
+               disjunction.GetSubFormula2().Accept(*this);
+               Formula::Formula::reference right(*_current_formula);
+					Formula::Formula *neg_left = new Formula::Negation(left);
+					Formula::Formula *neg_right = new Formula::Negation(right);
+					Formula::Formula *conj = new Formula::Conjunction(*neg_left, *neg_right);
+					_current_formula = new Formula::Negation(*conj);
+
+				} 
+				// (A -> B) == !(A & !B)
+            virtual void Visit(const AST::Formula::Implication &implication) { 
+               implication.GetSubFormula1().Accept(*this);
+               Formula::Formula::reference left(*_current_formula);
+               implication.GetSubFormula2().Accept(*this);
+               Formula::Formula::reference right(*_current_formula);
+					Formula::Formula *neg_right = new Formula::Negation(right);
+					Formula::Formula *conj = new Formula::Conjunction(left, *neg_right);
+					_current_formula = new Formula::Negation(*conj);
+				} 
             virtual void Visit(const AST::Formula::AX &ax)                   { throw runtime_error("TODO"); } 
             virtual void Visit(const AST::Formula::Until &until)             {
                until.GetSubFormula1().Accept(*this);
                Formula::Formula::reference before(*_current_formula);
                until.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               const Automaton *automaton(_environment.GetAutomaton(until.GetAutomatonName()));
-               _current_formula = new Formula::Until( before, after, automaton );
+               //const Automaton *automaton(_environment.GetAutomaton());
+               _current_formula = new Formula::Until( before, after, until.GetAutomatonName() );
             } 
             virtual void Visit(const AST::Formula::Release &release)         {
                release.GetSubFormula1().Accept(*this);
                Formula::Formula::reference before(*_current_formula);
                release.GetSubFormula2().Accept(*this);
                Formula::Formula::reference after(*_current_formula);
-               const Automaton *automaton(_environment.GetAutomaton(release.GetAutomatonName()));
-               _current_formula = new Formula::Until( before, after, automaton );
+               //const Automaton *automaton(_environment.GetAutomaton());
+               _current_formula = new Formula::Until( before, after, release.GetAutomatonName() );
             } 
 
             Formula::Formula::reference Build() {

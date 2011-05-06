@@ -1,0 +1,74 @@
+#LTS test_lts {
+#   STATE ( initial:    hungry, thirsty )
+#	STATE ( stuck: hungry )
+#	STATE ( magic: nothing)
+#
+#	ACTION ( destroy_toaster: initial -> stuck  )
+#	ACTION ( make_toast: initial -> magic )
+#}
+#
+#PDA test_pda {
+#   STATE ( empty )
+#   STATE ( toast_ready )
+#   ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
+#   ACTION ( make_toast: toast_ready[toast] -> toast_ready[PUSH toast] )
+#}
+
+# A Labelled Transition System test
+LTS test_lts {
+   STATE ( initial:    hungry, thirsty )
+   STATE ( hungry:     hungry )
+   STATE ( thirsty:    thirsty )
+   STATE ( toast_a:    hungry, thirsty, toast )
+   STATE ( tea_a:      hungry, thirsty, tea )
+   STATE ( toast_tea:  hungry, thirsty, toast, tea )
+   STATE ( tea_b:      thirsty, tea )
+   STATE ( toast_b:    hungry, toast )
+   STATE ( fulfilled:  full )
+	STATE ( stuck: hungry )
+
+	ACTION ( destroy_toaster: initial -> stuck  )
+
+   ACTION ( make_toast: initial   -> toast_a   )
+   ACTION ( make_toast: tea_a     -> toast_tea )
+   ACTION ( make_toast: hungry    -> toast_b   )
+   ACTION ( make_tea:   initial   -> tea_a     )
+   ACTION ( make_tea:   toast_a   -> toast_tea )
+   ACTION ( make_tea:   thirsty   -> tea_b     )
+
+   ACTION ( eat_toast:  toast_a   -> thirsty   )
+   ACTION ( eat_toast:  toast_tea -> tea_b     )
+   ACTION ( eat_toast:  toast_b   -> fulfilled )
+
+   ACTION ( drink_tea:  tea_a     -> hungry    )
+   ACTION ( drink_tea:  toast_tea -> toast_b   )
+   ACTION ( drink_tea:  tea_b     -> fulfilled )
+}
+
+PDA test_pda {
+   STATE ( empty )
+   STATE ( toast_ready )
+   STATE ( *fulfilled )
+   ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
+   ACTION ( eat_toast: toast_ready[toast] -> fulfilled[POP] )
+}
+
+FORMULA not_always_hungry {
+   !E( 0 R[test_pda] hungry )
+}
+
+FORMULA foo {
+	E( 1 U[test_pda] full )
+}
+
+FORMULA problem {
+   (hungry & !toast)
+}
+
+:xshow(test_pda)
+
+#:check(not_always_hungry, test_lts)
+#:check(problem, test_lts)
+:check(foo, test_lts)
+
+

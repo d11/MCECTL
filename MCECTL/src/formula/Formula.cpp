@@ -21,4 +21,5 @@ namespace Formula {
    void Release::Accept(Visitor &visitor) const     { visitor.Visit(*this); }
    Visitor::~Visitor() { }
 
+	unsigned int Formula::_next_id = 0;
 }

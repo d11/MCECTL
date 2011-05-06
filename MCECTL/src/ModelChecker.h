@@ -14,13 +14,11 @@
 #define MODELCHECKER_H
 
 #include <boost/shared_ptr.hpp>
-
 #include "Environment.h"
-
 #include "formula/Formula.h"
-using namespace Formula;
-
 #include "Automata.h"
+
+using namespace Formula;
 
 template <class A>
 class PredecessorConfigurations {
@@ -29,26 +27,40 @@ public:
    bool Contains(const KripkeState *state_1, const KripkeState *state_2, const A *action) const;
 };
 
-
 // Will contain example/counterexample if available
-class Result {
-public:
-   Result(const KripkeState &, bool);
-};
-
-class CheckResults {
-   public:
-      CheckResults();
-      void AddResult( const Result &result );
-};
-
-class ResultsTable {
+class Result : public Showable {
 private:
+   Configuration _config_id;
+   bool _evaluation;
 public:
-   ResultsTable();
+   Configuration GetID() const { return _config_id; }
+   bool GetEvaluation() const { return _evaluation; }
+   Result(unsigned int, bool);
+   string ToString() const;
+};
+
+class CheckResults : public Showable {
+private:
+   map<unsigned int, Result*> _result_map; // from configuration to value
+public:
+   CheckResults();
+   void AddResult(Result *result );
+   string ToString() const;
+   const Result &GetResult(unsigned int id) const;
+   const map<unsigned int, Result *> &GetResults() const;
+};
+
+class ResultsTable : public Showable {
+private:
+   map<unsigned int, CheckResults *> _entries;
+   const Environment &_environment;
+   const KripkeStructure &_system;
+public:
+   ResultsTable(const Environment &env, const KripkeStructure &lts);
    bool HasEntry( Formula::Formula::const_reference formula ) const;
-	CheckResults GetEntry( Formula::Formula::const_reference formula ) const;
-	void SetEntry( const CheckResults &formula );
+	const CheckResults *GetEntry( Formula::Formula::const_reference formula ) const;
+	void SetEntry( Formula::Formula::const_reference formula, CheckResults *check_results );
+   string ToString() const;
 };
 
 class Environment;
@@ -65,7 +77,7 @@ public:
    );
 
    // combine _system and automata
-   boost::shared_ptr<PushDownSystem> ConstructProductSystem(
+   ProductSystem *ConstructProductSystem(
       const PDA &automaton,
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y
@@ -79,7 +91,7 @@ public:
    void Visit(const Formula::Until       &until);
    void Visit(const Formula::Release     &release);
 
-   CheckResults Check( Formula::Formula::const_reference formula );
+   const CheckResults *Check( Formula::Formula::const_reference formula );
 };
 
 #endif

@@ -18,3 +18,5 @@
 //}
 
 Automaton::~Automaton() { }
+
+unsigned int Automaton::_next_id = 0;

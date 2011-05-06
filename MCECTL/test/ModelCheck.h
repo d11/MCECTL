@@ -31,16 +31,17 @@ BOOST_AUTO_TEST_CASE( test_basic )
       states.push_back(s1);
       states.push_back(s2);
 
-      KripkeStructure ts(states, s1);
+   //   KripkeStructure ts(states, s1);
 
       //StackSymbol sym("ó");
       //PushAction *action = new PushAction("a", sym, sym);
-      RegularAction *action = new RegularAction("a");
+      //RegularAction *action = new RegularAction("a");
 
-      ts.AddRule(s1, action, s2);
-      ModelChecker mc(env, ts);
+      //ts.AddRule(s1, action, s2);
+     // ts.AddRule(s1, action); //TODO
+      //ModelChecker mc(env, ts);
 
-      cout << ts.ToString() << endl;
+    //  cout << ts.ToString() << endl;
    );
 }
 
