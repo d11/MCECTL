@@ -5,11 +5,23 @@ use Data::Dumper;
 
 while (<> !~ /Rules:/) { }
 
+sub normalize {
+   my $input = shift;
+   my $out = lc($input);
+   if ($out eq '#') {
+      $out = '_';
+   }
+   return $out;
+}
+
 my @rules;
 
 my $line = "";
-while ($line !~ /Propositions:/) {
+while (1) {
    chomp($line = <>);
+   if ( $line ~~ /Propositions:/ ) {
+      last;
+   }
    my @words = split(/ |;/,$line);
    if (!scalar @words) {
       next
@@ -27,16 +39,39 @@ while ($line !~ /Propositions:/) {
    my $stack2a = shift @words;
    my $stack2b = shift @words;
    unshift @rules, {
-      from_state => $state1,
-      from_stack => $stack1,
-      to_state => $state2,
-      to_stack_a => $stack2a,
-      to_stack_b => $stack2b
+      from_state => normalize($state1),
+      from_stack => normalize($stack1),
+      to_state =>   normalize($state2),
+      to_stack_a => normalize($stack2a),
+      to_stack_b => normalize($stack2b)
    };
+}
+
+my @states;
+while (1) {
+   if (not ($line = <>)) {
+      last;
+   }
+   chomp($line);
+   my @words = split(/ |;/,$line);
+   if (!scalar @words) {
+      next
+   }
+   my $state1 = shift @words;
+   my $stack1 = shift @words;
+   unshift @states, {
+      _state => normalize($state1),
+      _stack => normalize($stack1),
+      _vars => [ map { normalize($_) } @words ]
+   }
 }
 
 
 print "PDS jimple_pds {\n";
+
+for my $state (@states) {
+   print "   STATE ( " . $state->{_state} . "[" . $state->{_stack} . "] : " . join(",",@{$state->{_vars}}) . " )\n"
+}
 
 for my $rule (@rules) {
    my $action_name = "a";
@@ -49,7 +84,7 @@ for my $rule (@rules) {
       $effect = "POP";
    }
 
-   print "ACTION ( $action_name : "
+   print "   ACTION ( $action_name : "
          . $rule->{from_state} . "[" . $rule->{from_stack} . "]"
          . " -> " . $rule->{to_state} . "[$effect])\n";
 }
