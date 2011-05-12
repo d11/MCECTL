@@ -1,0 +1,189 @@
+LTS t1 {
+   STATE ( s1: p )
+   STATE ( s2: q )
+   STATE ( s3: na)
+   ACTION ( a: s1 -> s2 )
+   ACTION ( a: s2 -> s3 )
+}
+
+PDA a1 {
+   STATE ( *t1 )
+   ACTION ( a: t1[_] -> t1[REWRITE _] )
+}
+
+FORMULA phi1 {
+   E( p U[a1] q )
+}
+
+LTS t2 {
+   STATE ( s1: p )
+   STATE ( s2: p )
+   STATE ( s3: p )
+   STATE ( s4: q )
+   ACTION ( a: s1 -> s2 )
+   ACTION ( a: s2 -> s3 )
+   ACTION ( a: s2 -> s4 )
+}
+
+PDA a2 {
+   STATE ( t1 )
+   STATE ( *t2 )
+   ACTION ( a: t1[_] -> t2[REWRITE _] )
+}
+
+FORMULA phi2 {
+   E( p U[a2] q )
+}
+
+PDA a3 {
+   STATE ( t1 )
+   STATE ( t2 )
+   STATE ( *t3 )
+   ACTION ( a: t1[_] -> t2[REWRITE _] )
+   ACTION ( a: t2[_] -> t3[REWRITE _] )
+}
+
+FORMULA phi3 {
+   E( p U[a3] q )
+}
+
+LTS t3 {
+   STATE ( s1: p )
+   ACTION ( a: s1 -> s1 )
+}
+
+FORMULA phi4 {
+   E( p U[a1] q )
+}
+
+LTS t4 {
+   STATE ( s1:    p ) 
+   STATE ( s2:    na )
+   STATE ( s3:    p, q )
+
+	ACTION ( a: s1 -> s2  )
+	ACTION ( b: s2 -> s3  )
+	ACTION ( c: s1 -> s1  )
+	ACTION ( c: s2 -> s2  )
+	ACTION ( c: s3 -> s3  )
+}
+
+PDA a4 {
+   STATE ( t1 )
+   STATE ( t2 )
+   STATE ( *t3 )
+   ACTION ( c: t1[_] -> t2[REWRITE _] )
+   ACTION ( c: t2[_] -> t2[REWRITE _] )
+   ACTION ( a: t2[_] -> t2[REWRITE _] )
+   ACTION ( b: t2[_] -> t3[REWRITE _] )
+}
+
+FORMULA phi5 {
+   E( !q U[a4] (q & p) )
+}
+
+PDA a5 {
+   STATE( t1)
+   STATE( t2)
+   STATE( t3)
+   STATE( *t4)
+   ACTION ( a: t1[_] -> t1[PUSH s] )
+   ACTION ( a: t1[s] -> t2[REWRITE s] )
+   ACTION ( a: t2[s] -> t2[PUSH t] )
+   ACTION ( a: t2[t] -> t3[POP ] )
+   ACTION ( a: t3[s] -> t3[POP] )
+   ACTION ( a: t3[_] -> t4[REWRITE _])
+}
+
+FORMULA phi6 {
+   E( p U[a5] p )
+}
+#:check(phi4,t4)
+#:check(phi6,t3)
+
+LTS t7 {
+   STATE(t1 : p,q)
+   STATE(t2 : p)
+   ACTION(a: t1 -> t2)
+   ACTION(b: t2 -> t1)
+}
+PDA a7 {
+   STATE(s1)
+   STATE(s2)
+   STATE(*s3)
+   ACTION( a: s1[_] -> s2[PUSH y])
+   ACTION( b: s2[y] -> s3[POP])
+}
+FORMULA phi7 {
+   E(p U[a7] q)
+}
+
+PDA a8 {
+   STATE( s1)
+   STATE(*s2)
+   ACTION(a: s1[_] -> s1[PUSH s] )
+   ACTION(b: s1[s] -> s1[POP] )
+   ACTION(c: s1[_] -> s2[REWRITE _] )
+}
+#PDA a8 {
+#   STATE( s1)
+#   STATE(*s2)
+#   ACTION(a: s1[_] -> s1[PUSH s] )
+#   #ACTION(b: s1[s] -> s1[POP] )
+#   ACTION(c: s1[s] -> s2[POP] )
+#}
+FORMULA phi8 {
+   E( 1 U[a8] p )
+}
+LTS t8 {
+   STATE(t1 : na)
+   STATE(t2 : na)
+   STATE(t3 : na)
+   STATE(t4 : p)
+   ACTION(a:t1 -> t2)
+   ACTION(b:t2 -> t3)
+   ACTION(c:t3 -> t4)
+}
+
+LTS t9 {
+   STATE(t1 : na)
+   STATE(t2 : na)
+   STATE(t3 : p)
+   ACTION(a:t1->t2)
+   ACTION(b:t2->t1)
+   ACTION(c:t1->t3)
+}
+LTS t10 {
+   STATE(t1 : na)
+   STATE(t2 : p)
+   ACTION(c:t1->t2)
+}
+LTS t11 {
+   STATE(t1 : na)
+   STATE(t2 : na)
+   STATE(t3 : p)
+   ACTION(a:t1->t2)
+   ACTION(c:t2->t3)
+}
+LTS t12 {
+   STATE(t1 : na)
+   STATE(t2 : na)
+   STATE(t3 : na)
+   STATE(t4 : na)
+   STATE(t5 : p)
+   ACTION(a:t1->t2)
+   ACTION(a:t2->t3)
+   ACTION(b:t3->t4)
+   ACTION(c:t4->t5)
+}
+#:check(phi8,t11)
+
+#LTS t13 {
+#
+#}
+#
+#PDA a9 {
+#
+#}
+#
+#FORMULA 
