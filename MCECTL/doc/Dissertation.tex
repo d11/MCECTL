@@ -17,7 +17,16 @@ Blablabla said Nobody ~\cite{Nobody06}.
 \begin{abstract}
 
 TODO abstract
-Computation Tree Logic (CTL) is an effective way of modelling the behaviour of simple systems over time, but there are properties which are beyond its power to describe. More powerful logics such as CTL* (and ultimately the modal mu-calculus) have the disadvantage that their model-checking problems are intractable (EXPTIME as opposed to PTIME). A recent approach by Kreutzer et al \cite{Kreutzer10} introduces the 'Extended CTL' family of logics, in which CTL is parameterised by various classes of automata. This increases the expressive power of the logic, whilst (in some cases) preserving the tractability of model-checking. This project aims to implement a model checker for the PTIME extensions of CTL described in \cite{Kreutzer10}.
+Computation Tree Logic (CTL) is an effective way of modelling the behaviour of
+simple systems over time, but there are properties which are beyond its power
+to describe. More powerful logics such as CTL* (and ultimately the modal
+mu-calculus) have the disadvantage that their model-checking problems are
+intractable (EXPTIME as opposed to PTIME). A recent approach by Kreutzer et al
+\cite{Kreutzer10} introduces the 'Extended CTL' family of logics, in which CTL
+is parameterised by various classes of automata. This increases the expressive
+power of the logic, whilst (in some cases) preserving the tractability of
+model-checking. This project aims to implement a model checker for the PTIME
+extensions of CTL described in \cite{Kreutzer10}.
 
 \end{abstract}
 
@@ -65,7 +74,7 @@ To address this, more powerful logics have been proposed. CTL* % TODO CTL*
 and the modal mu-calculus
 While these are all important and worthwhile tools, they suffer from two key problems: 
 unintuitive
-exponential model-checking
+exponential-time model-checking
 
 
 
@@ -98,6 +107,8 @@ interpreted
 as a pushdown system
 
 \section{Requirements}
+
+The aim of this project was to create a complete system for model-checking Extended CTL for the pushdown (i.e. context-free) case. 
 
 input
 output
