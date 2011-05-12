@@ -1,21 +1,35 @@
 \documentclass[11pt]{article}
+\pdfpagewidth 210mm
+\pdfpageheight 297mm
+\setlength\topmargin{0in}
+\setlength\headheight{0in}
+\setlength\headsep{0in}
+\setlength\textheight{9.0in}
+\setlength\textwidth{6.0in}
+\setlength\oddsidemargin{0in}
+\setlength\evensidemargin{0in}
 \usepackage{cite}
 \usepackage{amsmath}
+
+\newcommand{\sectionline}{%
+  \nointerlineskip \vspace{\baselineskip}%
+  \rule{0.5\linewidth}{.7pt}\hspace{\fill}%
+  \par\nointerlineskip \vspace{\baselineskip}
+}
+
 \begin{document}
 \title{Information Retrieval Assignment}
 \author{Candidate 680817}
 \maketitle
 
 \section*{Question 1}
-% TODO: Why is it useful to convert queries into DNF ? 2-3 sentences
 Converting queries to Disjunctive Normal Form is helpful since it allows
 evaluation to be performed in one simple left-to-right pass.  It does not
-necessarily reduce the number of evaluations that need to be performed, indeed,
-it may increase the size of the formula, but the simpler form may allow
-calculations to be done more efficiently -- for example, after normalization,
+necessarily reduce the number of evaluations that need to be performed --
+indeed, it may increase the size of the formula, but the simpler form may allow
+the calculations to be done more efficiently. For example, after normalization,
 the disjuncts can be evaluated independently. 
 
-% TODO: DNF conversion
 \begin{align*}
 & \quad (t_a \wedge \neg (t_b \wedge t_c)) \wedge (t_a \vee t_d)                                                   & \\
 & \equiv (t_a \wedge (\neg t_b \vee \neg t_c)) \wedge (t_a \vee t_d)                                               & \text{by De Morgan} \\
@@ -26,7 +40,6 @@ the disjuncts can be evaluated independently.
 \end{align*}
 
 \section*{Question 2}
-% TODO: Explain vector space model
 The problem of text-based information retrieval involves determining the
 relevancy of documents to a given query. A natural approach is to situate both
 queries and documents in a single `topic space', wherein some appropriate
@@ -74,15 +87,46 @@ underlying `bag of words' assumption.
 
 \section*{Question 3}
 
-% TODO: Program to construct inverted list
+Inverted list:
+\begin{verbatim}
+{'document': [Doc1, Doc2, Doc3]),
+ 'file': [Doc1, Doc2, Doc3]),
+ 'index': [Doc1, Doc2, Doc3]),
+ 'inverted': [Doc1, Doc2, Doc3]),
+ 'list': [Doc1, Doc2, Doc3]),
+ 'postings': [Doc1, 'Doc3']),
+ 'retrieval': [Doc1, Doc2, Doc3]),
+ 'search': [Doc1, Doc2, Doc3]),
+ 'term': [Doc1, Doc2, Doc3]),
+ 'text': [Doc1, Doc2, Doc3]),
+ 'word': [Doc1, Doc2, Doc3])}
+\end{verbatim}
 
-% TODO: Calculate cosine similarity with query { inverted list retrieval }
+Cosine similarity results:
+\begin{verbatim}
+doc:  IRExamDocs/Doc1.txt
+query:  set(['list', 'retrieval', 'inverted'])
+doc weight:  7.08081847238
+query weight:  0.824561673745
+cosine similarity: 0.198441745705 
+
+doc:  IRExamDocs/Doc2.txt
+query:  set(['list', 'retrieval', 'inverted'])
+doc weight:  5.23758638986
+query weight:  0.824561673745
+cosine similarity: 0.221995400179 
+
+doc:  IRExamDocs/Doc3.txt
+query:  set(['list', 'retrieval', 'inverted'])
+doc weight:  6.87233224281
+query weight:  0.824561673745
+cosine similarity: 0.252241450846
+\end{verbatim}
+
+See appendix for program used.
 
 \section*{Question 4}
 
-% TODO: Why precision @ recall? 
-% TODO: How to achieve fairness when comparing systems evaluated on
-% differently-sized datasets? [2-3 sentences]
 We evaluate performance by calculating precision at recall values because we
 wish to be able to compare systems which make different trade-offs for
 precision and recall against rank. In addition, taking a straight average of
@@ -93,8 +137,8 @@ recall values, calculating the precision at these, and taking the average of
 the results eliminates those confounding variables, and is therefore a sensible
 way of comparing the performance of different systems.
 
+This table shows precision and recall calculations for the given data:
 
-% TODO: Calc prec @ rec for given data
 \begin{tabular}{c l c l l}
 Rank & Document & Relevant & Recall & Precision \\
 \hline
@@ -110,7 +154,7 @@ Rank & Document & Relevant & Recall & Precision \\
 10 & $d_{37}$ & N & 6/15          & 6/10 \\
 \end{tabular}
 
-So the precision @ recall values are
+So the precision @ recall values are:
 
 \begin{tabular}{l l}
 Recall & Precision \\
@@ -123,8 +167,7 @@ Recall & Precision \\
 
 \section*{Question 5}
 
-% TODO: Do K-means clustering
-Means:
+Initial means:
 
 $\bar{a} = (0.9, 0.3)$
 
@@ -153,6 +196,9 @@ Clusters:
 
 $A = \{1,8\}$
 $B = \{2,3,4,5,6,7\}$
+
+\sectionline
+
 Means:
 
 $\bar{a} = (0.85, 0.3)$
@@ -182,6 +228,9 @@ Clusters:
 
 $A = \{3,4,5,6\}$
 $B = \{1,2,7,8\}$
+
+\sectionline
+
 Means:
 
 $\bar{a} = (0.175, 0.8)$
@@ -212,11 +261,11 @@ Clusters:
 $A = \{3,4,5,6\}$
 $B = \{1,2,7,8\}$
 
+\sectionline
 
+The process has converged, so this is the final result.
 
 \section*{Question 6}
-
-% TODO: Apply opening  to given data ( showing intermediate results)
 
 Initial data, $X$:
 
@@ -254,10 +303,120 @@ Final result, after applying a dilation to the previous output:
 0 & 0 & 1 & 1 & 1 & 0 & 0 \\
 \end{tabular}
 
-% TODO: Comment on results
 As can be seen from these results, the opening transformation removes any
 isolated `handles' which are not strongly connected to the core of the object.
 In this case, the pixels at coordinates (2,1) and (2,5) are set to zero because
 there are no non-zero pixels horizontally or vertically adjacent to them.
 
+\section*{Appendix}
+
+Cosine similarity program:
+\footnotesize
+\begin{verbatim}
+#!/usr/bin/python2
+import glob
+import re
+import pprint
+import math
+
+class Corpus(object):
+   def __init__(self, file_list, vocab):
+      self._file_list = file_list
+      self._N = 0;
+      self._inverted_index = dict()
+      self._vocab = vocab
+      self._docs = dict()
+      self._doc_freqs = {
+         'document': 15,
+         'file': 24,
+         'index': 15,
+         'inverted': 22,
+         'list': 19,
+         'postings': 13,
+         'retrieval': 6,
+         'search': 18,
+         'term': 17,
+         'text': 6,
+         'word': 5
+      }
+      self._freqs = dict()
+   
+   def _process_word(self, file_name, word):
+      if word in self._vocab:
+         if word not in self._inverted_index:
+            self._inverted_index[word] = set()
+         self._inverted_index[word].add(file_name)
+         if file_name not in self._docs:
+            self._docs[file_name] = set()
+            self._freqs[file_name] = dict()
+            self._N += 1
+         self._docs[file_name].add(word)
+         if word not in self._freqs[file_name]:
+            self._freqs[file_name][word] = 0
+         self._freqs[file_name][word] += 1
+
+
+   def _process_line(self, file_name, line):
+      for word in re.split('\W', line):
+         self._process_word(file_name, word)
+
+   def _process_file(self, file_name):
+      fs = open(file_name, 'r')
+      for line in fs:
+         self._process_line(file_name, line)
+      fs.close()
+
+   def index(self):
+      for file_name in self._file_list:
+         self._process_file(file_name)
+
+   def __repr__(self):
+      return "%s" % pprint.pformat(self._inverted_index)
+
+   # The lengths could be stored, but doesn't matter here
+   def doc_length(self, doc_name, doc):
+      total = 0;
+      for term in doc:
+         freq_d_t = float(self._freqs[doc_name][term])
+         total += (1 + math.log(freq_d_t))**2
+      return math.sqrt(total)
+
+   def query_length(self, query):
+      total = 0;
+      for term in query:
+         freq_t = float(self._doc_freqs[term])
+         total += math.log(1 + self._N/freq_t)
+      return math.sqrt(total)
+
+   def cosine(self, query, doc_name):
+      doc = self._docs[doc_name]
+      print "doc: ", doc_name
+      print "query: ", query 
+      w_doc   = self.doc_length(doc_name, doc)
+      w_query = self.query_length(query)
+      print "doc weight: ", w_doc
+      print "query weight: ", w_query
+      total = 0
+      for term in query.intersection(doc):
+         freq_d_t = float(self._freqs[doc_name][term])
+         freq_t   = float(self._doc_freqs[term])
+         total += (1 + math.log(freq_d_t)) * math.log(1 + self._N/freq_t)
+      return total / (w_query * w_doc)
+
+def main():
+   vocab = {'document', 'file', 'index', 'inverted', 'list', 'postings',
+            'retrieval', 'search', 'term', 'text', 'word'}
+   docs = glob.glob("IRExamDocs/Doc?.txt")
+   cs = Corpus(docs, vocab)
+   cs.index()
+
+   query = {'inverted', 'list', 'retrieval'}
+   for d in docs:
+      res = cs.cosine(query, d)
+      print "cosine similarity:", res, "\n"
+
+main()
+\end{verbatim}
+
 \end{document}
+
