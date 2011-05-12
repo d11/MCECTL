@@ -17,12 +17,12 @@ Blablabla said Nobody ~\cite{Nobody06}.
 \begin{abstract}
 
 TODO abstract
+Computation Tree Logic (CTL) is an effective way of modelling the behaviour of simple systems over time, but there are properties which are beyond its power to describe. More powerful logics such as CTL* (and ultimately the modal mu-calculus) have the disadvantage that their model-checking problems are intractable (EXPTIME as opposed to PTIME). A recent approach by Kreutzer et al \cite{Kreutzer10} introduces the 'Extended CTL' family of logics, in which CTL is parameterised by various classes of automata. This increases the expressive power of the logic, whilst (in some cases) preserving the tractability of model-checking. This project aims to implement a model checker for the PTIME extensions of CTL described in \cite{Kreutzer10}.
 
 \end{abstract}
 
 \section{Introduction}
 
-Computation Tree Logic (CTL) is an effective way of modelling the behaviour of simple systems over time, but there are properties which are beyond its power to describe. More powerful logics such as CTL* (and ultimately the modal mu-calculus) have the disadvantage that their model-checking problems are intractable (EXPTIME as opposed to PTIME). A recent approach by Kreutzer et al \cite{Kreutzer10} introduces the 'Extended CTL' family of logics, in which CTL is parameterised by various classes of automata. This increases the expressive power of the logic, whilst (in some cases) preserving the tractability of model-checking. This project aims to implement a model checker for the PTIME extensions of CTL described in \cite{Kreutzer10}.
 
 % move 1: background
 %        - why is area important?
@@ -37,22 +37,96 @@ Computation Tree Logic (CTL) is an effective way of modelling the behaviour of s
 
 \section{Background}
 
+\subsection{Applications of Logic to Software Verification}
+
+An important topic 
+is software verification.
+Model checking
+
+
+
+
+\subsection{Computation-tree logic}
+
+Standard CTL has become %TODO cite
+one of the most widely-used logics for software verification, since it is both intuitive and computationally amenable.
+
+% define DFA
+% define LTS
+
+%define CTL
+
+
+However, its expressive power is limited, and there are properties which we would like to be able to check that are beyond its power.
+For example: 
+% TODO example
+To address this, more powerful logics have been proposed. CTL* % TODO CTL*
+ PDL % TODO
+and the modal mu-calculus
+While these are all important and worthwhile tools, they suffer from two key problems: 
+unintuitive
+exponential model-checking
+
+
+
+
 \subsection{Extended Computation-tree logic}
-Description of the formalism...
+%Description of the formalism...
+
+
+
+% TODO define pushdown automata
+
+%TODO define pushdown system
+
+% TODO define ectl
+
+\cite{Kreutzer10}
+
+\subsection{Model Checking}
+
+Given a formula and a labelled transition system, the global model checking
+problem consists of determining which states of the system satisfy the formula.
+
+
+\subsection{Programs as Pushdown systems}
+
+CTL extended by pushdown automata is an effective choice for verification of real programs
+
+because the control flow of a recursive program can naturally be 
+interpreted
+as a pushdown system
 
 \section{Requirements}
 
+input
+output
+
+
+
 \section{Design}
+
+% TODO bison/flex
+% TODO repl
+
+% algorithm
+\subsection{Model checking algorithm}
+
+
+\cite{EHRS00b}
 
 \section{Testing}
 
 \section{Conclusions}
 
+I have implemented the first (to my knowledge) system for automated solution of
+the global model checking problem for CTL extended by pushdown automata.
+
 \section{Acknowledgements}
 
 I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, in which capacity he ... TODO
 
-TODO
+%TODO
 
 \section{References}
 \bibliography{references}{}
