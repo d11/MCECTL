@@ -22,6 +22,7 @@ extern "C" {
 #include "wpds.h"
 } // End 'extern C'
 
+#include <cstdio>
 // taken from libwpds example
 void print_automaton (wFA *fa, const string &s)
 {
@@ -36,6 +37,51 @@ void print_automaton (wFA *fa, const string &s)
    }
    cout << endl;
 }
+void print_rule (wRule *r)
+{
+	printf("rule: <%s,%s> -> <%s",wIdentString(r->from_state),
+		wIdentString(r->from_stack),wIdentString(r->to_state));
+	if (r->to_stack1) printf(",%s",wIdentString(r->to_stack1));
+	if (r->to_stack2) printf(" %s",wIdentString(r->to_stack2));
+	printf(">");
+}
+void print_trace (wFA *fa, wPath *p)
+{
+	wIdent *id;
+	wPath *pnext;
+	wConfig *conf;
+
+	do {
+		conf = wPathConfig(fa,p);
+		printf("[%d] <%s,%s",(int)p->value,wIdentString(conf->state),
+				wIdentString(conf->stack[0]));
+		id = conf->stack;
+		while (*++id) printf(" %s",wIdentString(*id));
+		printf(">\t\t");
+		wConfigDelete(conf);
+
+		wPathTraceStep(fa,p);
+		if (p->transitions->rule) print_rule(p->transitions->rule);
+		wPathRef(fa,pnext = p->transitions->target);
+		wPathDeref(fa,p);
+		p = pnext;
+
+		printf("\n");
+	} while (p);
+
+	printf("\n");
+}
+void print_pds (wPDS *pds, const string &s) {
+   wRule *r = pds->rules;
+   cout << s;
+   while (r) {
+      cout << endl;
+      print_rule(r);
+      r = r->next;
+   }
+   cout << endl;
+}
+
 
 #include <string.h>
 
@@ -43,13 +89,13 @@ using namespace std;
 
 // RESULT
 
-Result::Result(unsigned int config_id, bool result) : _config_id(config_id), _evaluation(result) {
+Result::Result(unsigned int config_id, const string &config_name, bool result) : _config_id(config_id), _config_name(config_name), _evaluation(result) {
    // TODO
 }
 
 string Result::ToString() const {
    stringstream s;
-   s << _config_id << ": " << (_evaluation ? "T" : "F");
+   s << _config_name << ": " << (_evaluation ? "T" : "F");
    return s.str();
 }
 // CHECK RESULTS
@@ -62,10 +108,11 @@ void CheckResults::AddResult(Result *result) {
 
 string CheckResults::ToString() const {
    stringstream s;
-   s << "{" << endl;
+   s << "Results: {" << endl;
    map<unsigned int, Result*>::const_iterator iter;
    for (iter = _result_map.begin(); iter != _result_map.end(); ++iter) {
-      cout << "  State " << (*iter).first << " -> [" << (*iter).second->ToString() <<"]" << endl;
+      //s << "  State " << (*iter).first << " -> [" << (*iter).second->ToString() <<"]" << endl;
+      s << "   " << (*iter).second->ToString() << endl;
    }
    s << "}" << endl;
    return s.str();
@@ -121,10 +168,8 @@ public:
 
    string operator()( const string &a, const pair<unsigned int,Result*> &b ) {
       stringstream bs;
-      unsigned int config_id = b.first;
-      bs << "{ " << _system.GetConfigurationByID(config_id) << ": "
-         << b.second->ToString()
-         << " }" << endl;
+      //unsigned int config_id = b.first;
+      bs << "   " << b.second->ToString() << "," << endl;
       if (a.empty()) return bs.str();
       return a + bs.str();
    }
@@ -142,13 +187,12 @@ public:
       const map<unsigned int, Result *> &result_map = b.second->GetResults();
       stringstream bs;
       unsigned int formula_id = b.first;
-      bs << "{ " << _environment.GetFormulaByID(formula_id).ToString()
-         << ": " << 
-         accumulate(result_map.begin(),
+      bs << "Results for " << _environment.GetFormulaByID(formula_id).ToString() << ": {" << endl
+         << accumulate(result_map.begin(),
                     result_map.end(),
                     string(""),
                     JoinStateResults(_system))
-         << " }" << endl;
+         << "}" << endl;
       if (a.empty()) return bs.str();
       return a + bs.str();
    }
@@ -332,25 +376,33 @@ void ModelChecker::Visit(const Formula::Until &until) {
    vector<string>::const_iterator f;
    const vector<string> &state_names = product_system->GetConfigurationSpace().GetStates();
    for (f = state_names.begin(); f != state_names.end(); ++f) {
-      char *temp = strdup(f->c_str());
+      string f_mod = "s" + *f + "__";
+      char *temp = strdup(f_mod.c_str());
       state_idents[*f] = wIdentCreate(temp);
       free(temp);
+      cout << "state: " << f_mod << " ident: " << state_idents[f_mod] << endl;
    }
 
    // create idents for stack symbols
    map<string,wIdent> stack_idents;
    vector<string>::const_iterator g;
-   stack_idents["_"] = 0;
+   //stack_idents["_"] = 0; // TODO
+   /*char *octothorpe = strdup("#");
+   stack_idents["_"] = wIdentCreate(octothorpe); // TODO
+   free(octothorpe);*/
    const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
    for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
       char *temp = strdup(g->c_str());
-      if (stack_idents.find(*g) != stack_idents.end()) {
+      if (stack_idents.find(*g) == stack_idents.end()) {
          stack_idents[*g] = wIdentCreate(temp);
       }
       free(temp);
+      cout << "symbol: " << *g << " ident: " << stack_idents[*g] << endl;
    }
 
-   // todo convert pds to a libwpds one
+   
+
+   // Convert PDS to a libwpds one
    pds = wPDSCreate(p_semiring);
    //wPDSInsert(...) for each rule
 	typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
@@ -366,12 +418,29 @@ void ModelChecker::Visit(const Formula::Until &until) {
       const PushDownAction *action = rule_iter->action;
       string to_state_name = product_system->GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
       to_state_ident = state_idents[to_state_name];
-      string to_symbol_name1(from_stack_symbol);
-      string to_symbol_name2("_");
+      string to_symbol_name1("_");
+      string to_symbol_name2(from_stack_symbol);
       action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
-      to_stack1_ident = stack_idents[to_symbol_name1];
-      to_stack2_ident = stack_idents[to_symbol_name2];
-      // TODO extract 'to' state/stack symbols - use polymorphism
+      if (to_symbol_name1 == "_") {
+         to_stack1_ident = 0;
+      } else {
+         to_stack1_ident = stack_idents[to_symbol_name1];
+      }
+      if (to_symbol_name2 == "_") {
+         to_stack2_ident = 0;
+      } else {
+         to_stack2_ident = stack_idents[to_symbol_name2];
+      }
+      cout << "Inserting PDS rule:" << endl;
+      cout << "from_state_ident: " << from_state_ident << endl;
+      cout << "from_stack_ident: " << from_stack_ident << endl;
+      cout << "to_state_ident: " << to_state_ident << endl;
+      cout << "to_stack1_ident: " << to_stack1_ident << endl;
+      cout << "to_stack2_ident: " << to_stack2_ident << endl;
+      cout << endl;
+      
+      // TODO extract 'to' state/stack symbols - use polymorphism 
+      // [ this is done ?? ]
       wPDSInsert(pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, NULL);
    }
 
@@ -396,6 +465,11 @@ void ModelChecker::Visit(const Formula::Until &until) {
          vector<string>::const_iterator gamma;
          for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
             // add self-loop via gamma
+            cout << "Inserting automaton transition" << endl;
+            cout << "from_state_ident: " << state_ident << endl;
+            cout << "stack_ident: " << stack_idents[*gamma] << " [" << *gamma << "]" << wIdentString(stack_idents[*gamma]) << endl;
+            cout << "to_state_ident: " << state_ident << endl;
+            cout << endl;
             wFAInsert(fa, state_ident, stack_idents[*gamma], state_ident, NULL, NULL);
          }
       }
@@ -407,8 +481,10 @@ void ModelChecker::Visit(const Formula::Until &until) {
       }
 	}
 
+
+   print_pds(pds,"PDS:");
    print_automaton(fa, "before pre*");
-   fa_pre = wPrestar(pds, fa, TRACE_YES);
+   fa_pre = wPrestar(pds, fa, TRACE_COPY);
    print_automaton(fa_pre, "after pre*");
 
    CheckResults *results = new CheckResults();
@@ -424,21 +500,42 @@ void ModelChecker::Visit(const Formula::Until &until) {
       ProductState<State,KripkeState> pre_state(automaton.GetInitialState(), system_state);
       string pre_state_name = pre_state.GetName();
 
-      cout << "looking for configuration " << pre_state_name << endl;
+      cout << "Seeking configuration <" << pre_state_name << ",*>" << endl;
 
-      for (t = fa_pre->transitions; t; t = t->next) {
+      for (t = fa_pre->transitions; t && !found; t = t->next) {
          string state_name(wIdentString(t->from));
-         cout << "found " << state_name << "... ";
-         if (state_name == pre_state_name) {
-            Result *result = new Result(*state_iter, true);
-            results->AddResult( result );
-            cout << "yeehaw!" << endl;
-            found = true;
+         cout << "  ...found <" << state_name << ","  << wIdentString(t->name) << "> ";
+         // print trace
+         wConfig *c = wConfigCreate(t->from, t->name, 0); // TODO state
+         wPath *p = wPathFind(fa_pre, c);
+         //wPathTraceAll(fa_pre,p);
+         if (p->transitions->target) {
+            cout << " [found paths] ";
+            //asm("int $0x3\n");
+            print_trace(fa_pre, p->transitions->target);
+            //print_trace(fa_pre, p);
          }
-         cout << "no good" << endl;
+         else {
+            cout << "[no paths] ";
+         }
+         if (t->from == state_idents[pre_state_name] && t->name == stack_idents["_"]) {
+            Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), true);
+            results->AddResult( result );
+            cout << " {TRUE}" << endl;
+            found = true;
+
+//            print_trace(fa_pre, p->transitions->target);
+
+         }
+         else {
+            cout << endl;
+         }
+         wConfigDelete(c);
+         wPathDeref(fa_pre,p);
       }
       if (!found) {
-         Result *result = new Result(*state_iter, false);
+         cout << " {FALSE}" << endl;
+         Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), false);
          results->AddResult( result );
       }
    }
@@ -471,7 +568,7 @@ void ModelChecker::Visit(const Formula::PVar &pvar) {
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
       const KripkeState &state = _system.GetState(id);
-      Result *res = new Result(id, state.Evaluate(pvar.GetVarName()));
+      Result *res = new Result(id, state.GetName(), state.Evaluate(pvar.GetVarName()));
       results->AddResult(res);
    }
 
@@ -485,7 +582,8 @@ void ModelChecker::Visit(const Formula::False &formula_false) {
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      Result *res = new Result(id, false);
+      const KripkeState &state = _system.GetState(id);
+      Result *res = new Result(id, state.GetName(), false);
       results->AddResult(res);
    }
    _environment.SetCheckResults(&_system, formula_false, results);
@@ -499,7 +597,8 @@ void ModelChecker::Visit(const Formula::True &formula_true) {
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      Result *res = new Result(id, true);
+      const KripkeState &state = _system.GetState(id);
+      Result *res = new Result(id, state.GetName(),true);
       results->AddResult(res);
    }
    _environment.SetCheckResults(&_system, formula_true, results);
@@ -516,9 +615,10 @@ void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
+      const KripkeState &state = _system.GetState(id);
       const Result &result_left  = left_results->GetResult(id);
       const Result &result_right = right_results->GetResult(id);
-      Result *res = new Result(id, result_left.GetEvaluation() && result_right.GetEvaluation());
+      Result *res = new Result(id, state.GetName(), result_left.GetEvaluation() && result_right.GetEvaluation());
       results->AddResult(res);
    }
 
@@ -534,8 +634,9 @@ void ModelChecker::Visit(const Formula::Negation &negation) {
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
+      const KripkeState &state = _system.GetState(id);
       const Result &sub_result_for_configuration = sub_results->GetResult(id);
-      Result *res = new Result(id, !sub_result_for_configuration.GetEvaluation());
+      Result *res = new Result(id, state.GetName(), !sub_result_for_configuration.GetEvaluation());
       results->AddResult(res);
    }
 

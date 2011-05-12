@@ -31,11 +31,12 @@ public:
 class Result : public Showable {
 private:
    Configuration _config_id;
+   string _config_name;
    bool _evaluation;
 public:
    Configuration GetID() const { return _config_id; }
    bool GetEvaluation() const { return _evaluation; }
-   Result(unsigned int, bool);
+   Result(unsigned int, const string &, bool);
    string ToString() const;
 };
 

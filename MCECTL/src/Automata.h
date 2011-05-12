@@ -244,7 +244,7 @@ public:
       return "push " + _push_symbol; // TODO
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
-      symbol_2 = _push_symbol;
+      symbol_1 = _push_symbol;
    }
 };
 
@@ -267,6 +267,7 @@ public:
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
       symbol_1 = _rewrite_symbol;
+      symbol_2 = "_";
    }
 };
 
@@ -286,7 +287,7 @@ public:
       return "_";
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
-      symbol_1 = "_";
+      symbol_2 = "_";
    }
 };
 
@@ -329,7 +330,6 @@ public:
    };
 private:
    map<const S*, size_t> _index_lookup;
-//TransitionTable *_transition_table;
    vector<Rule> _rule_list;
 public:
    RuleBook( const vector<S*> &states ) {
@@ -339,27 +339,9 @@ public:
          _index_lookup.insert( make_pair<S*, size_t>(*iter, index));
          ++index;
       }
-      //_transition_table = new TransitionTable(index, index);
    }
 
    void AddRule(unsigned int start_id, A *action) {
-      /*
-      typename map<const S*, size_t>::const_iterator iter;
-      iter = _index_lookup.find(state1);
-      if (iter == _index_lookup.end()) {
-         throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
-      }
-      */
-      //size_t i = iter->second;
-      /*
-      iter = _index_lookup.find(state2);
-      if (iter == _index_lookup.end()) {
-         throw runtime_error(string("Trying to add rule for action with unknown state: ") + state1->ToString());
-      }*/
-      //size_t j = iter->second;
-      //TransitionTable &tt = *_transition_table;
-      //tt(i, j).push_back(action);
-      //_rule_list.push_back(Rule(state1, action));
       _rule_list.push_back(Rule(start_id, action));
    }
 

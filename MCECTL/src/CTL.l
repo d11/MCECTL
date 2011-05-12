@@ -70,7 +70,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 \)          return RPAREN;
 ,           return COMMA;
 
-[a-z_][a-z_1-9]*      {
+[a-z_][a-z_0-9]*      {
    yylval.string=new string(yytext); 
    return IDENTIFIER;
 }
@@ -78,7 +78,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <formula>0        return FORMULA_FALSE; /* Propositional syntax */
 <formula>1        return FORMULA_TRUE;
 
-<formula>[a-z_][a-z_1-9]*  { yylval.string=new string(yytext); return FORMULA_PVAR; }
+<formula>[a-z_][a-z_0-9]*  { yylval.string=new string(yytext); return FORMULA_PVAR; }
 <formula>!        return FORMULA_NOT;
 <formula>\&       return FORMULA_AND;
 <formula>\|       return FORMULA_OR;
@@ -102,7 +102,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <regex>\.         return REGEX_ANY;
 <regex>\*         return REGEX_KLEENE;
 <regex>;          return REGEX_SEQ;
-<regex>[a-z_][a-z_1-9]*    {
+<regex>[a-z_][a-z_0-9]*    {
    yylval.string=new string(yytext); 
    return REGEX_ACTION;
 }
@@ -116,7 +116,7 @@ REGULAR { expect = LEX_REGEX;     return REGEX_DECLARATION;   }
 <automaton>,            return DFA_COMMA;
 <automaton>ACTION       return DFA_ACTION;
 <automaton>->           return DFA_TRANSITION;
-<automaton>[a-z_][a-z_1-9]*      {
+<automaton>[a-z_][a-z_0-9]*      {
    yylval.string= new string (yytext); 
    return DFA_IDENTIFIER;
 };
