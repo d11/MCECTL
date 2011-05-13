@@ -62,39 +62,35 @@ Model checking
 
 
 
+In all of the following exposition, let $\textbf{Prop}$ be a countably infinite
+set of proposition variables, let $\Sigma$ be a finite set of action names, and
+let $\Gamma$ be a finite set of stack symbols.
+
 \subsection{Computation-tree logic}
 
 Standard CTL has become %TODO cite
 one of the most widely-used logics for software verification, since it is both intuitive and computationally amenable.
 
-\begin{mydef}
-Let $A$ be a countably infinite set of proposition variables.
-\end{mydef}
+with LTL
 
-\begin{mydef}
-Let $\Sigma$ be a finite set of action names.
-\end{mydef}
-
-\begin{mydef}
-Let $\Gamma$ be a finite set of stack symbols.
-\end{mydef}
-
-% define DFA
 % define LTS
 \begin{mydef}
-A Labelled Transition System (LTS) is a triple $(\mathcal{S}, \rightarrow, l)$, where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times \Gamma \times \Sigma$ is the transition relation, and $l:\mathcal{S} \rightarrow \mathcal{P}(A)$.
+A Labelled Transition System (LTS) is a triple $(\mathcal{S}, \rightarrow, l)$,
+where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times
+\Gamma \times \Sigma$ is the transition relation, and $l:\mathcal{S}
+\rightarrow \mathcal{P}(A)$.
 \end{mydef}
 
 %define CTL
 \begin{mydef}
 A standard CTL formula is defined by
 $\phi := q | \phi \vee \phi | \not \phi | E(\phi U \phi) | $%TODO
+%semantics
 \end{mydef}
-
 
 However, its expressive power is limited, and there are properties which we would like to be able to check that are beyond its power.
 For example: 
-% TODO example
+% TODO example - buffer ?
 To address this, more powerful logics have been proposed. CTL* % TODO CTL*
  PDL % TODO
 and the modal mu-calculus
@@ -103,20 +99,43 @@ unintuitive
 exponential-time model-checking
 
 
-
-
+% Description of the formalism...
 \subsection{Extended Computation-tree logic}
-%Description of the formalism...
 
+Note that in \cite{Kreutzer10}, the logic is defined for general classes of
+automata. Here we are concerned only with the case of (non-deterministic)
+pushdown automata, since this is the fragment for which we wish to implement
+model-checking. In the terminology of \cite{Kreutzer10}, the logic defined
+below is CTL[PDA,PDA].
 
+% Define pushdown automata
+\begin{mydef}
+A pushdown automaton (PDA) $\mathcal{A}$ is a 5-tuple $(Q, \Sigma, \Gamma, \delta, q_0, F)$ where
+$Q$ is a set of states, $\Sigma$ and $\Gamma$ are as established above,
+$\delta$ is a set of pushdown transition rules, $q_0$ is the initial state, and
+$F$ is the set of accepting states.
+% TODO explain transition rules
+\end{mydef}
+% TODO semantics
 
-% TODO define pushdown automata
+% Define ectl
+\begin{mydef}
+The syntax for an Extended CTL formula is defined recursively as follows:
+   $\phi := q | \phi \vee \phi | \not \phi | E(\phi U^\mathcal{A} \phi) | E(\phi
+   R^\mathcal{A} \phi) $ 
+where $q \in \textbf{Prop}$, and $\mathcal{A}$ is a PDA.
+\end{mydef}
+
+Formulas are evaluated with respect to the states of an LTS $\mathcal{T} = (\mathcal{S},
+\rightarrow, l)$, according to the following semantics:
+% TODO ectl semantics
+$\mathcal{T}, s \models q$ iff $q \in l(s)$
 
 %TODO define pushdown system
+\begin{mydef} \end{mydef}
 
-% TODO define ectl
+% define DFA?
 
-\cite{Kreutzer10}
 
 \subsection{Model Checking}
 
@@ -143,8 +162,26 @@ output
 
 \section{Design}
 
+The core of the system is the MCECTL module; 
+
+this accepts input in the form of commands in the MCECTL input language. 
+
+Commands may update the internal state by defining new automata, systems and formulas.
+
+They may produce output
+
+% dot
+
+Read-eval-print loop
+
 % TODO bison/flex
 % TODO repl
+
+The MCECTL input language is defined as follows.
+Definitions are signalled by the keyword for the type of data being defined, in all caps (e.g. PDS) followed by the actual definition, in curly braces.
+Commands in lower case and preceded by a colon 
+for example, checking a formula against a system.
+
 
 % algorithm
 \subsection{Model checking algorithm}
