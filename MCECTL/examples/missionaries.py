@@ -1,4 +1,8 @@
 #!/usr/bin/env python2
+# 
+# This script generates an ECTL input file for the 'missionaries and cannibals'
+# problem
+#
 
 n = 4
 states = [ (i,j) for i in range(n) for j in range(n) ]
@@ -9,8 +13,8 @@ def state_name(i,j):
 print "LTS river {"
 
 for (i,j) in states:
-   propositions = ["n"];
-   if i < j:
+   propositions = [];
+   if i != j:
       propositions.append("carnage")
    if i == 0 and j == 0:
       propositions.append("success")

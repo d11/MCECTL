@@ -65,10 +65,13 @@ FORMULA problem {
    (hungry & !toast)
 }
 
-:xshow(test_pda)
+#:xshow(test_pda)
 
 #:check(not_always_hungry, test_lts)
 #:check(problem, test_lts)
-:check(foo, test_lts)
+#:check(foo, test_lts)
 
+LTS test_lts2 {
+   STATE( st: )
+}
 

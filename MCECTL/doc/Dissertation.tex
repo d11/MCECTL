@@ -1,6 +1,9 @@
 \documentclass[11pt]{article}
 \usepackage{cite}
 \usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\newtheorem{mydef}{Definition}
 
 \begin{document}
 
@@ -29,6 +32,10 @@ model-checking. This project aims to implement a model checker for the PTIME
 extensions of CTL described in \cite{Kreutzer10}.
 
 \end{abstract}
+
+\tableofcontents
+\setcounter{tocdepth}{3}
+
 
 \section{Introduction}
 
@@ -60,10 +67,29 @@ Model checking
 Standard CTL has become %TODO cite
 one of the most widely-used logics for software verification, since it is both intuitive and computationally amenable.
 
+\begin{mydef}
+Let $A$ be a countably infinite set of proposition variables.
+\end{mydef}
+
+\begin{mydef}
+Let $\Sigma$ be a finite set of action names.
+\end{mydef}
+
+\begin{mydef}
+Let $\Gamma$ be a finite set of stack symbols.
+\end{mydef}
+
 % define DFA
 % define LTS
+\begin{mydef}
+A Labelled Transition System (LTS) is a triple $(\mathcal{S}, \rightarrow, l)$, where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times \Gamma \times \Sigma$ is the transition relation, and $l:\mathcal{S} \rightarrow \mathcal{P}(A)$.
+\end{mydef}
 
 %define CTL
+\begin{mydef}
+A standard CTL formula is defined by
+$\phi := q | \phi \vee \phi | \not \phi | E(\phi U \phi) | $%TODO
+\end{mydef}
 
 
 However, its expressive power is limited, and there are properties which we would like to be able to check that are beyond its power.
