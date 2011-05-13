@@ -421,6 +421,12 @@ pushdown_kripke_state:
       $$ = new AST::Automaton(state);
    };
 
+proposition_list:
+   {
+      vector<string> *proposition_list = new vector<string>();
+      $$ = proposition_list;
+   };
+
 proposition_list: single_proposition 
    {
       vector<string> *proposition_list = new vector<string>();

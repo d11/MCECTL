@@ -72,14 +72,6 @@ void print_trace (wFA *fa, wPath *p)
 	printf("\n");
 }
 void print_pds (wPDS *pds, const string &s) {
-   wRule *r = pds->rules;
-   cout << s;
-   while (r) {
-      cout << endl;
-      print_rule(r);
-      r = r->next;
-   }
-   cout << endl;
 }
 
 
@@ -207,12 +199,208 @@ string ResultsTable::ToString() const {
    return s.str();
 }
 
+// Used by libwpds semiring
+void *nullfn (void *a, void *b) { return NULL; }
+int   eqfn (void *a, void *b)   { return a==b;    }
+void *null ()			{ return NULL; }
+
+/* Wrap wPDS functionality in an object */
+class WPDSWrapper {
+private:
+   wPDS *_pds;
+   wFA *_fa;
+   wFA *_fa_pre;
+   wSemiring _semiring;
+   wSemiring *_p_semiring;
+   map<string,wIdent> _state_idents;
+   map<string,wIdent> _stack_idents;
+   const ProductSystem &_product_system;
+public:
+   WPDSWrapper(const ProductSystem &product_system) : _product_system(product_system) {
+
+      // TODO - ensure this is correct
+      _semiring.extend   = &nullfn;
+      _semiring.combine  = &nullfn;
+      _semiring.diff     = NULL;
+      _semiring.one      = &null;
+      _semiring.zero     = &null;
+      _semiring.quasione = NULL;
+      _semiring.eq       = &eqfn;
+      _semiring.ref      = NULL;
+      _semiring.deref    = NULL;
+      _p_semiring = &_semiring;
+
+      // Initialise libwpds
+      wInit();
+
+      // Create and store wpds idents for states
+      vector<string>::const_iterator f;
+      const vector<string> &state_names = _product_system.GetConfigurationSpace().GetStates();
+      for (f = state_names.begin(); f != state_names.end(); ++f) {
+         string f_mod = "s" + *f + "__";
+         char *temp = strdup(f_mod.c_str());
+         _state_idents[*f] = wIdentCreate(temp);
+         free(temp);
+         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
+      }
+
+      // Create and store wpds idents for stack symbols
+      vector<string>::const_iterator g;
+      //stack_idents["_"] = 0; // TODO - determine whether to use this
+      const vector<string> &stack_alphabet = _product_system.GetConfigurationSpace().GetStackAlphabet();
+      for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
+         char *temp = strdup(g->c_str());
+         if (_stack_idents.find(*g) == _stack_idents.end()) {
+            _stack_idents[*g] = wIdentCreate(temp);
+         }
+         free(temp);
+         cout << "symbol: " << *g << " ident: " << _stack_idents[*g] << endl;
+      }
+
+      _fa = wFACreate(_p_semiring);
+   }
+
+   // Convert PDS to a libwpds one
+   void CreatePDS() {
+
+      _pds = wPDSCreate(_p_semiring);
+
+      // Call wPDSInsert for each rule
+      typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
+      const vector<ProductRule> &product_rules = _product_system.GetRules().GetRules();
+      vector<ProductRule>::const_iterator rule_iter;
+      for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
+         wIdent from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident;
+         Configuration from_configuration = rule_iter->configuration;
+         string from_state_name = _product_system.GetConfigurationSpace().GetStateName(from_configuration);
+         from_state_ident = _state_idents[from_state_name];
+         string from_stack_symbol = _product_system.GetConfigurationSpace().GetSymbolName(from_configuration);
+         from_stack_ident = _stack_idents[from_stack_symbol];
+         const PushDownAction *action = rule_iter->action;
+         string to_state_name = _product_system.GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
+         to_state_ident = _state_idents[to_state_name];
+         string to_symbol_name1("_");
+         string to_symbol_name2(from_stack_symbol);
+         action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
+         if (to_symbol_name1 == "_") {
+            to_stack1_ident = 0;
+         } else {
+            to_stack1_ident = _stack_idents[to_symbol_name1];
+         }
+         if (to_symbol_name2 == "_") {
+            to_stack2_ident = 0;
+         } else {
+            to_stack2_ident = _stack_idents[to_symbol_name2];
+         }
+         /* debugging
+         cout << "Inserting PDS rule:" << endl;
+         cout << "from_state_ident: " << from_state_ident << endl;
+         cout << "from_stack_ident: " << from_stack_ident << endl;
+         cout << "to_state_ident: " << to_state_ident << endl;
+         cout << "to_stack1_ident: " << to_stack1_ident << endl;
+         cout << "to_stack2_ident: " << to_stack2_ident << endl;
+         cout << endl;
+         */
+
+         wPDSInsert(_pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, NULL);
+      }
+   }
+
+   // Add a self-loop for the state, via the given stack symbol
+   void AddConfiguration(const ProductState<State,KripkeState> &state, const string &stack_symbol) {
+      /* debugging
+         cout << "Inserting automaton transition" << endl;
+         cout << "from_state_ident: " << state_ident << endl;
+         cout << "stack_ident: " << stack_idents[*gamma] << " [" << *gamma << "]" << wIdentString(stack_idents[*gamma]) << endl;
+         cout << "to_state_ident: " << state_ident << endl;
+         cout << endl;
+         */
+      wIdent state_ident = _state_idents[state.GetName().c_str()];
+      wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
+
+   }
+
+   void PrintPDS() const {
+      wRule *r = _pds->rules;
+      cout << "PDS:";
+      while (r) {
+         cout << endl << "  ";
+         print_rule(r);
+         r = r->next;
+      }
+      cout << endl;
+   }
+
+   void PrintConfigurationAutomaton() const {
+      print_automaton(_fa, "before pre*");
+   }
+
+   void ComputePredecessorConfigurations() {
+      _fa_pre = wPrestar(_pds, _fa, TRACE_COPY);
+   }
+
+   void PrintPredecessorConfigurations() { 
+      print_automaton(_fa_pre, "after pre*");
+   }
+
+   bool IsInPreStar(const ProductState<State,KripkeState> &state, const string &stack_symbol) {
+      bool found = false;
+      wTrans *t;
+      string pre_state_name = state.GetName();
+      for (t = _fa_pre->transitions; t && !found; t = t->next) {
+//         cout << "  ...found <" << state_name << ","  << wIdentString(t->name) << "> ";
+         wConfig *config = wConfigCreate(t->from, t->name, 0); // TODO state
+         wPath *path = wPathFind(_fa_pre, config);
+         //wPathTraceAll(fa_pre,p);
+         //if (p->transitions->target) {
+         //   cout << " [found paths] ";
+         //   //asm("int $0x3\n");
+         //   print_trace(fa_pre, p->transitions->target);
+         //   //print_trace(fa_pre, p);
+         //}
+         //else {
+         //   cout << "[no paths] ";
+         //}
+         if (t->from == _state_idents[pre_state_name] && t->name == _stack_idents[stack_symbol]) {
+            return true;
+         }
+//         else {
+//            cout << endl;
+//         }
+         wConfigDelete(config);
+         wPathDeref(_fa_pre, path);
+      }
+
+      return false;
+
+   }
+
+   virtual ~WPDSWrapper() {
+      // Clean up libwpds data
+      wFADelete(_fa);
+      wFADelete(_fa_pre);
+      wPDSDelete(_pds);
+      wFinish();
+   }
+};
+
 // MODEL CHECKER
 
 ModelChecker::ModelChecker(
    Environment &environment,
    const KripkeStructure &transition_system
 ) : _environment(environment), _system(transition_system) { }
+
+ProductSystem *ModelChecker::ConstructReleaseSystem(
+   const PDA &automaton,
+   Formula::Formula::const_reference x,
+   Formula::Formula::const_reference y
+) {
+   cout << "Constructing release system" << endl;
+
+   // TODO
+   return NULL;
+}
 
 // combine _system and automata
 ProductSystem *ModelChecker::ConstructProductSystem(
@@ -252,22 +440,24 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 	}
 
 	const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
-	vector<string> stack_alphabet = automaton_config_space.GetStackAlphabet();
+	const vector<unsigned int> &automaton_configurations = automaton_config_space.GetConfigurations();
+	const vector<string> &stack_alphabet = automaton_config_space.GetStackAlphabet();
 	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
 
 	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
 
 	cout << product_system->ToString() << endl;
 
-	const ConfigurationSpace &system_config_space(_system.GetConfigurationSpace());
+//   const ConfigurationSpace &system_config_space(_system.GetConfigurationSpace());
 	typedef RuleBook<PushDownAction,State>::Rule AutomatonRule;
 	typedef RuleBook<RegularAction,KripkeState>::Rule SystemRule;
+
+
 	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
 	const vector<SystemRule> &system_rules = _system.GetRules().GetRules();
 
-	//temp
-	const vector<unsigned int> &system_configurations = system_config_space.GetConfigurations();
-	const vector<unsigned int> &automaton_configurations = automaton_config_space.GetConfigurations();
+	//temp - debugging
+   /*
 	vector<unsigned int>::const_iterator e1;
 	vector<unsigned int>::const_iterator e2;
 	cout << "1\tn1\t2\tn2\t3\tn3" << endl;
@@ -281,7 +471,9 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 			cout << start_id << "\t" << config_space->GetStateName(start_id) << endl; 
 		}
 	}
+   */
 
+   // Recursively check the first subformula (dynamic programming)
 	const CheckResults *x_results  = Check(x);
 
 	vector<AutomatonRule>::const_iterator j1;
@@ -289,6 +481,7 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
 		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
 			if (j1->action->GetName() == j2->action->GetName()) {
+            /* debugging
 				cout << "automaton rule: " << endl;
 				cout << "config: " << j1->configuration << endl;
 				cout << "AKA " << automaton_config_space.GetStateName(j1->configuration) << endl;
@@ -301,8 +494,8 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 				cout << "AKA " << system_config_space.GetStateName(j2->configuration) << endl;
 				cout << "to state: " << j2->action->GetDestStateName(system_config_space) << endl;
 				cout << "action: " << j2->action->ToString() << endl;
-
 				cout << endl;
+            */
 
 				// Check system state satisfies x
 				const Result &res = x_results->GetResult(j2->configuration);
@@ -337,11 +530,6 @@ ProductSystem *ModelChecker::ConstructProductSystem(
    return product_system;
 }
 
-// Used by libwpds semiring - TODO ??
-void *nullfn (void *a, void *b) { return NULL; }
-int   eqfn (void *a, void *b)   { return a==b;    }
-void *null ()			{ return NULL; }
-
 void ModelChecker::Visit(const Formula::Until &until) {
    cout << "visiting UNTIL" << endl;
    Formula::Formula::const_reference before = until.GetBefore();
@@ -361,119 +549,40 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
 	const CheckResults *y_results  = Check(after);
 
-   wPDS *pds;
-   wFA *fa;
-   wFA *fa_pre;
-   // TODO - figure out what this is about
-   wSemiring semiring = { &nullfn, &nullfn, NULL, &null, &null, NULL, &eqfn, NULL, NULL };
-   wSemiring *p_semiring = &semiring;
+   WPDSWrapper wpds(*product_system);
 
-   // initialise libwpds
-   wInit();
-
-   // create idents for states
-   map<string,wIdent> state_idents;
-   vector<string>::const_iterator f;
-   const vector<string> &state_names = product_system->GetConfigurationSpace().GetStates();
-   for (f = state_names.begin(); f != state_names.end(); ++f) {
-      string f_mod = "s" + *f + "__";
-      char *temp = strdup(f_mod.c_str());
-      state_idents[*f] = wIdentCreate(temp);
-      free(temp);
-      cout << "state: " << f_mod << " ident: " << state_idents[f_mod] << endl;
-   }
-
-   // create idents for stack symbols
-   map<string,wIdent> stack_idents;
-   vector<string>::const_iterator g;
-   //stack_idents["_"] = 0; // TODO
-   /*char *octothorpe = strdup("#");
-   stack_idents["_"] = wIdentCreate(octothorpe); // TODO
-   free(octothorpe);*/
-   const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
-   for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
-      char *temp = strdup(g->c_str());
-      if (stack_idents.find(*g) == stack_idents.end()) {
-         stack_idents[*g] = wIdentCreate(temp);
-      }
-      free(temp);
-      cout << "symbol: " << *g << " ident: " << stack_idents[*g] << endl;
-   }
-
-   
-
-   // Convert PDS to a libwpds one
-   pds = wPDSCreate(p_semiring);
-   //wPDSInsert(...) for each rule
-	typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
-   const vector<ProductRule> &product_rules = product_system->GetRules().GetRules();
-   vector<ProductRule>::const_iterator rule_iter;
-   for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
-      wIdent from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident;
-      Configuration from_configuration = rule_iter->configuration;
-      string from_state_name = product_system->GetConfigurationSpace().GetStateName(from_configuration);
-      from_state_ident = state_idents[from_state_name];
-      string from_stack_symbol = product_system->GetConfigurationSpace().GetSymbolName(from_configuration);
-      from_stack_ident = stack_idents[from_stack_symbol];
-      const PushDownAction *action = rule_iter->action;
-      string to_state_name = product_system->GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
-      to_state_ident = state_idents[to_state_name];
-      string to_symbol_name1("_");
-      string to_symbol_name2(from_stack_symbol);
-      action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
-      if (to_symbol_name1 == "_") {
-         to_stack1_ident = 0;
-      } else {
-         to_stack1_ident = stack_idents[to_symbol_name1];
-      }
-      if (to_symbol_name2 == "_") {
-         to_stack2_ident = 0;
-      } else {
-         to_stack2_ident = stack_idents[to_symbol_name2];
-      }
-      cout << "Inserting PDS rule:" << endl;
-      cout << "from_state_ident: " << from_state_ident << endl;
-      cout << "from_stack_ident: " << from_stack_ident << endl;
-      cout << "to_state_ident: " << to_state_ident << endl;
-      cout << "to_stack1_ident: " << to_stack1_ident << endl;
-      cout << "to_stack2_ident: " << to_stack2_ident << endl;
-      cout << endl;
-      
-      // TODO extract 'to' state/stack symbols - use polymorphism 
-      // [ this is done ?? ]
-      wPDSInsert(pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, NULL);
-   }
+   wpds.CreatePDS();
 
    // Construct a libwpds 'P-automaton' representing the set of configurations
    // see http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.EHRS00b.shtml
-	// find the accepting & after-satisfying configurations
-   fa = wFACreate(p_semiring);
+	// Find the accepting & after-satisfying configurations
 	const vector<Configuration> &product_configurations = product_system->GetConfigurations();
+   const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
    Configuration system_configuration = 0;
    Configuration automaton_configuration = 0;
-   cout << "accepting & satisfying product states:" << endl;
+   cout << "Accepting & satisfying product states:" << endl;
 	vector<Configuration>::const_iterator iter;
 	for (iter = product_configurations.begin(); iter != product_configurations.end(); ++iter) {
+
+      // Is the state accepting?
       const ProductState<State,KripkeState> &state = product_system->GetState(*iter);
       bool accepting = state.GetFirst().GetAccepting();
+
+      // Does it satisfy the 'after' formula?
       const Result &result_after = y_results->GetResult(system_configuration);
       bool satisfying = result_after.GetEvaluation();
 
+      // States which satisfy both have all of their configurations added to
+      // the set.
       if (accepting && satisfying) {
          cout << *iter << " " << state.ToString() << endl;
-         wIdent state_ident = state_idents[state.GetName().c_str()];
          vector<string>::const_iterator gamma;
          for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
-            // add self-loop via gamma
-            cout << "Inserting automaton transition" << endl;
-            cout << "from_state_ident: " << state_ident << endl;
-            cout << "stack_ident: " << stack_idents[*gamma] << " [" << *gamma << "]" << wIdentString(stack_idents[*gamma]) << endl;
-            cout << "to_state_ident: " << state_ident << endl;
-            cout << endl;
-            wFAInsert(fa, state_ident, stack_idents[*gamma], state_ident, NULL, NULL);
+            wpds.AddConfiguration(state, *gamma);
          }
       }
 
+      // TODO needed?
       automaton_configuration++;
       if (automaton_configuration >= automaton.GetConfigurations().size()) {
          automaton_configuration = 0;
@@ -481,11 +590,10 @@ void ModelChecker::Visit(const Formula::Until &until) {
       }
 	}
 
-
-   print_pds(pds,"PDS:");
-   print_automaton(fa, "before pre*");
-   fa_pre = wPrestar(pds, fa, TRACE_COPY);
-   print_automaton(fa_pre, "after pre*");
+   wpds.PrintPDS();
+   wpds.PrintConfigurationAutomaton();
+   wpds.ComputePredecessorConfigurations();
+   wpds.PrintPredecessorConfigurations();
 
    CheckResults *results = new CheckResults();
 
@@ -493,69 +601,49 @@ void ModelChecker::Visit(const Formula::Until &until) {
    vector<Configuration>::const_iterator state_iter;
    for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
 
-      bool found = false;
-      wTrans *t;
-
       const KripkeState &system_state(_system.GetState(*state_iter));
       ProductState<State,KripkeState> pre_state(automaton.GetInitialState(), system_state);
       string pre_state_name = pre_state.GetName();
 
       cout << "Seeking configuration <" << pre_state_name << ",*>" << endl;
 
-      for (t = fa_pre->transitions; t && !found; t = t->next) {
-         string state_name(wIdentString(t->from));
-         cout << "  ...found <" << state_name << ","  << wIdentString(t->name) << "> ";
-         // print trace
-         wConfig *c = wConfigCreate(t->from, t->name, 0); // TODO state
-         wPath *p = wPathFind(fa_pre, c);
-         //wPathTraceAll(fa_pre,p);
-         if (p->transitions->target) {
-            cout << " [found paths] ";
-            //asm("int $0x3\n");
-            print_trace(fa_pre, p->transitions->target);
-            //print_trace(fa_pre, p);
+      if (wpds.IsInPreStar( pre_state, "_")) {
+         Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), true);
+         results->AddResult( result );
+         cout << "  ...found <" << pre_state_name << ",_> ";
+         /*
+         if (path->transitions->target) {
+            cout << endl << " [found paths] ";
+            print_trace(_fa_pre, path->transitions->target);
          }
          else {
             cout << "[no paths] ";
          }
-         if (t->from == state_idents[pre_state_name] && t->name == stack_idents["_"]) {
-            Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), true);
-            results->AddResult( result );
-            cout << " {TRUE}" << endl;
-            found = true;
+         */
 
-//            print_trace(fa_pre, p->transitions->target);
-
-         }
-         else {
-            cout << endl;
-         }
-         wConfigDelete(c);
-         wPathDeref(fa_pre,p);
+         cout << " {TRUE}" << endl;
       }
-      if (!found) {
+      else {
          cout << " {FALSE}" << endl;
          Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), false);
          results->AddResult( result );
       }
    }
 
-   // Clean up libwpds data
-   wFADelete(fa);
-   wFADelete(fa_pre);
-   wPDSDelete(pds);
-   wFinish();
-
    _environment.SetCheckResults(&_system, until, results);
-
-	/*
-      PredecessorConfigurations<NondeterministicPushDownAction> pc; // Compute predecessor configurations
-      if ( pc.Contains(_system.GetInitialState(), *iter, new PushDownEpsilonAction()) ) {
-   */
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {
    cout << "visiting RELEASE" << endl;
+   /*
+   Formula::Formula::const_reference before = release.GetBefore();
+   Formula::Formula::const_reference after  = release.GetAfter();
+
+   // Retrieve automaton by name
+	const PDA &automaton = *_environment.GetPDA(release.GetAutomaton());
+
+   const ProductSystem *product_system = ConstructReleaseSystem(automaton, before, after);
+*/
    // TODO
    cout << "TODO" << endl;
 }

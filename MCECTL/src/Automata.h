@@ -291,11 +291,6 @@ public:
    }
 };
 
-class PushDownEpsilonAction : public NondeterministicPushDownAction {
-public:
-   string ToString() const;
-};
-
 /// Standard automaton state (as opposed to labelled)
 class State {
 protected:
@@ -329,16 +324,17 @@ public:
       Rule(unsigned int config, const A *a) : configuration(config), action(a) {}
    };
 private:
-   map<const S*, size_t> _index_lookup;
+//   map<const S*, size_t> _index_lookup;
    vector<Rule> _rule_list;
 public:
    RuleBook( const vector<S*> &states ) {
+      /*
       typename vector<S*>::const_iterator iter;
       size_t index = 0;
       for( iter = states.begin(); iter != states.end(); ++iter ) {
          _index_lookup.insert( make_pair<S*, size_t>(*iter, index));
          ++index;
-      }
+      }*/
    }
 
    void AddRule(unsigned int start_id, A *action) {
@@ -364,37 +360,6 @@ public:
          s << "]" << endl;
       }
 
-      /*
-      size_t columns = _transition_table->size2();
-
-      size_t col = 0;
-      s << "  ";
-      while ( col < columns ) {
-         s << col << "  ";
-         col++;
-      }
-      s << endl;
-
-      size_t row = 0;
-      typename TransitionTable::const_iterator2 iter_row;
-      for (iter_row = _transition_table->begin2(); iter_row != _transition_table->end2(); ++iter_row) {
-         col = 0;
-         s << row << "  ";
-         typename TransitionTable::const_iterator1 iter_col;
-         for (iter_col = iter_row.begin(); iter_col != iter_row.end(); ++iter_col) {
-            typename vector<A*>::const_iterator iter_action;
-            //s << "{";
-            for (iter_action = (*iter_col).begin(); iter_action != (*iter_col).end(); ++iter_action) {
-               s << (*iter_action)->ToString() << ",";
-            }
-            //s << "}";
-            s << " ";
-            col++;
-         }
-         s << endl;
-         row++;
-      }
-      */
       return s.str();
    }
 
@@ -488,13 +453,10 @@ public:
    }
 
 
+   /* Return a string containing a representation of the automaton in Graphviz
+    * 'dot' format, to be rendered to an image.
+    */
    string ToDot() const {
-
-      cout << "DOTTING!" << endl;
-
-      cout << "config space:" << endl;
-      cout << _config_space->ToString() << endl;
-
       stringstream s;
       s << "digraph automaton { " << endl
         << "rankdir=LR;"          << endl
@@ -531,9 +493,6 @@ public:
          if (!rule_iter->action) {
             throw runtime_error("Bad action");
          }
-         //if (!rule_iter->configuration) {
-         //   throw runtime_error("Bad configuration");
-         //}
          s << _config_space->GetStateName(rule_iter->configuration)
            << " -> ";
          s << rule_iter->action->GetDestStateName(*_config_space)
@@ -561,102 +520,5 @@ typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
 
 // Deterministic Push Down Automaton
 typedef FiniteAutomaton<PushDownAction,          State>  PDA;
-
-template <class A, class S>
-class AutomatonIterator {
-   const S &_state;
-public:
-   AutomatonIterator<A, S> Next(const A &action) = 0;
-
-   vector<const A*> GetAvailableActions() = 0;
-   const S &GetState() { return _state; }
-   virtual ~AutomatonIterator() { }
-};
-
-template <class S>
-class RegularAutomatonIterator : public AutomatonIterator<RegularAction, S> {
-
-};
-
-class RegularConfiguration {
-
-};
-
-//template <class T>
-//class DFA {
-//public:
-//   struct node;
-//   typedef boost::shared_ptr<T> state_ref;
-//   typedef boost::shared_ptr<node> node_ref;
-//   typedef vector<node_ref> node_vect;
-//   struct node {
-//      private:
-//         state_ref _state;
-//         map<string, node_ref> _successors;
-//         bool _terminal;
-//      public:
-//         node(state_ref state, bool terminal) : _state(state), _terminal(terminal) { }
-//         void AddSuccessor(string action, node_ref succ) {
-//         // TODO check deterministic
-//            _successors[action] = succ;
-//         }
-//         map<string, node_ref> GetSuccessors() const {
-//            return _successors;
-//         }
-//         string ToString() const {
-//            string s = "[Node]"; // TODO ?
-//            return s;
-//         }
-//   } ;
-//private:
-//   node_vect _nodes;
-//   node_ref _initial_node;
-//public:
-//   DFA(const vector<node_ref> &nodes, const node_ref &initial) : _nodes(nodes), _initial_node(initial) {
-//      cout << "Initting DFA" << endl;
-//   }
-//   DFA(string &action) {
-//      node_ref initial(new node(state_ref(static_cast<T*>(NULL)), false));
-//      node_ref final(new node(state_ref(static_cast<T*>(NULL)), true));
-//      initial->AddSuccessor(action, final);
-//      _nodes.push_back(initial);
-//      _nodes.push_back(final);
-//      _initial_node = initial;
-//   }
-//   vector< RegularAction > _actions;
-//   AutomatonIterator< RegularAction > &initialState();
-//
-//   // Messy - temporary
-//   string ToString() const {
-//      stringstream s;
-//      s << "DFA {\n";
-//      typename node_vect::const_iterator iter;
-//      int i = 0;
-//      for (iter = _nodes.begin(); iter != _nodes.end(); ++iter) {
-//         ++i;
-//         node_ref node(*iter);
-//         s << i << ". " << node->ToString() << " ( ";
-//         
-//         typename map<string, node_ref>::const_iterator jter;
-//         map<string, node_ref> successors((*iter)->GetSuccessors());
-//         for (jter = successors.begin(); jter != successors.end(); ++jter) {
-//            s << jter->first + " -> ?, ";
-//            int index = distance(_nodes.begin(), find(_nodes.begin(), _nodes.end(), jter->second));
-//            s << index;
-//         }
-//         s << " )\n";
-//      }
-//      s << "}\n";
-//      // TODO swizzle
-//      return s.str();
-//   }
-//
-//   void Seq( DFA<T>* dfa ) { }
-//   void Or( DFA<T>* dfa ) { }
-//   void Kleene() { }
-//};
-//
-
-
 
 #endif

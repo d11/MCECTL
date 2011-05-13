@@ -83,6 +83,11 @@ public:
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y
    );
+   ProductSystem *ConstructReleaseSystem(
+      const PDA &automaton,
+      Formula::Formula::const_reference x,
+      Formula::Formula::const_reference y
+   );
 
    void Visit(const Formula::False       &formula_false);
    void Visit(const Formula::True        &formula_true);
