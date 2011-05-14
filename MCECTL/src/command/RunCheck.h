@@ -34,17 +34,26 @@ namespace Command {
             return s.str();
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) {
-            // TODO
-            const KripkeStructure *lts = environment.GetLTS(_system_name);
-            if (!lts) {
-               throw runtime_error("system is not an LTS!");
-            }
-
-            ModelChecker model_checker(environment, *lts);
+				ModelChecker *model_checker = NULL;
+				try {
+					const KripkeStructure *lts = environment.GetLTS(_system_name);
+					model_checker = new ModelChecker(environment, *lts);
+				}
+				catch (NonExistentAutomatonException e) {
+					try {
+						const PushDownSystem *pds = environment.GetPDS(_system_name);
+						model_checker = new ModelChecker(environment, *pds);
+					}
+					catch (NonExistentAutomatonException e) {
+						throw runtime_error("System must be an LTS or a PDS!");
+					}
+				}
 
             Formula::Formula::const_reference formula = environment.GetFormula(_formula_name);
-            const CheckResults *results = model_checker.Check(formula);
+            const CheckResults *results = model_checker->Check(formula);
             cout << results->ToString() << endl;
+
+				delete model_checker;
          }
    };
 

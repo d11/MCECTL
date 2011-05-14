@@ -59,12 +59,15 @@ namespace Command {
          cout << "["<< ast_state->GetName() << "]" << endl;
          if (ast_state->GetType() == AST::State::KRIPKE) {
             cout << "creating kripke state" << endl;
-            KripkeState *state = new KripkeState(ast_state->GetName(), ast_state->GetPropositions());
+            KripkeState *state = new KripkeState(ast_state->GetName(), ast_state->GetName(), ast_state->GetPropositions());
             command.CreateState(state);
          }
          else if (ast_state->GetType() == AST::State::PUSHDOWN_KRIPKE) {
             cout << "creating pushdown kripke state" << endl;
-            KripkeState *state = new KripkeState(ast_state->GetName(), ast_state->GetPropositions());
+				ostringstream s;
+				s << "<" << ast_state->GetName() << "," 
+				  << ast_state->GetSymbol() << ">";
+            KripkeState *state = new KripkeState(ast_state->GetName(), s.str(), ast_state->GetPropositions());
             command.AddStackSymbol(ast_state->GetSymbol());
             command.CreateState(state);
          }
@@ -121,89 +124,6 @@ namespace Command {
             s << "Automaton " << _automaton_name << " { " << _ast_automaton->ToString() << " }";
             return s.str();
          }
-         /*
-         Automaton *CreateDFA() const {
-            map<string, State*> state_map;
-
-            const vector<AST::State *> &ast_states(_ast_automaton->GetStates());
-            vector<State*> states;
-
-            vector<AST::State*>::const_iterator state_iter;
-            for (state_iter = ast_states.begin(); state_iter != ast_states.end(); ++state_iter) {
-               const AST::State *ast_state(*state_iter);
-               string name(ast_state->GetName());
-               State *state(new State(name));
-               state_map.insert( make_pair<string, State*>(name, state) );
-               states.push_back(state);
-            }
-
-            State *initial_state = state_map.begin()->second; // TODO
-
-            DFA *dfa = new DFA(states, initial_state);
-
-            const vector<AST::Automaton::Rule> &ast_rules(_ast_automaton->GetRules());
-            vector<AST::Automaton::Rule>::const_iterator rule_iter;
-            for (rule_iter = ast_rules.begin(); rule_iter != ast_rules.end(); ++rule_iter) {
-               // TODO unhack!!!
-               const AST::RegularAction *ast_action(dynamic_cast<const AST::RegularAction *>(rule_iter->action));
-               State *state1(state_map.find(rule_iter->state1)->second);
-               State *state2(state_map.find(rule_iter->state2)->second);
-               if (!state1 || !state2) { throw runtime_error("Action refers to nonexistent state"); }
-               RegularAction *action(new RegularAction(ast_action->GetName()));
-               dfa->AddRule(state1, action, state2);
-            }
-            return dfa;
-         }
-
-         // TODO reduce code duplication !!
-
-         Automaton *CreateLTS() const {
-            map<string, KripkeState*> state_map;
-
-            const vector<AST::State *> &ast_states(_ast_automaton->GetStates());
-            vector<KripkeState*> states;
-
-            vector<AST::State*>::const_iterator state_iter;
-            for (state_iter = ast_states.begin(); state_iter != ast_states.end(); ++state_iter) {
-
-               cout << "Transforming state ";
-
-               const AST::KripkeState *ast_state(dynamic_cast<const AST::KripkeState *>(*state_iter));
-               if (!ast_state) {
-                  throw runtime_error("LTS contains non-kripke states..!");
-               }
-               string name(ast_state->GetName());
-               cout << name << ": ";
-               vector<string> propositions = ast_state->GetPropositions();
-
-               cout << accumulate(propositions.begin(), propositions.end(), string(""), JoinWithComma) << endl;
-//               transform(propositions.begin(), propositions.end()-1, propositions.begin()+1, cout, JoinWithComma);
-               KripkeState *state = new KripkeState(name, propositions);
-               state_map.insert( make_pair<string, KripkeState*>(name, state) );
-               states.push_back(state);
-            }
-
-            KripkeState *initial_state = *(states.begin()); // TODO
-
-            KripkeStructure *lts = new KripkeStructure(states, initial_state);
-
-            const vector<AST::Automaton::Rule> &ast_rules(_ast_automaton->GetRules());
-            vector<AST::Automaton::Rule>::const_iterator rule_iter;
-            for (rule_iter = ast_rules.begin(); rule_iter != ast_rules.end(); ++rule_iter) {
-               // TODO unhack!!!
-               const AST::RegularAction *ast_action(dynamic_cast<const AST::RegularAction *>(rule_iter->action));
-               if (!ast_action) {
-                  throw runtime_error("LTS contains non-regular actions..!");
-               }
-               KripkeState *state1(state_map.find(rule_iter->state1)->second);
-               KripkeState *state2(state_map.find(rule_iter->state2)->second);
-               if (!state1 || !state2) { throw runtime_error("Action refers to nonexistent state"); }
-               RegularAction *action(new RegularAction(ast_action->GetName()));
-               lts->AddRule(state1, action, state2);
-            }
-            return lts;
-         }
-         */
 
          void CreateState(S *state) {
             cout << "Adding state " << state->GetName() << "(" << state << ")"  << endl;
@@ -274,15 +194,6 @@ namespace Command {
             cout << "created action object: " << action->ToString() << endl;
 
             _automaton->AddRule(start_id, action);
-            /*
-            S *state_1 = _state_map.find(state1_name)->second;
-            S *state_2 = _state_map.find(state2_name)->second;
-            cout << "Adding rule " << state1_name << " (" << state_1 << ") "
-                 << action->ToString() << " " << state2_name << " (" << state_2
-                 << ") " << endl;
-            if (!state_1 || !state_2) { throw runtime_error("Action refers to nonexistent state"); }
-            _automaton->AddRule(state_1, action);
-            */
          }
 
          void CreateAutomaton() {
@@ -312,10 +223,8 @@ namespace Command {
             vector<string> stack_alphabet_ordered;
             copy(_stack_alphabet.begin(), _stack_alphabet.end(), back_inserter(stack_alphabet_ordered));
 
-            cout << "state names: " << endl;
             copy( _state_names.begin(), _state_names.end(), std::ostream_iterator<string>(std::cout, " "));
 
-            cout << endl << "stack alphabet" << endl;
             copy( _stack_alphabet.begin(), _stack_alphabet.end(), std::ostream_iterator<string>(std::cout, " "));
             cout << endl;
 
@@ -367,23 +276,6 @@ namespace Command {
 
             CreateAutomaton();
 
-            /*
-            switch(_ast_automaton->GetType()) {
-               case AST::Automaton::DFA:
-                  break;
-               case AST::Automaton::PDA:
-                  environment.SetAutomaton<A,S>( _automaton_name, _automaton );
-                  break;
-               case AST::Automaton::LTS:
-                  environment.SetLTS( _automaton_name, _automaton );
-                  break;
-               case AST::Automaton::PDS:
-                  environment.SetPDS( _automaton_name, _automaton );
-                  break;
-               default:
-                  throw runtime_error("Bad automaton type"); break;
-            }
-            */
             if (!_automaton) {
                throw runtime_error("Failed to construct automaton");
             }
@@ -394,16 +286,6 @@ namespace Command {
             delete _ast_automaton;
          }
    };
-
-   //template <class A>
-   //State *DeclareAutomatonCommand<A, State, AA, AST::State>::CreateState(AST::State *) {
-   //   return new State(ast_state.GetName());
-   //}
-
-   //template <class A, AA>
-   //KripkeState *DeclareAutomatonCommand<A, State, AA, AST::State>::CreateState(AST::KripkeState *) {
-   //   return new KripkeState(ast_state.GetName(), ast_state.GetPropositions());
-   //}
 
 }
 

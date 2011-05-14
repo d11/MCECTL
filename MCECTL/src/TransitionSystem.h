@@ -15,8 +15,6 @@
 #include <set>
 #include <vector>
 #include <algorithm>
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-#include <boost/numeric/ublas/io.hpp>
 
 #include "Automata.h"
 #include "Showable.h"
@@ -27,9 +25,10 @@ typedef vector<string> Valuation;
 
 class KripkeState : public State, Showable {
 private:
+   string _config_name;
    vector<string> _valuation;
 public:
-   KripkeState(const string &name, const Valuation &valuation) : State(name, false), _valuation(valuation) { }
+   KripkeState(const string &name, const string &config_name, const Valuation &valuation) : State(name, false), _config_name(config_name), _valuation(valuation) { }
 
    bool Evaluate(const string &pvar) const {
       vector<string>::const_iterator iter;
@@ -39,6 +38,7 @@ public:
 
 	const vector<string> &GetValuation() const { return _valuation; }
    string ToString() const;
+   string GetConfigName() const { return _config_name; }
 };
 
 // Abstract

@@ -132,7 +132,7 @@ bool PredecessorConfigurations<A>::Contains( const KripkeState *state_1, const K
 
 // RESULTS TABLE
 
-ResultsTable::ResultsTable(const Environment &env, const KripkeStructure &lts) : _environment(env), _system(lts) { 
+ResultsTable::ResultsTable(const Environment &env) : _environment(env){ 
    cout << "Creating new results table" << endl;
 }
 
@@ -154,13 +154,11 @@ void ResultsTable::SetEntry(Formula::Formula::const_reference formula, CheckResu
 
 class JoinStateResults {
 private:
-   const KripkeStructure &_system;
 public:
-   JoinStateResults(const KripkeStructure &lts) : _system(lts) { }
+   JoinStateResults(){ }
 
    string operator()( const string &a, const pair<unsigned int,Result*> &b ) {
       stringstream bs;
-      //unsigned int config_id = b.first;
       bs << "   " << b.second->ToString() << "," << endl;
       if (a.empty()) return bs.str();
       return a + bs.str();
@@ -170,10 +168,9 @@ public:
 class JoinCheckResults {
 private:
    const Environment &_environment;
-   const KripkeStructure &_system;
 public:
 
-   JoinCheckResults(const Environment &env, const KripkeStructure &lts) : _environment(env), _system(lts) { }
+   JoinCheckResults(const Environment &env) : _environment(env){ }
 
    string operator()( const string &a, const pair<unsigned int,CheckResults*> &b ) {
       const map<unsigned int, Result *> &result_map = b.second->GetResults();
@@ -183,7 +180,7 @@ public:
          << accumulate(result_map.begin(),
                     result_map.end(),
                     string(""),
-                    JoinStateResults(_system))
+                    JoinStateResults())
          << "}" << endl;
       if (a.empty()) return bs.str();
       return a + bs.str();
@@ -194,7 +191,7 @@ string ResultsTable::ToString() const {
    stringstream s;
    s << "==================" << endl;
    s << "FULL RESULTS TABLE" << endl;
-   s << accumulate(_entries.begin(), _entries.end(), string(""), JoinCheckResults(_environment, _system));
+   s << accumulate(_entries.begin(), _entries.end(), string(""), JoinCheckResults(_environment));
    s << "==================" << endl;
    return s.str();
 }
@@ -218,7 +215,7 @@ private:
 public:
    WPDSWrapper(const ProductSystem &product_system) : _product_system(product_system) {
 
-      // TODO - ensure this is correct
+      // Setup null semiring for wpds
       _semiring.extend   = &nullfn;
       _semiring.combine  = &nullfn;
       _semiring.diff     = NULL;
@@ -389,7 +386,52 @@ public:
 ModelChecker::ModelChecker(
    Environment &environment,
    const KripkeStructure &transition_system
-) : _environment(environment), _system(transition_system) { }
+) : _environment(environment), _is_pds(false) {
+   _system.lts = &transition_system;
+}
+ModelChecker::ModelChecker(
+   Environment &environment,
+   const PushDownSystem &transition_system
+) : _environment(environment), _is_pds(true) {
+   _system.pds = &transition_system;
+}
+vector<Configuration> ModelChecker::GetConfigurations() {
+   if (_is_pds) {
+      cout << "BANG" << endl;
+      cout << _system.pds->GetConfigurationSpace().ToString() << endl;
+      return _system.pds->GetConfigurations();
+   } 
+   else {
+      return _system.lts->GetConfigurations();
+   }
+}
+
+const KripkeState &ModelChecker::GetSystemState(Configuration configuration) {
+   if (_is_pds) {
+      return _system.pds->GetState(configuration);
+   } 
+   else {
+      return _system.lts->GetState(configuration);
+   }
+}
+
+void ModelChecker::SetCheckResults(Formula::Formula::const_reference formula, CheckResults *results) {
+   if (_is_pds) {
+      _environment.SetCheckResults(_system.pds, formula, results);
+   } 
+   else {
+      _environment.SetCheckResults(_system.lts, formula, results);
+   }
+}
+
+const ResultsTable &ModelChecker::GetCheckResults() {
+   if (_is_pds) {
+      return _environment.GetCheckResults(_system.pds);
+   } 
+   else {
+      return _environment.GetCheckResults(_system.lts);
+   }
+}
 
 ProductSystem *ModelChecker::ConstructReleaseSystem(
    const PDA &automaton,
@@ -402,33 +444,37 @@ ProductSystem *ModelChecker::ConstructReleaseSystem(
    return NULL;
 }
 
-// combine _system and automata
-ProductSystem *ModelChecker::ConstructProductSystem(
+ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
+   const KripkeStructure &lts,
    const PDA &automaton,
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
-   cout << "Constructing product system" << endl;
+   cout << "Constructing product system from LTS" << endl;
    vector<ProductState<State,KripkeState>*> product_states;
    Valuation v;
    ProductState<State,KripkeState> *initial_state = NULL;
 
 	vector<string> product_state_names;
 	
-	vector<KripkeState> system_states(_system.GetStates());
+	vector<KripkeState> system_states(lts.GetStates());
 	vector<State> automaton_states(automaton.GetStates());
 	vector<KripkeState>::const_iterator i1;
 	vector<State>::const_iterator i2;
 	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
 		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
-			//stringstream new_state_name;
-			//new_state_name << "(" << i1->GetName() << "," << i2->GetName() << ")";
 			ProductState<State, KripkeState> *new_state;
          new_state = new ProductState<State,KripkeState>(*i2, *i1);
-			product_states.push_back(new_state);
-			product_state_names.push_back(new_state->GetName());
-			//product_state_names.push_back(new_state_name.str());
-			if (i1->GetName() == _system.GetInitialState().GetName()
+
+         // TODO
+         unsigned int n = automaton.GetConfigurationSpace().GetStackAlphabetSize();
+         unsigned int i = 0;
+         while (i < n) {
+            product_states.push_back(new_state);
+            product_state_names.push_back(new_state->GetName());
+            ++i;
+         }
+			if (i1->GetName() == lts.GetInitialState().GetName()
 				&& i2->GetName() == automaton.GetInitialState().GetName()) {
 				initial_state = new_state;
 			}
@@ -448,13 +494,12 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 
 	cout << product_system->ToString() << endl;
 
-//   const ConfigurationSpace &system_config_space(_system.GetConfigurationSpace());
 	typedef RuleBook<PushDownAction,State>::Rule AutomatonRule;
 	typedef RuleBook<RegularAction,KripkeState>::Rule SystemRule;
 
 
 	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
-	const vector<SystemRule> &system_rules = _system.GetRules().GetRules();
+	const vector<SystemRule> &system_rules = lts.GetRules().GetRules();
 
 	//temp - debugging
    /*
@@ -491,7 +536,7 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 
 				cout << "system rule: " << endl;
 				cout << "config: " << j2->configuration << endl;
-				cout << "AKA " << system_config_space.GetStateName(j2->configuration) << endl;
+            cout << "AKA " << system_config_space.GetStateName(j2->configuration) << endl;
 				cout << "to state: " << j2->action->GetDestStateName(system_config_space) << endl;
 				cout << "action: " << j2->action->ToString() << endl;
 				cout << endl;
@@ -500,22 +545,14 @@ ProductSystem *ModelChecker::ConstructProductSystem(
 				// Check system state satisfies x
 				const Result &res = x_results->GetResult(j2->configuration);
 				if (!res.GetEvaluation()) {
-					cout << "x not in l(s)" << endl;
 					continue;
 				}
 
 				unsigned int start_id;
 				start_id = j1->configuration + j2->configuration * automaton_configurations.size();
-				cout << "product rule:" << endl;
-				cout << "config: " << start_id << endl;
-				cout << "AKA " << config_space->GetStateName(start_id) << endl;
-				cout << "(with symbol " << config_space->GetSymbolName(start_id) << ")" << endl;
 
 				unsigned int dest_id;
 				dest_id = j1->action->GetDestStateID() + j2->action->GetDestStateID() * automaton_states.size();
-				cout << "to state: " << config_space->GetStateNameByID(dest_id) << endl;
-
-				cout << endl;
 
 				PushDownAction *action = j1->action->Clone();
 				action->SetDestStateID(dest_id);
@@ -530,36 +567,107 @@ ProductSystem *ModelChecker::ConstructProductSystem(
    return product_system;
 }
 
-void ModelChecker::Visit(const Formula::Until &until) {
-   cout << "visiting UNTIL" << endl;
-   Formula::Formula::const_reference before = until.GetBefore();
-   Formula::Formula::const_reference after  = until.GetAfter();
-	const string &automaton_name = until.GetAutomaton();
-	cout << "getting automaton: " << automaton_name << endl;
-	cout << "looking for a PDA" << endl;
-	const PDA &automaton = *_environment.GetPDA(automaton_name);
+ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
+   const PushDownSystem &pds,
+   const DFA &automaton,
+   Formula::Formula::const_reference x,
+   Formula::Formula::const_reference y
+) {
+   cout << "Constructing product system from PDS" << endl;
 
-	cout << "found automaton" << endl;
-	cout << automaton.ToString() << endl;
+   // Create product states
+   vector<ProductState<State,KripkeState>*> product_states;
+   Valuation v;
+   ProductState<State,KripkeState> *initial_state = NULL;
+	vector<string> product_state_names;
+	vector<KripkeState> system_states(pds.GetStates());
+	vector<State> automaton_states(automaton.GetStates());
+	vector<KripkeState>::const_iterator i1;
+	vector<State>::const_iterator i2;
+	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
+		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
+			ProductState<State, KripkeState> *new_state;
+         new_state = new ProductState<State,KripkeState>(*i2, *i1);
+			product_states.push_back(new_state);
+			product_state_names.push_back(new_state->GetName());
+			if (i1->GetName() == pds.GetInitialState().GetName()
+				&& i2->GetName() == automaton.GetInitialState().GetName()) {
+				initial_state = new_state;
+			}
+		}
+	}
 
+	if (initial_state == NULL) {
+		throw runtime_error("Failed to find initial state..!");
+	}
 
-   const ProductSystem *product_system = ConstructProductSystem(automaton, before, after); 
-	cout << "PRODUCT SYSTEM:" << endl;
+	const ConfigurationSpace &system_config_space(pds.GetConfigurationSpace());
+	const vector<unsigned int> &system_configurations = system_config_space.GetConfigurations();
+	const vector<string> &stack_alphabet = system_config_space.GetStackAlphabet();
+	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
+
+   // Initialise 
+	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
+
 	cout << product_system->ToString() << endl;
 
-	const CheckResults *y_results  = Check(after);
+   // Create rules
+	typedef RuleBook<RegularAction,State>::Rule AutomatonRule;
+	typedef RuleBook<PushDownAction,KripkeState>::Rule SystemRule;
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
+	const vector<SystemRule> &system_rules = pds.GetRules().GetRules();
 
-   WPDSWrapper wpds(*product_system);
+   // Recursively check the first subformula (dynamic programming)
+	const CheckResults *x_results  = Check(x);
 
-   wpds.CreatePDS();
+	vector<AutomatonRule>::const_iterator j1;
+	vector<SystemRule>::const_iterator j2;
+	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
+		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
+			if (j1->action->GetName() == j2->action->GetName()) {
+
+				// Check system state satisfies x
+				const Result &res = x_results->GetResult(j2->configuration);
+				if (!res.GetEvaluation()) {
+					cout << "x not in l(s)" << endl;
+					continue;
+				}
+
+				unsigned int start_id;
+				//start_id = j1->configuration + j2->configuration * automaton_configurations.size();
+				start_id = j1->configuration + j2->configuration * system_configurations.size();
+				cout << "product rule:" << endl;
+				cout << "config: " << start_id << endl;
+				cout << "AKA " << config_space->GetStateName(start_id) << endl;
+				cout << "(with symbol " << config_space->GetSymbolName(start_id) << ")" << endl;
+
+				unsigned int dest_id;
+				dest_id = j1->action->GetDestStateID() + j2->action->GetDestStateID() * automaton_states.size();
+				cout << "to state: " << config_space->GetStateNameByID(dest_id) << endl;
+
+				cout << endl;
+
+				PushDownAction *action = j2->action->Clone();
+				action->SetDestStateID(dest_id);
+				product_system->AddRule(start_id, action);
+			}
+			else {
+				cout << "names don't match" << endl;
+			}
+		}
+	}
+
+   return product_system;
+}
+
+void ModelChecker::ConstructConfigurationSet(WPDSWrapper &wpds, const ProductSystem *product_system, const CheckResults *y_results, unsigned int automaton_configuration_count) {
 
    // Construct a libwpds 'P-automaton' representing the set of configurations
    // see http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.EHRS00b.shtml
 	// Find the accepting & after-satisfying configurations
 	const vector<Configuration> &product_configurations = product_system->GetConfigurations();
    const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
-   Configuration system_configuration = 0;
-   Configuration automaton_configuration = 0;
+
    cout << "Accepting & satisfying product states:" << endl;
 	vector<Configuration>::const_iterator iter;
 	for (iter = product_configurations.begin(); iter != product_configurations.end(); ++iter) {
@@ -569,6 +677,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
       bool accepting = state.GetFirst().GetAccepting();
 
       // Does it satisfy the 'after' formula?
+      Configuration system_configuration = *iter / automaton_configuration_count;
       const Result &result_after = y_results->GetResult(system_configuration);
       bool satisfying = result_after.GetEvaluation();
 
@@ -581,34 +690,73 @@ void ModelChecker::Visit(const Formula::Until &until) {
             wpds.AddConfiguration(state, *gamma);
          }
       }
-
-      // TODO needed?
-      automaton_configuration++;
-      if (automaton_configuration >= automaton.GetConfigurations().size()) {
-         automaton_configuration = 0;
-         system_configuration++;
-      }
 	}
+}
 
+void ModelChecker::Visit(const Formula::Until &until) {
+   cout << "visiting UNTIL" << endl;
+   Formula::Formula::const_reference before = until.GetBefore();
+   Formula::Formula::const_reference after  = until.GetAfter();
+	const string &automaton_name = until.GetAutomaton();
+	cout << "getting automaton: " << automaton_name << endl;
+   const ProductSystem *product_system = NULL;
+   unsigned int automaton_configuration_count = 0;
+   const State *automaton_initial_state = NULL;
+
+   if (_is_pds) {
+      cout << "looking for a DFA" << endl;
+      const DFA &automaton = *_environment.GetDFA(automaton_name);
+
+      cout << "found DFA" << endl;
+      cout << automaton.ToString() << endl;
+
+      automaton_configuration_count = automaton.GetConfigurations().size();
+      automaton_initial_state = new State(automaton.GetInitialState());
+      product_system = ConstructProductSystemFromPDS(*_system.pds, automaton, before, after); 
+
+   } else {
+      // pushdown part should be in the automaton
+      cout << "looking for a PDA" << endl;
+      const PDA &automaton = *_environment.GetPDA(automaton_name);
+
+      cout << "found PDA" << endl;
+      cout << automaton.ToString() << endl;
+      automaton_configuration_count = automaton.GetConfigurations().size();
+      automaton_initial_state = new State(automaton.GetInitialState());
+      product_system = ConstructProductSystemFromLTS(*_system.lts, automaton, before, after); 
+   }
+
+
+	cout << "PRODUCT SYSTEM:" << endl;
+	cout << product_system->ToString() << endl;
+
+	const CheckResults *y_results  = Check(after);
+
+   WPDSWrapper wpds(*product_system);
+
+   wpds.CreatePDS();
    wpds.PrintPDS();
+   ConstructConfigurationSet(
+         wpds, product_system, y_results, automaton_configuration_count
+      );
    wpds.PrintConfigurationAutomaton();
    wpds.ComputePredecessorConfigurations();
    wpds.PrintPredecessorConfigurations();
 
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations()); // TODO
    vector<Configuration>::const_iterator state_iter;
    for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
 
-      const KripkeState &system_state(_system.GetState(*state_iter));
-      ProductState<State,KripkeState> pre_state(automaton.GetInitialState(), system_state);
+      const KripkeState &system_state(GetSystemState(*state_iter)); // TODO
+      ProductState<State,KripkeState> pre_state(*automaton_initial_state, system_state);
       string pre_state_name = pre_state.GetName();
 
       cout << "Seeking configuration <" << pre_state_name << ",*>" << endl;
 
       if (wpds.IsInPreStar( pre_state, "_")) {
-         Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), true);
+         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), true);
          results->AddResult( result );
          cout << "  ...found <" << pre_state_name << ",_> ";
          /*
@@ -625,12 +773,14 @@ void ModelChecker::Visit(const Formula::Until &until) {
       }
       else {
          cout << " {FALSE}" << endl;
-         Result *result = new Result(*state_iter, pre_state.GetSecond().GetName(), false);
+         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), false);
          results->AddResult( result );
       }
    }
 
-   _environment.SetCheckResults(&_system, until, results);
+   delete automaton_initial_state;
+
+   SetCheckResults(until, results); // TODO
 }
 
 void ModelChecker::Visit(const Formula::Release &release) {
@@ -651,45 +801,46 @@ void ModelChecker::Visit(const Formula::PVar &pvar) {
    cout << "visiting PVAR" << endl;
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      const KripkeState &state = _system.GetState(id);
-      Result *res = new Result(id, state.GetName(), state.Evaluate(pvar.GetVarName()));
+      cout << "id " << id << endl;
+      const KripkeState &state = GetSystemState(id);
+      Result *res = new Result(id, state.GetConfigName(), state.Evaluate(pvar.GetVarName()));
       results->AddResult(res);
    }
 
-   _environment.SetCheckResults(&_system, pvar, results);
+   SetCheckResults(pvar, results);
 }
 void ModelChecker::Visit(const Formula::False &formula_false) {
    cout << "visiting FALSE" << endl;
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      const KripkeState &state = _system.GetState(id);
-      Result *res = new Result(id, state.GetName(), false);
+      const KripkeState &state = GetSystemState(id);
+      Result *res = new Result(id, state.GetConfigName(), false);
       results->AddResult(res);
    }
-   _environment.SetCheckResults(&_system, formula_false, results);
+   SetCheckResults(formula_false, results);
 }
 void ModelChecker::Visit(const Formula::True &formula_true) {
    cout << "visiting TRUE" << endl;
 
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      const KripkeState &state = _system.GetState(id);
-      Result *res = new Result(id, state.GetName(),true);
+      const KripkeState &state = GetSystemState(id);
+      Result *res = new Result(id, state.GetConfigName(),true);
       results->AddResult(res);
    }
-   _environment.SetCheckResults(&_system, formula_true, results);
+   SetCheckResults(formula_true, results);
 }
 void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
    cout << "visiting CONJUNCTION" << endl;
@@ -699,18 +850,18 @@ void ModelChecker::Visit(const Formula::Conjunction &conjunction) {
 
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      const KripkeState &state = _system.GetState(id);
+      const KripkeState &state = GetSystemState(id);
       const Result &result_left  = left_results->GetResult(id);
       const Result &result_right = right_results->GetResult(id);
-      Result *res = new Result(id, state.GetName(), result_left.GetEvaluation() && result_right.GetEvaluation());
+      Result *res = new Result(id, state.GetConfigName(), result_left.GetEvaluation() && result_right.GetEvaluation());
       results->AddResult(res);
    }
 
-   _environment.SetCheckResults(&_system, conjunction, results);
+   SetCheckResults(conjunction, results);
 }
 void ModelChecker::Visit(const Formula::Negation &negation) {
    cout << "visiting NEGATION" << endl;
@@ -718,21 +869,21 @@ void ModelChecker::Visit(const Formula::Negation &negation) {
 
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(_system.GetConfigurations());
+   vector<Configuration> ids(GetConfigurations());
    vector<Configuration>::const_iterator iter;
    for (iter = ids.begin(); iter != ids.end(); ++iter) {
       Configuration id = *iter;
-      const KripkeState &state = _system.GetState(id);
+      const KripkeState &state = GetSystemState(id);
       const Result &sub_result_for_configuration = sub_results->GetResult(id);
-      Result *res = new Result(id, state.GetName(), !sub_result_for_configuration.GetEvaluation());
+      Result *res = new Result(id, state.GetConfigName(), !sub_result_for_configuration.GetEvaluation());
       results->AddResult(res);
    }
 
-   _environment.SetCheckResults(&_system, negation, results);
+   SetCheckResults(negation, results);
 }
 
 const CheckResults *ModelChecker::Check( Formula::Formula::const_reference formula ) {
-   const ResultsTable &results_table = _environment.GetCheckResults(&_system);
+   const ResultsTable &results_table = GetCheckResults();
    if ( results_table.HasEntry( formula ) ) {
       return results_table.GetEntry( formula );
    }
@@ -741,10 +892,4 @@ const CheckResults *ModelChecker::Check( Formula::Formula::const_reference formu
    cout << results_table.ToString() << endl;
    return results_table.GetEntry( formula );
 }
-
-
-
-
-
-
 

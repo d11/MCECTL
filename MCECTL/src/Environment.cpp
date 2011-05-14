@@ -22,36 +22,48 @@
 
 Environment::Environment() { }
 
-const ResultsTable &Environment::GetCheckResults(const KripkeStructure *transition_system)  {
+const ResultsTable &Environment::GetCheckResultsByID(unsigned int system_id)  {
    cout << "Getting check results for a system" << endl;
    map<unsigned int, ResultsTable *>::const_iterator iter;
-   iter = _computed_results.find( transition_system->GetID() );
+   iter = _computed_results.find(system_id);
    ResultsTable *table = NULL;
    if (iter == _computed_results.end()) {
       cout << "creating new results table" << endl;
-      table = new ResultsTable(*this, *transition_system);
-      _computed_results.insert(make_pair(transition_system->GetID(), table));
+      table = new ResultsTable(*this);
+      _computed_results.insert(make_pair(system_id, table));
    }
    else {
       table = iter->second;
    }
    return *table;
 }
+const ResultsTable &Environment::GetCheckResults(const KripkeStructure *transition_system)  {
+	return GetCheckResultsByID(transition_system->GetID());
+}
+const ResultsTable &Environment::GetCheckResults(const PushDownSystem *transition_system)  {
+	return GetCheckResultsByID(transition_system->GetID());
+}
 
-void Environment::SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+void Environment::SetCheckResultsByID(unsigned int system_id, Formula::Formula::const_reference formula, CheckResults *results) {
    cout << "Setting check results for a system" << endl;
    map<unsigned int, ResultsTable *>::iterator iter;
-   iter = _computed_results.find( transition_system->GetID() );
+   iter = _computed_results.find( system_id );
    ResultsTable *table = NULL;
    if (iter == _computed_results.end()) {
       cout << "creating new results table" << endl;
-      table = new ResultsTable(*this, *transition_system);
-      _computed_results.insert(make_pair(transition_system->GetID(), table));
+      table = new ResultsTable(*this);
+      _computed_results.insert(make_pair(system_id, table));
    }
    else {
       table = iter->second;
    }
    table->SetEntry( formula, results );
+}
+void Environment::SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+   SetCheckResultsByID( transition_system->GetID(), formula, results );
+}
+void Environment::SetCheckResults(const PushDownSystem *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+   SetCheckResultsByID( transition_system->GetID(), formula, results );
 }
 
 Formula::Formula::const_reference Environment::GetFormula(const string &identifier) const {

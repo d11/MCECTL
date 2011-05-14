@@ -176,7 +176,7 @@ LTS t12 {
    ACTION(b:t3->t4)
    ACTION(c:t4->t5)
 }
-#:check(phi8,t11)
+:check(phi8,t12)
 
 #LTS t13 {
 #

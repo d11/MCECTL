@@ -25,6 +25,10 @@
 #include "Showable.h"
 
 typedef unsigned int Configuration;
+class KripkeState;
+class State;
+template<class S,class T>
+class ProductState;
 
 /*struct numbering_ostream_iterator : public ostream_iterator<string> {
    private:
@@ -425,9 +429,18 @@ public:
    }
 
    const S &GetState(Configuration c) const {
+//      return *(_states.at(c / _config_space->GetStackAlphabetSize())); // TODO
+      return GetStateAux((S*)NULL, c);
+   }
+   const KripkeState &GetStateAux(const KripkeState *,Configuration c) const {
+      return *(_states.at(c));
+   }
+   const State &GetStateAux(const State *,Configuration c) const {
       return *(_states.at(c / _config_space->GetStackAlphabetSize()));
    }
-
+   const ProductState<State,KripkeState> &GetStateAux(const ProductState<State,KripkeState> *,Configuration c) const {
+      return *(_states.at(c));
+   }
    S GetInitialState() const {
       return *_initial_state;
    };

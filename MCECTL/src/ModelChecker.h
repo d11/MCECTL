@@ -55,9 +55,8 @@ class ResultsTable : public Showable {
 private:
    map<unsigned int, CheckResults *> _entries;
    const Environment &_environment;
-   const KripkeStructure &_system;
 public:
-   ResultsTable(const Environment &env, const KripkeStructure &lts);
+   ResultsTable(const Environment &env);
    bool HasEntry( Formula::Formula::const_reference formula ) const;
 	const CheckResults *GetEntry( Formula::Formula::const_reference formula ) const;
 	void SetEntry( Formula::Formula::const_reference formula, CheckResults *check_results );
@@ -65,24 +64,54 @@ public:
 };
 
 class Environment;
+class WPDSWrapper;
 
 class ModelChecker : public Formula::Visitor {
 private:
    Environment &_environment;
-   const KripkeStructure &_system;
+   union {
+      const KripkeStructure *lts;
+      const PushDownSystem  *pds;
+   } _system;
+   bool _is_pds;
 
 public:
    ModelChecker(
       Environment &environment,
       const KripkeStructure &transition_system
    );
+   ModelChecker(
+      Environment &environment,
+      const PushDownSystem &transition_system
+   );
+
+   vector<Configuration> GetConfigurations();
+   const KripkeState &GetSystemState(Configuration configuration);
+
+	void SetCheckResults(Formula::Formula::const_reference formula, CheckResults *results);
+	const ResultsTable &GetCheckResults();
+
+   void ConstructConfigurationSet(
+      WPDSWrapper &wpds,
+      const ProductSystem *product_system, 
+      const CheckResults *y_results,
+      unsigned int automaton_configuration_count
+   );
 
    // combine _system and automata
-   ProductSystem *ConstructProductSystem(
+   ProductSystem *ConstructProductSystemFromLTS(
+      const KripkeStructure &lts,
       const PDA &automaton,
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y
    );
+   ProductSystem *ConstructProductSystemFromPDS(
+      const PushDownSystem &pds,
+      const DFA &automaton,
+      Formula::Formula::const_reference x,
+      Formula::Formula::const_reference y
+   );
+
    ProductSystem *ConstructReleaseSystem(
       const PDA &automaton,
       Formula::Formula::const_reference x,

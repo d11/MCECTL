@@ -30,19 +30,25 @@ class CheckResults;
 class Environment : public Showable, Formula::Visitor {
 private:
    map<string, const Formula::Formula*>  _formulas; 
-   map<unsigned int, const Formula::Formula*>  _formulas_by_id; 
-   map<string, const DFA*>         _dfas; 
-   map<string, const PDA*>         _pdas; 
-   map<string, const KripkeStructure*>         _ltss; 
-   map<string, const PushDownSystem*>         _pdss; 
+   map<unsigned int, const Formula::Formula*> _formulas_by_id;
+   map<string, const DFA*>                    _dfas;
+   map<string, const PDA*>                    _pdas;
+   map<string, const KripkeStructure*>        _ltss;
+   map<string, const PushDownSystem*>         _pdss;
 
+	// Map from unique automaton ID of system to its results table
    map<unsigned int, ResultsTable *> _computed_results;
+
+	void SetCheckResultsByID(unsigned int system_id, Formula::Formula::const_reference formula, CheckResults *results);
+	const ResultsTable &GetCheckResultsByID(unsigned int system_id);
 public:
    Environment();
    ~Environment();
 
-   const ResultsTable &GetCheckResults(const KripkeStructure *transition_system)     ;
+   const ResultsTable &GetCheckResults(const KripkeStructure *transition_system);
+   const ResultsTable &GetCheckResults(const PushDownSystem *transition_system);
 	void  SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results);
+	void  SetCheckResults(const PushDownSystem *transition_system, Formula::Formula::const_reference formula, CheckResults *results);
 
    Formula::Formula::const_reference GetFormula(const string &identifier)   const;
 	Formula::Formula::const_reference GetFormulaByID(unsigned int formula_id) const;

@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE( test_basic )
       v2.push_back("p");
 
       vector<KripkeState*> states;
-      KripkeState *s1 = new KripkeState("foo", v1);
-      KripkeState *s2 = new KripkeState("bar", v2);
+      KripkeState *s1 = new KripkeState("foo", "foo", v1);
+      KripkeState *s2 = new KripkeState("bar", "bar", v2);
       states.push_back(s1);
       states.push_back(s2);
 

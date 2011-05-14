@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  Automaton.h
+ *       Filename:  AST/TransitionSystem.h
  *    Description:  AST for systems
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
@@ -201,10 +201,6 @@ namespace AST {
 
          if (_owns_states) {
             for_each(_states.begin(), _states.end(), boost::checked_deleter<State>() );
-            //typename vector<const State*>::const_iterator state_iter;
-            //for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
-            //   delete *state_iter;
-            //}
             typename vector<Rule>::const_iterator rule_iter;
             for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
                delete rule_iter->_action;
@@ -246,13 +242,12 @@ namespace AST {
          }
          vector<Rule>::const_iterator rule_iter;
          for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
+				// TODO
             //s << "(" << rule_iter->state1 << ", " << (*rule_iter).action->ToString() << ", " << rule_iter->state2 << ")" << endl;
          }
          return s.str();
       }
    };
-
-//typedef Automaton<RegularAction, State> DFA;
 
 }
 
