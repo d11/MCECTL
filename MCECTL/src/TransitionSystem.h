@@ -27,8 +27,9 @@ class KripkeState : public State, Showable {
 private:
    string _config_name;
    vector<string> _valuation;
+   string _symbol;
 public:
-   KripkeState(const string &name, const string &config_name, const Valuation &valuation) : State(name, false), _config_name(config_name), _valuation(valuation) { }
+   KripkeState(const string &name, const string &config_name, const string &symbol, const Valuation &valuation) : State(name, false), _config_name(config_name), _valuation(valuation), _symbol(symbol) { }
 
    bool Evaluate(const string &pvar) const {
       vector<string>::const_iterator iter;
@@ -39,6 +40,7 @@ public:
 	const vector<string> &GetValuation() const { return _valuation; }
    string ToString() const;
    string GetConfigName() const { return _config_name; }
+   string GetSymbol() const { return _symbol; }
 };
 
 // Abstract
@@ -81,6 +83,11 @@ public:
       s << "(" << _a.GetName() << "," << _b.GetName() << ")";
       return s.str();
    }
+   string GetConfigName() const {
+      stringstream s;
+      s << "(" << _a.GetName() << "," << _b.GetConfigName() << ")";
+      return s.str();
+   }
    string ToString() const {
       stringstream s;
       s << "(" << _a.ToString() << ", " << _b.ToString() << ")";
@@ -92,5 +99,6 @@ public:
 };
 
 typedef FiniteAutomaton<PushDownAction, ProductState<State,KripkeState> > ProductSystem;
+typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
 
 #endif

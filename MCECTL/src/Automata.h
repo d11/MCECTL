@@ -69,16 +69,16 @@ public:
    unsigned int GetStateID(const string &state_name) const {
       typename vector<string>::const_iterator iter = _states.begin();
       unsigned int id = 0;
-      while (iter->compare(state_name) != 0) {
-         if (iter == _states.end()) {
-            stringstream s;
-            s << "Can't find ID for state " << state_name << " in configuration space";
-            throw runtime_error(s.str());
+      while (iter != _states.end()) {
+         if (iter->compare(state_name) == 0) {
+            return id;
          }
          ++id;
          ++iter;
       }
-      return id;
+      stringstream s;
+      s << "Can't find ID for state " << state_name << " in configuration space";
+      throw runtime_error(s.str());
    }
    unsigned int GetSymbolID(const string &stack_symbol) const {
       typename vector<string>::const_iterator iter = _stack_alphabet.begin();
@@ -105,6 +105,9 @@ public:
       return _stack_alphabet.at(symbol_id % _stack_alphabet.size());
    }
 
+   size_t GetStateCount() const {
+      return _states.size();
+   }
    size_t GetStackAlphabetSize() const {
       return _stack_alphabet.size();
    }
@@ -125,6 +128,12 @@ public:
       for (iter = _stack_alphabet.begin(); iter != _stack_alphabet.end(); ++iter) {
          s << index++ << ": " << *iter << endl;
       }
+      s << "Configurations: " << endl;
+      vector<Configuration> cs = GetConfigurations();
+      vector<Configuration>::const_iterator i;
+      for (i = cs.begin(); i != cs.end(); ++i) {
+         s << *i << " " << GetStateName(*i) << "," << GetSymbolName(*i) << endl;
+      }
       s << endl;
       return s.str();
    }
@@ -135,6 +144,15 @@ public:
          boost::counting_iterator<int>(_states.size()*_stack_alphabet.size()),
          std::back_inserter(ids));
       return ids;
+   }
+
+   vector<Configuration> GetProductConfigurations() const {
+      vector<Configuration> ids;
+      std::copy(boost::counting_iterator<int>(0),
+         boost::counting_iterator<int>(_states.size()),
+         std::back_inserter(ids));
+      return ids;
+
    }
    
 };
@@ -326,6 +344,8 @@ public:
       unsigned int configuration;
       const A *action;
       Rule(unsigned int config, const A *a) : configuration(config), action(a) {}
+      Rule() : configuration(0), action(NULL) {  }
+//throw runtime_error("Constructing empty rule!");
    };
 private:
 //   map<const S*, size_t> _index_lookup;
@@ -433,14 +453,23 @@ public:
       return GetStateAux((S*)NULL, c);
    }
    const KripkeState &GetStateAux(const KripkeState *,Configuration c) const {
+//      cout <<" ks " << endl;
       return *(_states.at(c));
    }
    const State &GetStateAux(const State *,Configuration c) const {
+//      cout <<" s " << endl;
       return *(_states.at(c / _config_space->GetStackAlphabetSize()));
    }
    const ProductState<State,KripkeState> &GetStateAux(const ProductState<State,KripkeState> *,Configuration c) const {
+//      cout <<" ps1 " << endl;
+//      return *(_states.at(c / _config_space->GetStackAlphabetSize()));
       return *(_states.at(c));
    }
+   /*
+   const ProductState<KripkeState,State> &GetStateAux(const ProductState<KripkeState,State> *,Configuration c) const {
+      cout <<" ps2 " << endl;
+      return *(_states.at(c));
+   }*/
    S GetInitialState() const {
       return *_initial_state;
    };

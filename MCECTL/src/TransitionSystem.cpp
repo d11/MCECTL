@@ -21,7 +21,7 @@
 string KripkeState::ToString() const {
    stringstream s;
    //vector<const string *> propositions(_valuation.GetEntries());
-   s << "[" << _name << ": "
+   s << "[" << GetConfigName() << ": "
       // TODO
      << accumulate(_valuation.begin(), _valuation.end(), string(""), JoinWithComma)
      << "]";

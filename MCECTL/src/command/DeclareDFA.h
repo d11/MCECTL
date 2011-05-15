@@ -59,7 +59,7 @@ namespace Command {
          cout << "["<< ast_state->GetName() << "]" << endl;
          if (ast_state->GetType() == AST::State::KRIPKE) {
             cout << "creating kripke state" << endl;
-            KripkeState *state = new KripkeState(ast_state->GetName(), ast_state->GetName(), ast_state->GetPropositions());
+            KripkeState *state = new KripkeState(ast_state->GetName(), ast_state->GetName(), "_", ast_state->GetPropositions());
             command.CreateState(state);
          }
          else if (ast_state->GetType() == AST::State::PUSHDOWN_KRIPKE) {
@@ -67,7 +67,7 @@ namespace Command {
 				ostringstream s;
 				s << "<" << ast_state->GetName() << "," 
 				  << ast_state->GetSymbol() << ">";
-            KripkeState *state = new KripkeState(ast_state->GetName(), s.str(), ast_state->GetPropositions());
+            KripkeState *state = new KripkeState(ast_state->GetName(), s.str(), ast_state->GetSymbol(), ast_state->GetPropositions());
             command.AddStackSymbol(ast_state->GetSymbol());
             command.CreateState(state);
          }

@@ -91,13 +91,19 @@ public:
 	void SetCheckResults(Formula::Formula::const_reference formula, CheckResults *results);
 	const ResultsTable &GetCheckResults();
 
-   void ConstructConfigurationSet(
+   void ConstructConfigurationSetForLTS(
       WPDSWrapper &wpds,
       const ProductSystem *product_system, 
       const CheckResults *y_results,
       unsigned int automaton_configuration_count
    );
 
+   void ConstructConfigurationSetForPDS(
+      WPDSWrapper &wpds,
+      const ProductSystem *product_system, 
+      const CheckResults *y_results,
+      unsigned int system_configuration_count
+   );
    // combine _system and automata
    ProductSystem *ConstructProductSystemFromLTS(
       const KripkeStructure &lts,

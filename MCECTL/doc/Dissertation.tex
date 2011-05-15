@@ -86,6 +86,9 @@ where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times
 A standard CTL formula is defined by
 $\phi := q | \phi \vee \phi | \not \phi | E(\phi U \phi) | $%TODO
 %semantics
+A $\mathcal{T}, s \models \phi$ denotes that state $s \in \mathcal{T} = (\mathcal{S}, \rightarrow, l)$ satisfies the formula $\phi$, and is defined inductively over formulas as follows:
+$\mathcal{T}, s \models q$ if $q \in l(s)$
+$\mathcal{T}, s \models \phi_1 \vee \phi_2$ if $\mathcal{T}, s \models \phi_1$ and $\mathcal{T}, s \models \phi_2$
 \end{mydef}
 
 However, its expressive power is limited, and there are properties which we would like to be able to check that are beyond its power.
