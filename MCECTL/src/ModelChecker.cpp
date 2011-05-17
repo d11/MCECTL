@@ -32,8 +32,14 @@ using namespace std;
 
 // RESULT
 
-Result::Result(unsigned int config_id, const string &config_name, bool result) : _config_id(config_id), _config_name(config_name), _evaluation(result) {
-   // TODO
+Result::Result(unsigned int config_id, const string &config_name) : _config_id(config_id), _config_name(config_name) {
+}
+Result::Result(unsigned int config_id, const string &config_name, bool evaluation) : _config_id(config_id), _config_name(config_name), _evaluation(evaluation) {
+
+}
+
+void Result::SetEvaluation(bool evaluation) {
+   _evaluation = evaluation;
 }
 
 string Result::ToString() const {
@@ -153,6 +159,7 @@ int   eqfn (void *a, void *b)   { return a==b;    }
 void* plusfn (void *a, void *b) { return (void*)((int)a+(int)b); }
 void* minfn  (void *a, void *b) { return (a<b)? a : b; }
 void* onefn ()		 	{ return NULL; }
+void* null ()		 	{ return NULL; }
 void* zerofn ()		 	{ return (void*)INT_MAX; }
 
 /* Wrap wPDS functionality in an object */
@@ -171,24 +178,24 @@ public:
    WPDSWrapper(const ProductSystem &product_system) : _product_system(product_system) {
 
       // Setup null semiring for wpds
-//      _semiring.extend   = &nullfn;
-//      _semiring.combine  = &nullfn;
-//      _semiring.diff     = NULL;
-//      _semiring.one      = &null;
-//      _semiring.zero     = &null;
-//      _semiring.quasione = NULL;
-//      _semiring.eq       = &eqfn;
-//      _semiring.ref      = NULL;
-//      _semiring.deref    = NULL;
-      _semiring.extend   = &plusfn;
-      _semiring.combine  = &minfn;
+      _semiring.extend   = &nullfn;
+      _semiring.combine  = &nullfn;
       _semiring.diff     = NULL;
-      _semiring.one      = &onefn;
-      _semiring.zero     = &zerofn;
+      _semiring.one      = &null;
+      _semiring.zero     = &null;
       _semiring.quasione = NULL;
       _semiring.eq       = &eqfn;
       _semiring.ref      = NULL;
       _semiring.deref    = NULL;
+//      _semiring.extend   = &plusfn;
+//      _semiring.combine  = &minfn;
+//      _semiring.diff     = NULL;
+//      _semiring.one      = &onefn;
+//      _semiring.zero     = &zerofn;
+//      _semiring.quasione = NULL;
+//      _semiring.eq       = &eqfn;
+//      _semiring.ref      = NULL;
+//      _semiring.deref    = NULL;
       _p_semiring = &_semiring;
 //   wSemiring sr = { &plusfn, &minfn, NULL,		/* ext, comb, diff  */
 //           &onefn, &zerofn, NULL,	/* one, zero, q-one */
@@ -211,7 +218,7 @@ public:
 
       // Create and store wpds idents for stack symbols
       vector<string>::const_iterator g;
-      //stack_idents["_"] = 0; // TODO - determine whether to use this
+      // _stack_idents["_"] = 0; // TODO - determine whether to use this
       const vector<string> &stack_alphabet = _product_system.GetConfigurationSpace().GetStackAlphabet();
       for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
          char *temp = strdup(g->c_str());
@@ -228,9 +235,11 @@ public:
    void AddPDSState(const ProductState<State,KripkeState> &state, bool goal_state) {
 
       if (!goal_state && _state_idents.find(state.GetName()) != _state_idents.end()) {
+
          return;
       }
       string f_mod = "s"+ state.GetName();
+//      string f_mod = "_"+ state.GetName();
       if (goal_state) {
          f_mod += "__";
       }
@@ -298,6 +307,33 @@ public:
          */
       wIdent state_ident = _state_idents[state.GetName().c_str()];
       wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
+
+   }
+   void AddConfigurationTop(const ProductState<State,KripkeState> &state, const string &stack_symbol, const vector<string> &stack_alphabet) {
+
+//      if (stack_symbol == "_") {
+//         AddConfiguration(state,stack_symbol);
+//         return;
+//      }
+      string f_mod = "s"+ state.GetName();
+      char *temp = strdup(f_mod.c_str());
+//      _state_idents[state.GetName()+"__"] = _state_idents[state.GetName()];
+      _state_idents[state.GetName()] = wIdentCreate(temp);
+      f_mod = "_"+ state.GetName() +"__";
+      free(temp);
+      temp = strdup(f_mod.c_str());
+      _state_idents[state.GetName()+"__"] = wIdentCreate(temp);
+      free(temp);
+
+
+      wIdent state_ident1 = _state_idents[state.GetName()];
+      wIdent state_ident2 = _state_idents[state.GetName()+"__"];
+      wFAInsert(_fa, state_ident1, _stack_idents[stack_symbol], state_ident2, NULL, NULL);
+
+      vector<string>::const_iterator gamma;
+      for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
+         wFAInsert(_fa, state_ident2, _stack_idents[*gamma], state_ident2, NULL, NULL);
+      }
 
    }
 // from libwpds example TODO rewrite
@@ -374,12 +410,12 @@ public:
       PrintAutomaton(_fa_pre, "after pre*");
    }
 
-   bool IsInPreStar(const ProductState<State,KripkeState> &state, const string &stack_symbol) {
+   void CheckPreStar(const ProductState<State,KripkeState> &state, const string &stack_symbol, Result &result) {
       bool found = false;
       wTrans *t;
       string pre_state_name = state.GetName();
       for (t = _fa_pre->transitions; t && !found; t = t->next) {
-//         cout << "  ...found <" << state_name << ","  << wIdentString(t->name) << "> ";
+         cout << "  ...found <" << wIdentString(t->from) << ","  << wIdentString(t->name) << "> ";
 //         wConfig *config = NULL;
 //         if (stack_symbol == "_") {
 //          wConfig *config = wConfigCreate(t->from, t->name, 0); // TODO state
@@ -398,29 +434,33 @@ public:
 //            cout << "[no paths] ";
 //         }
          if (t->from == _state_idents[pre_state_name] && t->name == _stack_idents[stack_symbol]) {
-            wConfig *config = wConfigCreate(t->from, t->name, 0); // TODO state
+            cout << " !! ";
+            wConfig *config = wConfigCreate(t->from, t->name, 0); 
             wPath *path = wPathFind(_fa_pre, config);
 //            if ( path->transitions->target) {
+            bool done = false;
             if (path->transitions && path->transitions->target) {
                cout << " [found paths] " << endl;
                PrintTrace(_fa_pre, path->transitions->target);
                // IF HERE, return true ... !
+               done = true;
+               result.SetEvaluation(true);
             }
             else {
                cout << "[no paths] ";
             }
             wConfigDelete(config);
             wPathDeref(_fa_pre, path);
-            return true;
+            if (done)
+               return;
+//            return true; //temp - normally use this!
          }
-//         else {
-//            cout << endl;
-//         }
-//         wConfigDelete(config);
-//         wPathDeref(_fa_pre, path);
+         cout << endl;
       }
 
-      return false;
+
+      result.SetEvaluation(false);
+      return;
 
    }
 
@@ -762,11 +802,15 @@ void ModelChecker::ConstructConfigurationSetForLTS(WPDSWrapper &wpds, const Prod
       // the set.
       if (accepting && satisfying) {
 
+         wpds.AddPDSState(state, true);
          vector<string>::const_iterator gamma;
          for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
-            wpds.AddConfiguration(state, *gamma);
+//            if (*gamma != "_")
+               wpds.AddConfiguration(state, *gamma);
          }
-         wpds.AddConfiguration(state, state.GetSecond().GetSymbol());
+         //wpds.AddConfiguration(state, state.GetSecond().GetSymbol());
+      } else {
+         wpds.AddPDSState(state, false);
       }
       cout << endl;
 	}
@@ -809,7 +853,7 @@ void ModelChecker::ConstructConfigurationSetForPDS(WPDSWrapper &wpds, const Prod
 
          wpds.AddPDSState(state, true);
 
-         wpds.AddConfiguration(state, state.GetSecond().GetSymbol());
+         wpds.AddConfigurationTop(state, state.GetSecond().GetSymbol(),stack_alphabet);
       } else {
          wpds.AddPDSState(state, false);
       }
@@ -878,21 +922,24 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
    CheckResults *results = new CheckResults();
 
-   vector<Configuration> ids(GetConfigurations()); // TODO
+   vector<Configuration> ids(GetConfigurations()); 
    vector<Configuration>::const_iterator state_iter;
    for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
 
-      const KripkeState &system_state(GetSystemState(*state_iter)); // TODO
+      const KripkeState &system_state(GetSystemState(*state_iter));
       ProductState<State,KripkeState> pre_state(*automaton_initial_state, system_state);
       string pre_state_name = pre_state.GetConfigName();
 
       cout << "Seeking configuration " << pre_state_name  << endl;
 
-//      if (wpds.IsInPreStar( pre_state, "_")) { // for lts
-      if (wpds.IsInPreStar( pre_state, system_state.GetSymbol())) { // for pds
-         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), true);
-         results->AddResult( result );
-         cout << "  ...found <" << pre_state_name << ",_> ";
+      Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName());
+//      wpds.CheckPreStar( pre_state, "_", *result); // for lts
+      wpds.CheckPreStar( pre_state, system_state.GetSymbol(), *result ); // ok for both?
+      results->AddResult( result );
+
+//      if (wpds.IsInPreStar()) { // for pds
+//         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), true);
+//         cout << "  ...found <" << pre_state_name << ",_> ";
          /*
          if (path->transitions->target) {
             cout << endl << " [found paths] ";
@@ -903,13 +950,13 @@ void ModelChecker::Visit(const Formula::Until &until) {
          }
          */
 
-         cout << " {TRUE}" << endl;
-      }
-      else {
-         cout << " {FALSE}" << endl;
-         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), false);
-         results->AddResult( result );
-      }
+//         cout << " {TRUE}" << endl;
+//      }
+//      else {
+//         cout << " {FALSE}" << endl;
+//         Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName(), false);
+//         results->AddResult( result );
+//      }
    }
 
    delete automaton_initial_state;
@@ -919,17 +966,50 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
 void ModelChecker::Visit(const Formula::Release &release) {
    cout << "visiting RELEASE" << endl;
-   /*
    Formula::Formula::const_reference before = release.GetBefore();
    Formula::Formula::const_reference after  = release.GetAfter();
 
-   // Retrieve automaton by name
-	const PDA &automaton = *_environment.GetPDA(release.GetAutomaton());
+   ReleaseSystem *release_system  = NULL;
+   const State *automaton_initial_state = NULL;
 
-   const ProductSystem *product_system = ConstructReleaseSystem(automaton, before, after);
-*/
+   // Retrieve automaton by name
+   if (_is_pds) {
+      const DFA &automaton = *_environment.GetDFA(release.GetAutomaton());
+      automaton_initial_state = new State(automaton.GetInitialState());
+      release_system = ConstructReleaseSystemFromPDS(automaton, before, after);
+   }
+   else {
+      const PDA &automaton = *_environment.GetPDA(release.GetAutomaton());
+      automaton_initial_state = new State(automaton.GetInitialState());
+      release_system = ConstructReleaseSystemFromLTS(automaton, before, after);
+   }
+
+   release_system
+
+   WPDSWrapper wpds(*product_system);
    // TODO
-   cout << "TODO" << endl;
+//   ConfigurationSpace config_space(states, stack_alphabet)
+//
+   CheckResults *results = new CheckResults();
+
+   vector<Configuration> ids(GetConfigurations()); 
+   vector<Configuration>::const_iterator state_iter;
+   for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
+
+      const KripkeState &system_state(GetSystemState(*state_iter));
+      ProductState<State,KripkeState> pre_state(*automaton_initial_state, system_state);
+      string pre_state_name = pre_state.GetConfigName();
+
+      cout << "Seeking configuration " << pre_state_name  << endl;
+
+      Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName());
+//      wpds.CheckPreStar( pre_state, "_", *result); // for lts
+//      wpds.CheckPreStar( pre_state, system_state.GetSymbol(), *result ); // ok for both?
+//
+
+
+      results->AddResult( result );
+   }
 }
 void ModelChecker::Visit(const Formula::PVar &pvar) {
    cout << "visiting PVAR" << endl;

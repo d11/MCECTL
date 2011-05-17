@@ -18,15 +18,15 @@ PDS test_pds {
    ACTION ( eat_toast: eaten_toast[toast]  -> eaten_toast[ POP ] )
 }
 
-:xshow(test_pds)
+# :xshow(test_pds)
 
-#DFA test_dfa { # DFA test
-#   STATE ( empty )
-#   STATE ( fulfilled )
-#   STATE ( toast_ready )
-#   ACTION ( make_toast: empty -> toast_ready )
-#   ACTION ( eat_toast: toast_ready -> fulfilled )
-#}
+DFA test_dfa { # DFA test
+   STATE ( empty )
+   STATE ( toast_ready )
+   STATE ( *fulfilled )
+   ACTION ( make_toast: empty -> toast_ready )
+   ACTION ( eat_toast: toast_ready -> fulfilled )
+}
 #
 ## another DFA test
 #DFA test_dfa2 {
@@ -38,18 +38,18 @@ PDS test_pds {
 #   .*
 #}
 #
-#REGULAR eat_nonexistent_toast {
-#   .* eat_toast .* make_toast
-#}
+REGULAR eat_nonexistent_toast {
+   .* eat_toast .* make_toast
+}
 
 # some formulas
 
-#FORMULA not_always_hungry {
-#   !E( 0 R[test_dfa] hungry )
-#}
-##
-#FORMULA dont_eat_future_toast {
-#   !E( 1 U[test_dfa] 1 )
-#}
+FORMULA not_always_hungry {
+   !E( 0 R[test_dfa] hungry )
+}
+#
+FORMULA dont_eat_future_toast {
+   !E( 1 U[test_dfa] 1 )
+}
 #
 #FORMULA no_wasteful_toas

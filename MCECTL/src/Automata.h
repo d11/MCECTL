@@ -208,7 +208,7 @@ public:
    }
 
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
-      return config_space.GetSymbolName(_dest_id); // TODO
+      return config_space.GetSymbolName(_dest_id);
    }
 };
 
@@ -449,27 +449,20 @@ public:
    }
 
    const S &GetState(Configuration c) const {
-//      return *(_states.at(c / _config_space->GetStackAlphabetSize())); // TODO
       return GetStateAux((S*)NULL, c);
    }
+   // Dispatch based on the template parameter...
    const KripkeState &GetStateAux(const KripkeState *,Configuration c) const {
-//      cout <<" ks " << endl;
       return *(_states.at(c));
    }
    const State &GetStateAux(const State *,Configuration c) const {
-//      cout <<" s " << endl;
       return *(_states.at(c / _config_space->GetStackAlphabetSize()));
    }
    const ProductState<State,KripkeState> &GetStateAux(const ProductState<State,KripkeState> *,Configuration c) const {
-//      cout <<" ps1 " << endl;
-//      return *(_states.at(c / _config_space->GetStackAlphabetSize()));
       return *(_states.at(c));
    }
-   /*
-   const ProductState<KripkeState,State> &GetStateAux(const ProductState<KripkeState,State> *,Configuration c) const {
-      cout <<" ps2 " << endl;
-      return *(_states.at(c));
-   }*/
+
+   /* Return a copy of the initial state */
    S GetInitialState() const {
       return *_initial_state;
    };

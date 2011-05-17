@@ -176,11 +176,21 @@ LTS t12 {
    ACTION(b:t3->t4)
    ACTION(c:t4->t5)
 }
-:check(phi8,t12)
 
-#LTS t13 {
-#
-#}
+LTS t13 {
+   STATE(t0 : )
+   STATE(t1 : )
+   STATE(t2 : )
+   STATE(t3 : )
+   STATE(t4 : )
+   STATE(t5 : p)
+   ACTION(a:t0->t1)
+   ACTION(b:t1->t2)
+   ACTION(a:t2->t3)
+   ACTION(b:t3->t4)
+   ACTION(c:t4->t5)
+}
+:check(phi8,t13)
 #
 #PDA a9 {
 #

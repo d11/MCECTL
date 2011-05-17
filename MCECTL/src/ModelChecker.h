@@ -36,6 +36,8 @@ private:
 public:
    Configuration GetID() const { return _config_id; }
    bool GetEvaluation() const { return _evaluation; }
+   void SetEvaluation(bool evaluation);
+   Result(unsigned int, const string &);
    Result(unsigned int, const string &, bool);
    string ToString() const;
 };
