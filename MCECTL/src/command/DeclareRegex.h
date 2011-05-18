@@ -24,16 +24,16 @@ extern "C" {
    struct fa {
       struct state *initial;
       int           deterministic : 1;
-      int           minimal : 1;
-      unsigned int  nocase : 1;
-      int           trans_re : 1;
+      int           minimal       : 1;
+      unsigned int  nocase        : 1;
+      int           trans_re      : 1;
    };
    typedef unsigned long hash_val_t;
    struct state {
       struct state *next;
       hash_val_t    hash;
-      unsigned int  accept : 1;
-      unsigned int  live : 1;
+      unsigned int  accept    : 1;
+      unsigned int  live      : 1;
       unsigned int  reachable : 1;
       size_t        tused;
       size_t        tsize;
@@ -122,14 +122,14 @@ namespace Command {
                if (trans->min == 0 && trans->max == 0) {
 						RegularAction *action = new RegularAction(".", to_id);
 						dfa->AddRule(from_config, action);
-						cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
+//                  cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                }
 					else { // 
                   uchar c = trans->min;
                   while (c <= trans->max) {
 							RegularAction *action = new RegularAction(ActionNameFromChar(c), to_id);
 							dfa->AddRule(from_config, action); 
-							cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
+//                     cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                      ++c;
                   }
                }

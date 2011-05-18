@@ -125,13 +125,6 @@ PDA a8 {
    ACTION(b: s1[s] -> s1[POP] )
    ACTION(c: s1[_] -> s2[REWRITE _] )
 }
-#PDA a8 {
-#   STATE( s1)
-#   STATE(*s2)
-#   ACTION(a: s1[_] -> s1[PUSH s] )
-#   #ACTION(b: s1[s] -> s1[POP] )
-#   ACTION(c: s1[s] -> s2[POP] )
-#}
 FORMULA phi8 {
    E( 1 U[a8] p )
 }

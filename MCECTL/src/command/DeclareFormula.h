@@ -118,7 +118,7 @@ namespace Command {
          }
          virtual void Execute(Environment &environment, GlobalOptions &options) {
             cout << "[FORMULA "  << _formula_name << "]" << endl;
-            cout << "Declaring formula... "  << ToString() << endl;
+//            cout << "Declaring formula... "  << ToString() << endl;
 
             FormulaBuilder builder(_formula_ast, environment);
             Formula::Formula::const_reference formula = builder.Build();

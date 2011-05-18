@@ -289,7 +289,7 @@ public:
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
       symbol_1 = _rewrite_symbol;
-      symbol_2 = "_";
+      symbol_2 = "";
    }
 };
 
@@ -309,7 +309,7 @@ public:
       return "_";
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
-      symbol_2 = "_";
+      symbol_2 = "";
    }
 };
 

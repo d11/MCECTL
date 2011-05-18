@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <numeric>
 #include <climits>
+#include <cstdio>
+#include <cstring>
 
 #include "TransitionSystem.h"
 #include "ModelChecker.h"
@@ -23,10 +25,6 @@ extern "C" {
 #include "wpds.h"
 } // End 'extern C'
 
-#include <cstdio>
-
-
-#include <string.h>
 
 using namespace std;
 
@@ -49,17 +47,21 @@ string Result::ToString() const {
    // temp
    if (!_trace_steps.empty()) {
       s << "     [ ";
-      vector<TraceStep*>::const_iterator iter;
+      vector<TraceStep>::const_iterator iter;
       for ( iter = _trace_steps.begin(); iter != _trace_steps.end(); ++iter ) {
-         s << (*iter)->GetStateName();
+         s << "<";
+         const vector<string> &stack = iter->GetStack();
+         copy(stack.begin(), stack.end(), ostream_iterator<string>(s,""));
+         s << "> ";
 
-         const ProductRule *rule = (*iter)->GetRule();
-         if (rule)
-            s << "  --" << rule->action->GetName() << "-->  ";
+         s << iter->GetStateName();
 
+         if (iter->HasRule()) {
+            const ProductRule &rule = iter->GetRule();
+            s << " --" << rule.action->GetName() << "--> ";
+         }
 
       }
-//      s << _config_name; // TODO needed?
       s << " ]";
    }
    return s.str();
@@ -244,6 +246,7 @@ public:
    {
       wIdent *id; wPath *pnext; wConfig *conf;
 
+      wPathTraceAll(fa,p);
       do {
          conf = wPathConfig(fa,p);
          printf("[%d] <%s,%s",(int)p->value,wIdentString(conf->state),
@@ -267,21 +270,22 @@ public:
 
    void StoreTrace(Result &result, wFA *fa, wPath *path) const {
       wIdent *id; wPath *pnext; wConfig *conf;
+      wPathTraceAll(fa,path);
       do {
          conf = wPathConfig(fa, path);
-         string state_name = wIdentString(conf->state);
-         vector<string> *stack = new vector<string>();
+         string state_name(wIdentString(conf->state));
+         vector<string> stack;
          id = conf->stack;
          while (*++id) {
-            stack->push_back( wIdentString(*id) );
+            stack.push_back( wIdentString(*id) );
          }
          wConfigDelete(conf);
 
-         wPathTraceStep(fa, path);
-         TraceStep *trace_step = new TraceStep(state_name, stack);
+         wPathTraceStep(fa, path); 
+         TraceStep trace_step(state_name, stack);
          wRule *rule = path->transitions->rule;
          if (rule) {
-            trace_step->AddRule(LookupRule(rule));
+            trace_step.AddRule(LookupRule(rule));
          }
          result.AddTraceStep(trace_step);
          pnext = path->transitions->target;
@@ -356,27 +360,23 @@ public:
 //            cout << "[no paths] ";
 //         }
          if (t->from == _state_idents[pre_state_name] && t->name == _stack_idents[stack_symbol]) {
-            cout << " !! ";
+//            cout << " !! ";
             wConfig *config = wConfigCreate(t->from, t->name, 0); 
             wPath *path = wPathFind(_fa_pre, config);
-//            if ( path->transitions->target) {
             bool done = false;
             if (path->transitions && path->transitions->target) {
-               cout << " [found paths] " << endl;
+//               cout << " [found paths] " << endl;
                PrintTrace(_fa_pre, path->transitions->target);
                StoreTrace(result, _fa_pre, path->transitions->target);
-               // IF HERE, return true ... !
                done = true;
                result.SetEvaluation(true);
             }
             else {
-               cout << "[no paths] ";
+//               cout << "[no paths] ";
             }
             wConfigDelete(config);
-            wPathDeref(_fa_pre, path);
             if (done)
                return;
-//            return true; //temp - normally use this!
          }
          cout << endl;
       }
@@ -429,9 +429,9 @@ public:
       }
       string f_mod = "s"+ state.GetName();
 //      string f_mod = "_"+ state.GetName();
-//      if (goal_state) { // temp
+      if (goal_state) { 
          f_mod += "__";
-//      }
+      }
       char *temp = strdup(f_mod.c_str());
       _state_idents[state.GetName()] = wIdentCreate(temp);
       free(temp);
@@ -460,15 +460,15 @@ public:
          const PushDownAction *action = rule_iter->action;
          string to_state_name = _product_system.GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
          to_state_ident = _state_idents[to_state_name];
-         string to_symbol_name1("_");
+         string to_symbol_name1("");
          string to_symbol_name2(from_stack_symbol);
          action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
-         if (to_symbol_name1 == "_") {
+         if (to_symbol_name1 == "") {
             to_stack1_ident = 0;
          } else {
             to_stack1_ident = _stack_idents[to_symbol_name1];
          }
-         if (to_symbol_name2 == "_") {
+         if (to_symbol_name2 == "") {
             to_stack2_ident = 0;
          } else {
             to_stack2_ident = _stack_idents[to_symbol_name2];

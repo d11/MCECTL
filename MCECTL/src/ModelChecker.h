@@ -24,28 +24,39 @@ using namespace Formula;
 class TraceStep {
 private:
    string _state;
-   const vector<string> *_stack;
-   ProductRule *_rule;
+   vector<string> _stack;
+   ProductRule _rule;
+   bool _has_rule;
 public:
-   TraceStep(const string &state_name, const vector<string> *stack)
-      : _state(state_name), _stack(stack), _rule(NULL) { }
-   ~TraceStep() {
-      delete _stack;
-      if (_rule) {
-         delete _rule;
-      }
-   }
+   TraceStep(const string &state_name, const vector<string> &stack)
+      : _state(state_name), _stack(stack), _has_rule(false) { }
+//   TraceStep(string state_name) : _state(state_name){ }
+//   ~TraceStep() {
+//      delete _stack;
+//      if (_rule) {
+//         delete _rule;
+//      }
+//   }
    void AddRule(const ProductRule &rule){
-      _rule = new ProductRule(rule);
+      _rule = rule;
+      _has_rule = true;
    }
-   string GetStateName() const { return _state; }
+   string GetStateName() const {
+      return _state;
+   }
    string GetAction() const {
-      if (!_rule) 
+      if (!_has_rule) 
          return "";
-      return _rule->action->GetName();
+      return _rule.action->GetName();
    }
-   const ProductRule *GetRule() const {
+   bool HasRule() const {
+      return _has_rule;
+   }
+   const ProductRule &GetRule() const {
       return _rule;
+   }
+   const vector<string> &GetStack() const {
+      return _stack;
    }
    
 };
@@ -56,21 +67,21 @@ private:
    Configuration _config_id;
    string _config_name;
    bool _evaluation;
-   vector<TraceStep*> _trace_steps;
+   vector<TraceStep> _trace_steps;
 public:
+   Result(unsigned int config_id, const string &config_name);
+   Result(unsigned int config_id, const string &config_name, bool evaluation);
    Configuration GetID() const { return _config_id; }
    bool GetEvaluation() const { return _evaluation; }
    void SetEvaluation(bool evaluation);
-   Result(unsigned int, const string &);
-   Result(unsigned int, const string &, bool);
    string ToString() const;
-   void AddTraceStep(TraceStep *trace_step) {
+   void AddTraceStep(const TraceStep &trace_step) {
       _trace_steps.push_back(trace_step);
    }
-   ~Result() {
-      for_each(_trace_steps.begin(), _trace_steps.end(),
-            boost::checked_deleter<TraceStep>() );
-   }
+//   ~Result() {
+//      for_each(_trace_steps.begin(), _trace_steps.end(),
+//            boost::checked_deleter<TraceStep>() );
+//   }
 };
 
 class CheckResults : public Showable {
