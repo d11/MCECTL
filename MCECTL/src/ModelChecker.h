@@ -20,11 +20,34 @@
 
 using namespace Formula;
 
-template <class A>
-class PredecessorConfigurations {
+
+class TraceStep {
 private:
+   string _state;
+   const vector<string> *_stack;
+   ProductRule *_rule;
 public:
-   bool Contains(const KripkeState *state_1, const KripkeState *state_2, const A *action) const;
+   TraceStep(const string &state_name, const vector<string> *stack)
+      : _state(state_name), _stack(stack), _rule(NULL) { }
+   ~TraceStep() {
+      delete _stack;
+      if (_rule) {
+         delete _rule;
+      }
+   }
+   void AddRule(const ProductRule &rule){
+      _rule = new ProductRule(rule);
+   }
+   string GetStateName() const { return _state; }
+   string GetAction() const {
+      if (!_rule) 
+         return "";
+      return _rule->action->GetName();
+   }
+   const ProductRule *GetRule() const {
+      return _rule;
+   }
+   
 };
 
 // Will contain example/counterexample if available
@@ -33,6 +56,7 @@ private:
    Configuration _config_id;
    string _config_name;
    bool _evaluation;
+   vector<TraceStep*> _trace_steps;
 public:
    Configuration GetID() const { return _config_id; }
    bool GetEvaluation() const { return _evaluation; }
@@ -40,6 +64,13 @@ public:
    Result(unsigned int, const string &);
    Result(unsigned int, const string &, bool);
    string ToString() const;
+   void AddTraceStep(TraceStep *trace_step) {
+      _trace_steps.push_back(trace_step);
+   }
+   ~Result() {
+      for_each(_trace_steps.begin(), _trace_steps.end(),
+            boost::checked_deleter<TraceStep>() );
+   }
 };
 
 class CheckResults : public Showable {
@@ -66,7 +97,8 @@ public:
 };
 
 class Environment;
-class WPDSWrapper;
+class WPDSProduct;
+class ReleaseSystem;
 
 class ModelChecker : public Formula::Visitor {
 private:
@@ -94,14 +126,14 @@ public:
 	const ResultsTable &GetCheckResults();
 
    void ConstructConfigurationSetForLTS(
-      WPDSWrapper &wpds,
+      WPDSProduct &wpds,
       const ProductSystem *product_system, 
       const CheckResults *y_results,
       unsigned int automaton_configuration_count
    );
 
    void ConstructConfigurationSetForPDS(
-      WPDSWrapper &wpds,
+      WPDSProduct &wpds,
       const ProductSystem *product_system, 
       const CheckResults *y_results,
       unsigned int system_configuration_count
@@ -120,11 +152,25 @@ public:
       Formula::Formula::const_reference y
    );
 
-   ProductSystem *ConstructReleaseSystem(
+//   ProductSystem *ConstructReleaseSystem(
+//      const PDA &automaton,
+//      Formula::Formula::const_reference x,
+//      Formula::Formula::const_reference y
+//   );
+
+   ReleaseSystem *ConstructReleaseSystemFromPDS(
+      const PushDownSystem &pds,
+      const DFA &automaton,
+      Formula::Formula::const_reference x,
+      Formula::Formula::const_reference y
+   );
+   ReleaseSystem *ConstructReleaseSystemFromLTS(
+      const KripkeStructure &lts,
       const PDA &automaton,
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y
    );
+
 
    void Visit(const Formula::False       &formula_false);
    void Visit(const Formula::True        &formula_true);

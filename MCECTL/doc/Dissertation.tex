@@ -225,19 +225,27 @@ Display a graphical representation of the named automaton or system.
 % algorithm
 \subsection{Model checking algorithm}
 
-As with standard CTL, the global model-checking problem for CTL Extended with pushdown automaton admits a polynomial-time dynamic programming solution.
+As with standard CTL, the global model-checking problem for CTL Extended with
+pushdown automaton admits a polynomial-time dynamic programming solution.
+
+Specifically, the problem of checking a formula can be divided into the
+sub-problems of checking the sub-formulas. %TODO rewrite
 
 bottom-up
-dynamic programming
 
 
-Until
+\subsection{Until}
 
-Release
+\subsection{Release}
+% section from kreutzer paper
+To check the LTL formula, we use a method based on the one described in \cite{EHRS00b} %TODO check right cite
 
-\cite{EHRS00b}
+But since we only need to be able to check the specific type of LTL formula
+that occurs here, it is possible to make some simplifications.
 
 \section{Testing}
+
+\section{Application to Checking Java Programs}
 
 \section{Conclusions}
 
@@ -248,7 +256,7 @@ the global model checking problem for CTL extended by pushdown automata.
 
 I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, in which capacity he ... TODO
 
-%TODO
+%TODO Matthew Hague
 
 \section{References}
 \bibliography{references}{}

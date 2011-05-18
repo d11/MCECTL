@@ -369,7 +369,7 @@ public:
       return _rule_list;
    }
 
-   vector< pair<typename A::const_ptr, S* > > GetSuccessors( S* state );
+//   vector< pair<typename A::const_ptr, S* > > GetSuccessors( S* state );
 
    string ToString() const {
       stringstream s;
