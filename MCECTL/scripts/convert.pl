@@ -22,7 +22,7 @@ while (1) {
    if ( $line ~~ /Propositions:/ ) {
       last;
    }
-   my @words = split(/ |;/,$line);
+   my @words = split(/ +|;/,$line);
    if (!scalar @words) {
       next
    }
@@ -42,8 +42,8 @@ while (1) {
       from_state => normalize($state1),
       from_stack => normalize($stack1),
       to_state =>   normalize($state2),
-      to_stack_a => normalize($stack2a),
-      to_stack_b => normalize($stack2b)
+      to_stack_a => $stack2a,
+      to_stack_b => $stack2b
    };
 }
 
@@ -76,10 +76,10 @@ for my $state (@states) {
 for my $rule (@rules) {
    my $action_name = "a";
    my $effect;
-   if ($rule->{to_stack_b} && $rule->{to_stack_b} ne '_') {
-      $effect = "PUSH ".$rule->{to_stack_b};
-   } elsif ($rule->{to_stack_a} ) {
-      $effect = "REWRITE ".$rule->{to_stack_a};
+   if ($rule->{to_stack_b}) {
+      $effect = "PUSH ".normalize($rule->{to_stack_b});
+   } elsif ($rule->{to_stack_a}  && $rule->{to_stack_a} ne '_') {
+      $effect = "REWRITE ".normalize($rule->{to_stack_a});
    } else {
       $effect = "POP";
    }
