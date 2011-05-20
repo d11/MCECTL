@@ -157,29 +157,150 @@ as a pushdown system
 
 \section{Requirements}
 
-The aim of this project was to create a complete system for model-checking Extended CTL for the pushdown (i.e. context-free) case. 
+The aim of this project was to create a complete system for model-checking
+Extended CTL for the pushdown (i.e. context-free) case. 
 
-input
-output
+A number of key requirements were identified, and these goals helped to direct
+the design process. 
 
 
+\subsection{Correctness}
+The first priority for the system was -- perhaps obviously -- that of
+correctness. Since one of the primary applications of model-checking in general
+is the analysis and verification of other programs, it is vital that
+an implementation produce accurate results. Mainstream adoption of formal
+verification methods has been slow,\cite{mitra2008strategies} and if these
+techniques are ever to be more widely used, they must in the first place be
+reliable.
+
+% use algorithms that are proven correct, where possible
+% testing
+
+\subsection{Usability}
+
+Using the system should be simple and practical.
+
+The system must accept problem specifications in a clear format, 
+and produce results in an intelligible manner.
+
+\subsection{Efficiency}
+
+Less important than accuracy, but nevertheless desirable is that the system
+should be computationally efficient. 
+
+Naturally, the size of the models which can be checked will be limited by the
+amount of memory available. Since real-world applications of the system will
+involve models generated from analysis of potentially large pieces of software,
+we may desire to check very large systems. Therefore, the algorithms used
+should be space-efficient, and the implementation should not be wasteful.
+
+Time-efficiency is of equal importance: since the key advantage of formal
+verification is that it saves time by finding problems which would otherwise
+only be caught by extensive testing, a tool's usefulness can easily be
+undermined if it takes a long time to produce results.
+
+\subsection{Extensibility}
+
+A minor consideration 
+
+\subsection{Integration}
+ %jimple
 
 \section{Design}
+
+
+% class breakdown, diagrams ?
+
+% algorithms, data structures
+
+% user interface
+
+
+% regex
 
 The core of the system is the MCECTL module; 
 
 this accepts input in the form of commands in the MCECTL input language. 
 
 Commands may update the internal state by defining new automata, systems and formulas.
+stored internally
 
 They may produce output
 
+Read-eval-print loop
+% TODO repl; GNU readline
+
 % dot
 
-Read-eval-print loop
-
+\subsection{Input}
+input language is tokenised and parsed using \textbf{flex} and \textbf{Bison} respectively. 
 % TODO bison/flex
-% TODO repl; readline
+
+An Abstract Syntax Tree is constructed recursively 
+
+
+
+
+% algorithm
+\subsection{Model checking algorithm}
+
+As with standard CTL, the global model-checking problem for CTL Extended with
+pushdown automaton admits a polynomial-time dynamic programming solution.
+
+Specifically, the problem of checking a formula can be divided into the
+sub-problems of checking the sub-formulas. %TODO rewrite
+
+bottom-up
+% visitor pattern
+
+\subsection{Until}
+
+\subsection{Release}
+% section from kreutzer paper
+To check the LTL formula, we use a method based on the one described in \cite{EHRS00b} %TODO check right cite
+
+But since we only need to be able to check the specific type of LTL formula
+that occurs here, it is possible to make some simplifications.
+
+\section{Testing}
+
+% examples ?
+
+
+% strategy for testing
+% results ?
+
+
+\section{Application to Checking Java Programs}
+
+%PDsolver and jimple
+
+\section{Conclusions}
+
+% summary
+I have implemented the first (to my knowledge) system for automated solution of
+the global model checking problem for CTL extended by pushdown automata.
+% achievements
+
+%critical appraisal
+
+% lessons learnt
+
+%further work
+
+
+\section{Acknowledgements}
+
+I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, in which capacity he ... TODO
+
+%TODO Matthew Hague
+
+\section{References}
+\bibliography{references}{}
+\bibliographystyle{plain}
+
+\appendix
+\section{User Manual}
 
 The MCECTL input language is defined as follows.
 Definitions are signalled by the keyword for the type of data being defined, in all caps (e.g. PDS) followed by the actual definition, in curly braces.
@@ -221,47 +342,12 @@ Print a textual description of the named object.
 :xshow(automaton)
 :xshow(system)
 Display a graphical representation of the named automaton or system.
+This requires that graphviz is installed, and that the `dot' tool is present in
+the system PATH.
 
-% algorithm
-\subsection{Model checking algorithm}
-
-As with standard CTL, the global model-checking problem for CTL Extended with
-pushdown automaton admits a polynomial-time dynamic programming solution.
-
-Specifically, the problem of checking a formula can be divided into the
-sub-problems of checking the sub-formulas. %TODO rewrite
-
-bottom-up
+%TODO convert.pl
 
 
-\subsection{Until}
-
-\subsection{Release}
-% section from kreutzer paper
-To check the LTL formula, we use a method based on the one described in \cite{EHRS00b} %TODO check right cite
-
-But since we only need to be able to check the specific type of LTL formula
-that occurs here, it is possible to make some simplifications.
-
-\section{Testing}
-
-\section{Application to Checking Java Programs}
-
-\section{Conclusions}
-
-I have implemented the first (to my knowledge) system for automated solution of
-the global model checking problem for CTL extended by pushdown automata.
-
-\section{Acknowledgements}
-
-I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, in which capacity he ... TODO
-
-%TODO Matthew Hague
-
-\section{References}
-\bibliography{references}{}
-\bibliographystyle{plain}
-
-
+\section{Code Listings}
 
 \end{document}

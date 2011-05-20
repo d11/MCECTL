@@ -17,6 +17,14 @@
 #include <cstdio>
 #include <cstring>
 
+#include <utility> // std::pair
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/strong_components.hpp>
+
+// temp
+#include <boost/graph/graphviz.hpp>
+
 #include "TransitionSystem.h"
 #include "ModelChecker.h"
 #include "Util.h"
@@ -175,6 +183,10 @@ void* zerofn ()		 	{ return (void*)INT_MAX; }
 
 /* Wrap wPDS functionality in an object */
 class WPDSWrapper {
+private:
+   // Keeps track of how many objects are using libwpds, so that it can be
+   // initialised/terminated appropriately
+   static int _wpds_refcount;
 protected:
    wPDS *_pds;
    wFA *_fa;
@@ -187,7 +199,14 @@ protected:
 public:
    WPDSWrapper()  {
 
-      // Setup null semiring for wpds
+      // Resource Allocation Is Initialisation
+      if (_wpds_refcount == 0) {
+         // Initialise libwpds
+         wInit();
+      }
+      _wpds_refcount++;
+
+      // Setup null semiring for wpds automata
       _semiring.extend   = &nullfn;
       _semiring.combine  = &nullfn;
       _semiring.diff     = NULL;
@@ -207,18 +226,11 @@ public:
 //      _semiring.ref      = NULL;
 //      _semiring.deref    = NULL;
       _p_semiring = &_semiring;
-//   wSemiring sr = { &plusfn, &minfn, NULL,		/* ext, comb, diff  */
-//           &onefn, &zerofn, NULL,	/* one, zero, q-one */
-//           &eqfn, NULL, NULL };		/* eq, ref, deref   */
-
-
-      // Initialise libwpds
-      wInit();
-
       _fa = wFACreate(_p_semiring);
    }
 
-// from libwpds example TODO rewrite
+   // from libwpds example TODO rewrite
+   // For debugging
    void PrintAutomaton (wFA *fa, const string &s) const
    {
       wTrans *t;
@@ -232,6 +244,7 @@ public:
       }
       cout << endl;
    }
+   // For debugging
    void PrintRule (wRule *r) const
    {
       ProductRule rule = LookupRule(r);
@@ -242,6 +255,7 @@ public:
       if (r->to_stack2) cout << " " << wIdentString(r->to_stack2);
       cout << ">";
    }
+   // For debugging
    void PrintTrace (wFA *fa, wPath *p) const
    {
       wIdent *id; wPath *pnext; wConfig *conf;
@@ -267,43 +281,7 @@ public:
 
       printf("\n");
    }
-
-   void StoreTrace(Result &result, wFA *fa, wPath *path) const {
-      wIdent *id; wPath *pnext; wConfig *conf;
-      wPathTraceAll(fa,path);
-      do {
-         conf = wPathConfig(fa, path);
-         string state_name(wIdentString(conf->state));
-         vector<string> stack;
-         id = conf->stack;
-         while (*++id) {
-            stack.push_back( wIdentString(*id) );
-         }
-         wConfigDelete(conf);
-
-         wPathTraceStep(fa, path); 
-         TraceStep trace_step(state_name, stack);
-         wRule *rule = path->transitions->rule;
-         if (rule) {
-            trace_step.AddRule(LookupRule(rule));
-         }
-         result.AddTraceStep(trace_step);
-         pnext = path->transitions->target;
-         wPathRef(fa, pnext);
-         wPathDeref(fa, path);
-         path = pnext;
-      } while(path);
-   }
-
-   ProductRule LookupRule(const wRule *wpds_rule) const {
-      map<const wRule*,ProductRule>::const_iterator iter;
-      iter = _rule_map.find(wpds_rule);
-      if (iter == _rule_map.end()) {
-         throw runtime_error("Tried to look up rule which is not in the map");
-      }
-      return iter->second;
-   }
-
+   // For debugging
    void PrintPDS() const {
       wRule *r = _pds->rules;
       cout << "PDS:";
@@ -314,17 +292,67 @@ public:
       }
       cout << endl;
    }
-
+   // For debugging
    void PrintConfigurationAutomaton() const {
       PrintAutomaton(_fa, "before pre*");
    }
-
-   void ComputePredecessorConfigurations() {
-      _fa_pre = wPrestar(_pds, _fa, TRACE_COPY);
-   }
-
+   // For debugging
    void PrintPredecessorConfigurations() { 
       PrintAutomaton(_fa_pre, "after pre*");
+   }
+
+   // Store the found witnessing path in the given result object
+   void StoreTrace(Result &result, wFA *fa, wPath *path) const {
+      wIdent *id; wPath *pnext; wConfig *conf;
+      wPathTraceAll(fa, path);
+
+      // Walk along the path
+      do {
+         conf = wPathConfig(fa, path);
+         // Retrieve the name of the state at this point in the run
+         string state_name(wIdentString(conf->state));
+         
+         // Construct the stack at the current point in this run
+         vector<string> stack;
+         id = conf->stack;
+         while (*++id) {
+            stack.push_back( wIdentString(*id) );
+         }
+         wConfigDelete(conf);
+
+         // Find the rule used at this point
+         wPathTraceStep(fa, path); 
+         TraceStep trace_step(state_name, stack);
+         wRule *rule = path->transitions->rule;
+         if (rule) {
+            trace_step.AddRule(LookupRule(rule));
+         }
+
+         // Add the information about this step to the result object
+         result.AddTraceStep(trace_step);
+
+         // Advance to the next point on the path
+         pnext = path->transitions->target;
+         wPathRef(fa, pnext);
+         wPathDeref(fa, path);
+         path = pnext;
+      } while(path);
+   }
+
+   // Map between the rule used by libwpds and our own objects
+   ProductRule LookupRule(const wRule *wpds_rule) const {
+      map<const wRule*,ProductRule>::const_iterator iter;
+      iter = _rule_map.find(wpds_rule);
+      if (iter == _rule_map.end()) {
+         throw runtime_error("Tried to look up rule which is not in the map");
+      }
+      return iter->second;
+   }
+
+   // Use libwpds to find the predecessors, assuming the initial
+   // multi-automaton has been constructed
+   void ComputePredecessorConfigurations() {
+      _fa_pre = wPrestar(_pds, _fa, TRACE_COPY);
    }
 
    virtual ~WPDSWrapper() {
@@ -332,33 +360,162 @@ public:
       wFADelete(_fa);
       wFADelete(_fa_pre);
       wPDSDelete(_pds);
-      wFinish();
+
+      // Dereference and possible terminate the usage of libwpds (RAII)
+      _wpds_refcount--;
+      if (_wpds_refcount == 0) {
+         wFinish();
+      }
+   }
+
+   void CreateAllStateIdents(const ConfigurationSpace &config_space) {
+      // Create and store wpds idents for states
+      vector<string>::const_iterator f;
+      const vector<string> &state_names = config_space.GetStates();
+      for (f = state_names.begin(); f != state_names.end(); ++f) {
+         string f_mod = "s" + *f + "__";
+         char *temp = strdup(f_mod.c_str());
+         _state_idents[*f] = wIdentCreate(temp);
+         free(temp);
+         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
+      }
+
+   }
+
+   void CreateAllStackIdents(const ConfigurationSpace &config_space) {
+      // Create and store wpds idents for stack symbols
+      vector<string>::const_iterator iter;
+      const vector<string> &stack_alphabet = config_space.GetStackAlphabet();
+      for (iter = stack_alphabet.begin(); iter != stack_alphabet.end(); ++iter) {
+         char *temp = strdup(iter->c_str());
+         if (_stack_idents.find(*iter) == _stack_idents.end()) {
+            _stack_idents[*iter] = wIdentCreate(temp);
+         }
+         free(temp);
+         cout << "Symbol: " << *iter << " ident: " << _stack_idents[*iter] << endl;
+      }
+   }
+
+   // Add a state to the internal weighted pushdown system.
+   void AddPDSState(const string &state_name, bool goal_state) {
+
+      // The same state should not be added more than once, except in the case
+      // where one instance is final and the other isn't
+      if (!goal_state && _state_idents.find(state_name) != _state_idents.end()) {
+         return;
+      }
+
+      // Construct an internal name for the 
+      // libwpds requires that initial states begin with an alphanumeric
+      // character. We use 's' as a standard.
+      string f_mod = "s" + state_name;
+      if (goal_state) { 
+         // Similarly, final (accepting) states end with a double-underscore
+         f_mod += "__";
+      }
+
+      // Obtain a wpds ident for this name, and store it in our own map
+      char *temp = strdup(f_mod.c_str());
+      _state_idents[state_name] = wIdentCreate(temp);
+      free(temp);
+
+      // debug
+      cout << "State: " << f_mod << " Ident: " << _state_idents[state_name] << endl;
    }
 
 
+   // Add a self-loop for the state, via the given stack symbol
+   void AddConfiguration(const string &state_name, const string &stack_symbol) {
+      /* debugging
+         cout << "Inserting automaton transition" << endl;
+         cout << "from_state_ident: " << state_ident << endl;
+         cout << "stack_ident: " << stack_idents[*gamma] << " [" << *gamma << "]" << wIdentString(stack_idents[*gamma]) << endl;
+         cout << "to_state_ident: " << state_ident << endl;
+         cout << endl;
+         */
+      wIdent state_ident = _state_idents[state_name.c_str()];
+      wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
+   }
+
+   // Convert a PDS to a libwpds one
+   void CreatePDS( const vector<ProductRule> &product_rules, const ConfigurationSpace &config_space ) {
+
+      _pds = wPDSCreate(_p_semiring);
+
+      // Call wPDSInsert for each rule
+      vector<ProductRule>::const_iterator rule_iter;
+      for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
+
+         // Obtain the names of the states and symbols for the rule
+         Configuration from_configuration = rule_iter->configuration;
+         string from_state_name   = config_space.GetStateName(from_configuration);
+         string from_stack_symbol = config_space.GetSymbolName(from_configuration);
+         const PushDownAction *action = rule_iter->action;
+         string to_state_name   = config_space.GetStateNameByID(action->GetDestStateID());
+         string to_symbol_name1 = "";
+         string to_symbol_name2 = from_stack_symbol;
+         action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
+
+         // Look up corresponding wpds idents
+         wIdent from_state_ident, from_stack_ident, to_state_ident,
+                to_stack1_ident, to_stack2_ident;
+         from_state_ident = _state_idents[from_state_name];
+         from_stack_ident = _stack_idents[from_stack_symbol];
+         to_state_ident   = _state_idents[to_state_name];
+         to_stack1_ident  = (to_symbol_name1 == "") ? 0 : _stack_idents[to_symbol_name1];
+         to_stack2_ident  = (to_symbol_name2 == "") ? 0 : _stack_idents[to_symbol_name2];
+
+         /* debugging
+         cout << "Inserting PDS rule:" << endl;
+         cout << "from_state_ident: " << from_state_ident << endl;
+         cout << "from_stack_ident: " << from_stack_ident << endl;
+         cout << "to_state_ident: " << to_state_ident << endl;
+         cout << "to_stack1_ident: " << to_stack1_ident << endl;
+         cout << "to_stack2_ident: " << to_stack2_ident << endl;
+         cout << endl;
+         */
+
+         // Insert a corresponding rule into the wpds
+         wRule *wpds_rule = wPDSInsert(
+            _pds, from_state_ident,
+            from_stack_ident, to_state_ident, to_stack1_ident,
+            to_stack2_ident, (void*)1
+         );
+         // Record the rule to which it corresponds
+         _rule_map[wpds_rule] = *rule_iter;
+      }
+   }
+
+   // Precondition: predecessor configurations have been computed
+   vector<string> GetSuccessors(const ConfigurationSpace &config_space, const string &state_name, const string &stack_symbol) {
+      vector<string> successor_names;
+
+      wIdent source_ident = _state_idents[state_name];
+      wIdent symbol_ident = _stack_idents[stack_symbol];
+      const vector<string> &state_names = config_space.GetStates();
+      vector<string>::const_iterator iter;
+      for (iter = state_names.begin(); iter != state_names.end(); ++iter) {
+         wIdent target_ident = _state_idents[*iter];
+         if (NULL != wFAFind(_fa_pre, source_ident, symbol_ident, target_ident)) {
+            cout << "Found successor " << *iter << endl;
+            successor_names.push_back(*iter);
+         }
+      }
+
+      return successor_names;
+   }
+
+   // Determine whether a given configuration is in the set of predecessor
+   // configurations, by checking whether it is accepted by the _fa_pre
+   // multi-automaton.
+   //
+   // Precondition: predecessor configurations have been computed
+   // Postcondition: result contains appropriate output data
    void CheckPreStar(const ProductState<State,KripkeState> &state, const string &stack_symbol, Result &result) {
-      bool found = false;
-      wTrans *t;
+      bool found = false; wTrans *t;
       string pre_state_name = state.GetName();
       for (t = _fa_pre->transitions; t && !found; t = t->next) {
          cout << "  ...found <" << wIdentString(t->from) << ","  << wIdentString(t->name) << "> ";
-//         wConfig *config = NULL;
-//         if (stack_symbol == "_") {
-//          wConfig *config = wConfigCreate(t->from, t->name, 0); // TODO state
-//         } else {
-//            config = wConfigCreate(t->from, t->name, _stack_idents[stack_symbol]);
-//         }
-//         wPath *path = wPathFind(_fa_pre, config);
-         //wPathTraceAll(fa_pre,p);
-//         if (path->transitions->target) {
-//            cout << " [found paths] ";
-         //   //asm("int $0x3\n");
-//            print_trace(_fa_pre, path->transitions->target);
-         //   //print_trace(fa_pre, p);
-//         }
-//         else {
-//            cout << "[no paths] ";
-//         }
          if (t->from == _state_idents[pre_state_name] && t->name == _stack_idents[stack_symbol]) {
 //            cout << " !! ";
             wConfig *config = wConfigCreate(t->from, t->name, 0); 
@@ -375,139 +532,46 @@ public:
 //               cout << "[no paths] ";
             }
             wConfigDelete(config);
-            if (done)
+            if (done) {
                return;
+            }
          }
          cout << endl;
       }
 
-
       result.SetEvaluation(false);
       return;
-
    }
 
 };
 
+// Static initialiser for the reference count
+int WPDSWrapper::_wpds_refcount = 0;
+
+// Subclass containing routines specific to checking Until formulas
 class WPDSProduct : public WPDSWrapper {
 private:
    const ProductSystem &_product_system;
 public:
    WPDSProduct(const ProductSystem &product_system) : _product_system(product_system) {
-
-      // Create and store wpds idents for states
-//      vector<string>::const_iterator f;
-//      const vector<string> &state_names = _product_system.GetConfigurationSpace().GetStates();
-//      for (f = state_names.begin(); f != state_names.end(); ++f) {
-//         string f_mod = "s" + *f + "__";
-//         char *temp = strdup(f_mod.c_str());
-//         _state_idents[*f] = wIdentCreate(temp);
-//         free(temp);
-//         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
-//      }
-
-      // Create and store wpds idents for stack symbols
-      vector<string>::const_iterator g;
-      // _stack_idents["_"] = 0; // TODO - determine whether to use this
-      const vector<string> &stack_alphabet = _product_system.GetConfigurationSpace().GetStackAlphabet();
-      for (g = stack_alphabet.begin(); g != stack_alphabet.end(); ++g) {
-         char *temp = strdup(g->c_str());
-         if (_stack_idents.find(*g) == _stack_idents.end()) {
-            _stack_idents[*g] = wIdentCreate(temp);
-         }
-         free(temp);
-         cout << "symbol: " << *g << " ident: " << _stack_idents[*g] << endl;
-      }
+      WPDSWrapper::CreateAllStackIdents(_product_system.GetConfigurationSpace());
 
    }
 
-   void AddPDSState(const ProductState<State,KripkeState> &state, bool goal_state) {
-
-      if (!goal_state && _state_idents.find(state.GetName()) != _state_idents.end()) {
-
-         return;
-      }
-      string f_mod = "s"+ state.GetName();
-//      string f_mod = "_"+ state.GetName();
-      if (goal_state) { 
-         f_mod += "__";
-      }
-      char *temp = strdup(f_mod.c_str());
-      _state_idents[state.GetName()] = wIdentCreate(temp);
-      free(temp);
-      cout << "State: " << f_mod << " Ident: " << _state_idents[state.GetName()] << endl;
-   }
-
-   // Convert PDS to a libwpds one
    void CreatePDS() {
-
-      _pds = wPDSCreate(_p_semiring);
-
-      // Call wPDSInsert for each rule
-      const vector<ProductRule> &product_rules = _product_system.GetRules().GetRules();
-      vector<ProductRule>::const_iterator rule_iter;
-      for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
-         wIdent from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident;
-         Configuration from_configuration = rule_iter->configuration;
-         string from_state_name = _product_system.GetConfigurationSpace().GetStateName(from_configuration);
-         from_state_ident = _state_idents[from_state_name];
-         string from_stack_symbol = _product_system.GetConfigurationSpace().GetSymbolName(from_configuration);
-//         if (from_stack_symbol == "_") {
-//            from_stack_ident = 0;
-//         } else {
-            from_stack_ident = _stack_idents[from_stack_symbol];
-//         }
-         const PushDownAction *action = rule_iter->action;
-         string to_state_name = _product_system.GetConfigurationSpace().GetStateNameByID(action->GetDestStateID());
-         to_state_ident = _state_idents[to_state_name];
-         string to_symbol_name1("");
-         string to_symbol_name2(from_stack_symbol);
-         action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
-         if (to_symbol_name1 == "") {
-            to_stack1_ident = 0;
-         } else {
-            to_stack1_ident = _stack_idents[to_symbol_name1];
-         }
-         if (to_symbol_name2 == "") {
-            to_stack2_ident = 0;
-         } else {
-            to_stack2_ident = _stack_idents[to_symbol_name2];
-         }
-         /* debugging
-         cout << "Inserting PDS rule:" << endl;
-         cout << "from_state_ident: " << from_state_ident << endl;
-         cout << "from_stack_ident: " << from_stack_ident << endl;
-         cout << "to_state_ident: " << to_state_ident << endl;
-         cout << "to_stack1_ident: " << to_stack1_ident << endl;
-         cout << "to_stack2_ident: " << to_stack2_ident << endl;
-         cout << endl;
-         */
-
-         //wPDSInsert(_pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, NULL);
-         wRule *wpds_rule = wPDSInsert(_pds, from_state_ident, from_stack_ident, to_state_ident, to_stack1_ident, to_stack2_ident, (void*)1);
-         _rule_map[wpds_rule] = *rule_iter;
-      }
+      WPDSWrapper::CreatePDS(_product_system.GetRules().GetRules(), _product_system.GetConfigurationSpace());
+   }
+   void AddPDSState(const ProductState<State,KripkeState> &state, bool goal_state) {
+      WPDSWrapper::AddPDSState(state.GetName(), goal_state);
    }
 
    // Add a self-loop for the state, via the given stack symbol
    void AddConfiguration(const ProductState<State,KripkeState> &state, const string &stack_symbol) {
-      /* debugging
-         cout << "Inserting automaton transition" << endl;
-         cout << "from_state_ident: " << state_ident << endl;
-         cout << "stack_ident: " << stack_idents[*gamma] << " [" << *gamma << "]" << wIdentString(stack_idents[*gamma]) << endl;
-         cout << "to_state_ident: " << state_ident << endl;
-         cout << endl;
-         */
-      wIdent state_ident = _state_idents[state.GetName().c_str()];
-      wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
-
+      WPDSWrapper::AddConfiguration(state.GetName(), stack_symbol);
    }
+
    void AddConfigurationTop(const ProductState<State,KripkeState> &state, const string &stack_symbol, const vector<string> &stack_alphabet) {
 
-//      if (stack_symbol == "_") {
-//         AddConfiguration(state,stack_symbol);
-//         return;
-//      }
       string f_mod = "s"+ state.GetName();
       char *temp = strdup(f_mod.c_str());
 //      _state_idents[state.GetName()+"__"] = _state_idents[state.GetName()];
@@ -588,12 +652,13 @@ private:
    ConfigurationSpace *_config_space;
    vector<ProductState<State,KripkeState>*> _product_states;
 
-   struct Rule {
-      unsigned int configuration;
-      const PushDownAction *action;
-      Rule(unsigned int config, const PushDownAction *a) : configuration(config), action(a) {}
-      Rule() : configuration(0), action(NULL) {  }
-   };
+   typedef RuleBook<PushDownAction, ProductState<State, KripkeState> >::Rule Rule;
+//   struct Rule {
+//      unsigned int configuration;
+//      const PushDownAction *action;
+//      Rule(unsigned int config, const PushDownAction *a) : configuration(config), action(a) {}
+//      Rule() : configuration(0), action(NULL) {  }
+//   };
    vector<Rule> _rule_list;
 public:
    ReleaseSystem(const vector<ProductState<State,KripkeState>*> &produce_states, ConfigurationSpace *config_space) : _config_space(config_space) {
@@ -643,15 +708,196 @@ private:
 public:
    WPDSRelease(const ReleaseSystem &release_system) : _release_system(release_system) {
 
+      WPDSWrapper::CreateAllStackIdents(_release_system.GetConfigurationSpace());
    }
 
+   void CreatePDS() {
+      WPDSWrapper::CreatePDS(_release_system.GetRules(), _release_system.GetConfigurationSpace());
+   }
+
+   void ConstructBottomConfigurations() {
+      const ConfigurationSpace &config_space      = _release_system.GetConfigurationSpace();
+      const vector<Configuration> &configurations = config_space.GetConfigurations();
+
+      vector<Configuration>::const_iterator iter;
+      for (iter = configurations.begin(); iter != configurations.end(); ++iter) {
+         const string &stack_symbol = config_space.GetSymbolName(*iter);
+         const string &state_name = config_space.GetStateName(*iter);
+         if (stack_symbol == "_") {
+            AddPDSState(state_name, true);
+            AddConfiguration(state_name, stack_symbol);
+         }
+         else {
+            AddPDSState(state_name, false);
+         }
+      }
+   }
 
    // Implementation of Algorithm 2 described in "Efficient Algorithms for
    // Model Checking Pushdown Systems" by Esparza, Hansel, Rossmanith and
    // Schwoon
    void ComputeRepeatingHeads() {
 
+      // Compute pre* of { <p, _> : p in P }
+      cout << "Getting pre* of bottom configurations" << endl;
+      WPDSRelease reachability(_release_system);
+      reachability.ConstructBottomConfigurations();
+      reachability.CreatePDS();
+      reachability.PrintPDS();
+      reachability.PrintConfigurationAutomaton();
+      reachability.ComputePredecessorConfigurations();
+      reachability.PrintPredecessorConfigurations();
+      cout << endl;
+
+      const ConfigurationSpace &config_space = _release_system.GetConfigurationSpace();
+
+      // Create reachability graph
+      typedef std::pair<Configuration, Configuration> Edge;
+      // temp
+      vector<Edge> edges;
+
+
+      // for rules in _release_system
+      const vector<ProductRule> &rules = _release_system.GetRules();
+      vector<ProductRule>::const_iterator iter;
+      for (iter = rules.begin(); iter != rules.end(); ++iter) {
+         const ProductRule &rule = *iter;
+         Configuration configuration = rule.configuration; // p
+         const PushDownAction &action = *rule.action;
+
+         Configuration dest_id = action.GetDestStateID(); // p'
+
+         string top_symbol = "";
+         string bottom_symbol = config_space.GetSymbolName(configuration);
+         action.ApplyToStackTop(top_symbol, bottom_symbol);
+
+         // A rewrite rule
+         if (top_symbol != "") {
+            if (bottom_symbol == "") {
+               cout << "rewrite rule" << endl;
+               Configuration dest_config = config_space.MakeConfiguration(dest_id, top_symbol);
+               edges.push_back(Edge(configuration, dest_config));
+            } else {
+               // A push rule
+               cout << "push rule" << endl;
+//               typedef ProductState<State,KripkeState> PState;
+
+//               /* TODO
+               string dest_state = config_space.GetStateNameByID(dest_id);
+               cout << "getting successors for " << dest_state << ", " << top_symbol << endl;
+               vector<string> successors = reachability.GetSuccessors(config_space, dest_state, top_symbol);
+               vector<string>::const_iterator iter;
+               for (iter = successors.begin(); iter != successors.end(); ++iter) {
+                  edges.push_back(Edge(configuration, config_space.MakeConfiguration(*iter, bottom_symbol)));
+               }
+
+               //2
+               edges.push_back(Edge(configuration, config_space.MakeConfiguration(dest_id, top_symbol)));
+            }
+
+         } else {
+            cout << "pop rule" << endl;
+            // pop
+         }
+      }
+
+      // TODO
+      using namespace boost;
+      typedef adjacency_list<vecS, vecS, bidirectionalS, 
+                 property<vertex_color_t, default_color_type>
+              > ReachabilityGraph;
+
+      ReachabilityGraph graph(edges.begin(), edges.end(), config_space.GetConfigurationCount());
+      typedef graph_traits<ReachabilityGraph>::vertex_descriptor Vertex;
+
       /*
+      class label_writer {
+         public:
+            label_writer(Name _name) : name(_name) {}
+            template <class VertexOrEdge>
+               void operator()(std::ostream& out, const VertexOrEdge& v) const {
+                  out << "[label=\"" << name[v] << "\"]";
+               }
+         private:
+            Name name;
+         };
+      */
+      vector<string> config_names = config_space.GetConfigurationNames();
+      /*
+      ostringstream dotout;
+      write_graphviz(dotout, graph, make_label_writer(config_names.begin()));
+      FILE *dot = popen("dot -Tx11", "w");
+      string out = dotout.str();
+      fputs(out.c_str(), dot);
+      pclose(dot);*/
+
+
+
+      pair<graph_traits<ReachabilityGraph>::edge_iterator, graph_traits<ReachabilityGraph>::edge_iterator> edge_range = boost::edges(graph);
+      graph_traits<ReachabilityGraph>::edge_iterator i_edge;
+      for (i_edge = edge_range.first; i_edge != edge_range.second; ++i_edge) {
+//         const Edge &e = *i_edge;
+         ReachabilityGraph::edge_descriptor e = *i_edge;
+         Configuration start_config = source(e, graph);
+         Configuration dest_config = target(e, graph);
+         cout << "Edge " << config_names[start_config] << " -> " << config_names[dest_config] << endl;
+      }
+
+      
+      // find strongly connected components
+      // time O(|V|+|E|)
+      vector<int> component(num_vertices(graph));
+//      vector<default_color_type> color(num_vertices(graph));
+//      vector<Vertex> root(num_vertices(graph));
+      int num = strong_components(graph, &component[0]);
+
+      vector< vector<Configuration> > buckets(num);
+
+      cout << "Total number of components: " << num << endl;
+      vector<int>::size_type i;
+      for (i = 0; i != component.size(); ++i) {
+         cout << "Configuration " << config_names[i]
+            <<" is in component " << component[i] << endl;
+         buckets[component[i]].push_back(i);
+      }
+
+      // loop through components
+      for ( i = 0; i != num; ++i ) {
+         cout << "Component " << i << ": ";
+         vector<int>::size_type component_size = buckets[i].size();
+
+         // We need to check that the component actually contains an edge -
+         // boost::graph only gives us the vertices.
+         // If there is more than one vertex, by connectedness this is a given.
+         if (component_size > 1) {
+            vector<int>::size_type j;
+            for (j = 0; j != component_size; ++j) {
+               _repeating_heads.insert(buckets[i][j]);
+            }
+         } 
+         else {
+            // If there's just one vertex, it needs to have a self-loop, so we
+            // check for that.
+            Configuration vertex = buckets[i][0];
+            typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
+            pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
+            if (out_list.second != out_list.first) {
+               _repeating_heads.insert(vertex);
+            }
+         }
+         cout << endl;
+      }
+
+      // for each component
+      //    for each vertex
+      //       add to _repeating_heads
+
+//      wIdent state_ident = _state_idents[state.GetName().c_str()];
+//      wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
+
+
+
+      /* hopefully not needed
       set<ReachabilityTransition> rel;
       vector<ReachabilityTransition> trans;
       set<ReachabilityRule> delta_prime;
@@ -683,7 +929,6 @@ public:
       }
       
       */
-      // TODO
    }
 
    void PrintRepeatingHeads() const {
@@ -701,13 +946,28 @@ public:
    // accept R . G* where R is the set of repeating heads and G is the stack
    // alphabet
    void ConstructFA() {
+
+//      WPDSWrapper::CreateAllStateIdents(_release_system.GetConfigurationSpace());
+      // TODO ?
+      const ConfigurationSpace& config_space = _release_system.GetConfigurationSpace();
+
+      // Create and store wpds idents for states
+      vector<string>::const_iterator f;
+      const vector<string> &state_names = config_space.GetStates();
+      for (f = state_names.begin(); f != state_names.end(); ++f) {
+         string f_mod = "s" + *f;
+         char *temp = strdup(f_mod.c_str());
+         _state_idents[*f] = wIdentCreate(temp);
+         free(temp);
+         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
+      }
+
       // Add final state
       string final_state_name = "__final__";
       char *temp = strdup(final_state_name.c_str());
       wIdent final_state_ident = wIdentCreate(temp);
       free(temp);
       // TODO
-      const ConfigurationSpace& config_space = _release_system.GetConfigurationSpace();
       set<Configuration>::const_iterator iter;
       for ( iter = _repeating_heads.begin(); iter != _repeating_heads.end(); ++iter ) {
 
@@ -1361,12 +1621,17 @@ void ModelChecker::Visit(const Formula::Release &release) {
    cout << release_system->ToString() << endl;
 
    WPDSRelease wpds(*release_system);
-//   wpds.PrintPDS();
+
+   // TODO
+//   wpds.AddAllStates();
 
    wpds.ComputeRepeatingHeads();
    wpds.PrintRepeatingHeads();
    wpds.ConstructFA();
    wpds.PrintConfigurationAutomaton();
+   wpds.CreatePDS();
+   wpds.PrintPDS();
+
    wpds.ComputePredecessorConfigurations();
    wpds.PrintPredecessorConfigurations();
 
@@ -1384,7 +1649,6 @@ void ModelChecker::Visit(const Formula::Release &release) {
 
       Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName());
       wpds.CheckPreStar( pre_state, system_state.GetSymbol(), *result ); // ok for both?
-//
       results->AddResult( result );
    }
    delete automaton_initial_state;

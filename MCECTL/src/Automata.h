@@ -94,6 +94,14 @@ public:
       }
       return id;
    }
+   Configuration MakeConfiguration(const string &state, const string &symbol) const {
+      unsigned int state_id = GetStateID(state);
+      return MakeConfiguration(state_id, symbol);
+   }
+   Configuration MakeConfiguration(unsigned int state_id, const string &symbol) const {
+      unsigned int symbol_id = GetSymbolID(symbol);
+      return state_id * _stack_alphabet.size() + symbol_id;
+   }
 
    string GetStateName(unsigned int state_id) const {
       return _states.at(state_id / _stack_alphabet.size());
@@ -110,6 +118,9 @@ public:
    }
    size_t GetStackAlphabetSize() const {
       return _stack_alphabet.size();
+   }
+   size_t GetConfigurationCount() const {
+      return _states.size() * _stack_alphabet.size();
    }
 
    string ToString() const {
@@ -136,6 +147,16 @@ public:
       }
       s << endl;
       return s.str();
+   }
+
+   vector<string> GetConfigurationNames() const {
+      vector<string> out;
+      vector<Configuration> cs = GetConfigurations();
+      vector<Configuration>::const_iterator i;
+      for (i = cs.begin(); i != cs.end(); ++i) {
+         out.push_back(GetStateName(*i) + "," + GetSymbolName(*i));
+      }
+      return out;
    }
 
    vector<Configuration> GetConfigurations() const {
