@@ -123,7 +123,6 @@ const CheckResults *ResultsTable::GetEntry( Formula::Formula::const_reference fo
 }
 
 void ResultsTable::SetEntry(Formula::Formula::const_reference formula, CheckResults *check_results) {
-   cout << "Setting results table entry" << endl;
    _entries.insert(make_pair(formula.GetID(), check_results));
 }
 
@@ -524,7 +523,8 @@ public:
             if (path->transitions && path->transitions->target) {
 //               cout << " [found paths] " << endl;
                PrintTrace(_fa_pre, path->transitions->target);
-               StoreTrace(result, _fa_pre, path->transitions->target);
+               // TODO
+//               StoreTrace(result, _fa_pre, path->transitions->target);
                done = true;
                result.SetEvaluation(true);
             }
@@ -849,7 +849,7 @@ public:
       vector<int> component(num_vertices(graph));
 //      vector<default_color_type> color(num_vertices(graph));
 //      vector<Vertex> root(num_vertices(graph));
-      int num = strong_components(graph, &component[0]);
+      unsigned int num = strong_components(graph, &component[0]);
 
       vector< vector<Configuration> > buckets(num);
 
@@ -879,11 +879,18 @@ public:
             // If there's just one vertex, it needs to have a self-loop, so we
             // check for that.
             Configuration vertex = buckets[i][0];
-            typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
+            typedef ReachabilityGraph::edge_descriptor edge_descriptor;
+//            typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
+
+            pair<edge_descriptor, bool> has_loop = edge(vertex, vertex, graph);
+            if (has_loop.second) {
+               _repeating_heads.insert(vertex);
+            }
+            /*
             pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
             if (out_list.second != out_list.first) {
                _repeating_heads.insert(vertex);
-            }
+            }*/
          }
          cout << endl;
       }

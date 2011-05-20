@@ -23,12 +23,10 @@
 Environment::Environment() { }
 
 const ResultsTable &Environment::GetCheckResultsByID(unsigned int system_id)  {
-   cout << "Getting check results for a system" << endl;
    map<unsigned int, ResultsTable *>::const_iterator iter;
    iter = _computed_results.find(system_id);
    ResultsTable *table = NULL;
    if (iter == _computed_results.end()) {
-      cout << "creating new results table" << endl;
       table = new ResultsTable(*this);
       _computed_results.insert(make_pair(system_id, table));
    }
@@ -45,12 +43,10 @@ const ResultsTable &Environment::GetCheckResults(const PushDownSystem *transitio
 }
 
 void Environment::SetCheckResultsByID(unsigned int system_id, Formula::Formula::const_reference formula, CheckResults *results) {
-   cout << "Setting check results for a system" << endl;
    map<unsigned int, ResultsTable *>::iterator iter;
    iter = _computed_results.find( system_id );
    ResultsTable *table = NULL;
    if (iter == _computed_results.end()) {
-      cout << "creating new results table" << endl;
       table = new ResultsTable(*this);
       _computed_results.insert(make_pair(system_id, table));
    }
