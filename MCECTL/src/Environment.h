@@ -27,7 +27,7 @@ using namespace std;
 class ResultsTable;
 class CheckResults;
 
-class Environment : public Showable, Formula::Visitor {
+class Environment : public Showable, public Formula::Visitor {
 private:
    map<string, const Formula::Formula*>  _formulas; 
    map<unsigned int, const Formula::Formula*> _formulas_by_id;

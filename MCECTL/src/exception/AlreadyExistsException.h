@@ -2,12 +2,12 @@
  * =====================================================================================
  *
  *       Filename:  AlreadyExistsException.h
- *    Description:  Tried to create something with the same name
+ *    Description:  Exception indicating that the user tried to create
+ *                  something with a name that has already been used
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
-
 
 #ifndef  _ALREADYEXISTSEXCEPTION_H_
 #define  _ALREADYEXISTSEXCEPTION_H_
@@ -18,6 +18,7 @@
 class AlreadyExistsException : public exception
 {
    private:
+      // The name that was attempted
       string _identifier;
    public:
       AlreadyExistsException(const string &identifier) : _identifier(identifier) { }
@@ -28,6 +29,5 @@ class AlreadyExistsException : public exception
       }
       virtual ~AlreadyExistsException() throw () { }
 };
-
 
 #endif

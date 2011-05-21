@@ -774,12 +774,13 @@ public:
          // A rewrite rule
          if (top_symbol != "") {
             if (bottom_symbol == "") {
-               cout << "rewrite rule" << endl;
+               cout << "rewrite rule" ;
                Configuration dest_config = config_space.MakeConfiguration(dest_id, top_symbol);
                edges.push_back(Edge(configuration, dest_config));
+               cout << "." << endl;
             } else {
                // A push rule
-               cout << "push rule" << endl;
+               cout << "push rule ";
 //               typedef ProductState<State,KripkeState> PState;
 
 //               /* TODO
@@ -789,10 +790,13 @@ public:
                vector<string>::const_iterator iter;
                for (iter = successors.begin(); iter != successors.end(); ++iter) {
                   edges.push_back(Edge(configuration, config_space.MakeConfiguration(*iter, bottom_symbol)));
+                  cout << ".";
                }
 
                //2
                edges.push_back(Edge(configuration, config_space.MakeConfiguration(dest_id, top_symbol)));
+               cout << ".";
+               cout << endl;
             }
 
          } else {
@@ -873,24 +877,30 @@ public:
             vector<int>::size_type j;
             for (j = 0; j != component_size; ++j) {
                _repeating_heads.insert(buckets[i][j]);
+               cout << buckets[i][j] << " ";
             }
          } 
          else {
-            // If there's just one vertex, it needs to have a self-loop, so we
-            // check for that.
             Configuration vertex = buckets[i][0];
-            typedef ReachabilityGraph::edge_descriptor edge_descriptor;
-//            typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
+            cout << vertex << " ";
 
-            pair<edge_descriptor, bool> has_loop = edge(vertex, vertex, graph);
-            if (has_loop.second) {
-               _repeating_heads.insert(vertex);
+            // TODO comment
+            if (config_space.GetStateName(vertex) != "_fail_state_") { // TODO
+               // If there are no successors, it counts as repeating for us
+               typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
+               pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
+               if (out_list.second == out_list.first) {
+                  _repeating_heads.insert(vertex);
+               }
+               // If it has a self-loop, it's repeating
+               typedef ReachabilityGraph::edge_descriptor edge_descriptor;
+               pair<edge_descriptor, bool> has_loop = edge(vertex, vertex, graph);
+               if (has_loop.second) {
+                  _repeating_heads.insert(vertex);
+               }
+               
             }
-            /*
-            pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
-            if (out_list.second != out_list.first) {
-               _repeating_heads.insert(vertex);
-            }*/
+
          }
          cout << endl;
       }
@@ -1132,7 +1142,8 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
          if (in_Lx && (!final || in_Ly)) {
             cout << "ADDING GOAL LINK" << endl;
             Configuration dest_id = product_state_names.size()-2;
-				PushDownAction *action = new PopAction("#goal#", dest_id );
+//            PushDownAction *action = new PopAction("#goal#", dest_id );
+            PushDownAction *action = new RewriteAction("#goal#", dest_id, "_" );
 				release_system->AddRule(start_id, action);
             matched.insert(start_id);
             continue;
@@ -1141,7 +1152,8 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
          if (final && !in_Ly) {
             cout << "ADDING FAIL LINK" << endl;
             Configuration dest_id = product_state_names.size()-1;
-				PushDownAction *action = new PopAction("#fail#", dest_id);
+//            PushDownAction *action = new PopAction("#fail#", dest_id);
+            PushDownAction *action = new RewriteAction("#fail#", dest_id, "_" );
 				release_system->AddRule(start_id, action);
 
             matched.insert(start_id);
