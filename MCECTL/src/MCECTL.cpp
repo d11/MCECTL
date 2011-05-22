@@ -2,65 +2,57 @@
  * =====================================================================================
  *
  *       Filename:  MCECTL.cpp
- *    Description:  Main entry point
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *    Description:  Executable entry point for using MCECTL via a read-eval-print loop
  *
  * =====================================================================================
  */
 
 #include <getopt.h>
 #include <iostream>
-
 #include <cstdlib>
 #include <map>
 #include <string>
+
 #include "Environment.h"
 #include "REPL.h"
-
 #include "CTL.h"
 #include "Command.h"
 #include "command/LoadFile.h"
 
 using namespace std;
 
+// Print usage information
 void usage(int exit_code) {
-   cout << "Usage:" << endl
-             << "\tMCECTL [--file blah.ectl]" << endl;
+   cout  << "Usage:" << endl
+		   << "\tMCECTL [--file blah.ectl] [--verbose]" << endl;
    exit(exit_code);
 }
-/*
-        struct option {
-              const char *name;
-              int has_arg;
-              int *flag;
-              int val;
-          };
-          */
 
-map<string, string> get_options(int argc, char *argv[]) {
+// Use getopt to read any command line options into a map
+map<string, string> get_options(int argc, char *argv[])
+{
    map<string, string> options;
+   int result = 0; int index = 0;
 
-   int result = 0;
-   int index = 0;
-   while (1) {
-      static struct option longopts[] = {
-         { "file",    required_argument,  0, 'f' },
-         { "verbose", no_argument,  0, 'v' },
-         { 0,         0,  0, 0   }
-      };
+	// Specification of valid options
+	static struct option longopts[] = {
+		{ "file",    required_argument,  0, 'f' },
+		{ "verbose", no_argument,			0, 'v' },
+		{ 0, 0, 0, 0 } // Terminate the list
+	};
 
-      result = getopt_long (argc, argv, "f:v", longopts, &index);
-
-      cout << "Index: " <<  index << endl;
-      if ( result < 0 )
-      {
+	// Loop through all found options
+   while (true) {
+      result = getopt_long(argc, argv, "f:v", longopts, &index);
+		// End of options
+      if ( result < 0 ) {
          break;
       }
-
+		// Bad option
       if ( result == '?' ) {
          usage(1);
       }
-
+		// Get the option's argument, if there is one
       string value;
       if (optarg) {
          value = optarg;
@@ -68,49 +60,44 @@ map<string, string> get_options(int argc, char *argv[]) {
       else {
          value = "1";
       }
+		// Store in the map
       options[ longopts[index].name ] = value;
-      cout << "Result: " << (char)result << endl;
-      cout << "Option: " << longopts[index].name << endl;
-      cout << "Value:  " << (optarg != NULL ? optarg : "[none]") << endl;
    }
 
    return options;
 }
 
+// Main entry point for the MCECTL-REPL program - the primary human interface
+// to the model-checker.
 int main(int argc, char *argv[]) {
 
-   map<string, string> options = get_options(argc, argv);
-   map<string, string>::const_iterator iter;
-   for ( iter = options.begin(); iter != options.end(); iter++ ) {
-      pair<string, string> p = *iter;
-      cout << "Got option: " << p.first << ", " << p.second << endl;
-   }
-
-
+	// Set up all necessary objects
    Environment env;
    GlobalOptions global_options;
    CommandProcessor command_processor(env, global_options);
    CommandParser command_parser;
-
    REPL repl(command_processor, command_parser, global_options);
 
+	// Process command line options
+   map<string, string> options = get_options(argc, argv);
+   map<string, string>::const_iterator iter;
+
+	// Check whether we were asked to load a file
    iter = options.find("file");
-   if(iter != options.end()) {
+   if (iter != options.end()) {
       Command::LoadFile *command = new Command::LoadFile(iter->second);
       repl.SendCommand(*command);
    }
-   else {
-   //   cout << "No file option found" << endl;
-   }
 
+	// Check for verbosity
    iter = options.find("verbose");
    if(iter != options.end()) {
       global_options.SetVerbose();
    }
 
+	// Launch the read-eval-print loop
    repl.Run();
 
    cout << "Goodbye" << endl;
-
    return 0;
 }

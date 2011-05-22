@@ -3,7 +3,6 @@
  *
  *       Filename:  DeclareRegex.h
  *    Description:  Compile regex to automaton
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -16,9 +15,9 @@
 #include "Environment.h"
 #include "Automata.h"
 
-// We use 'libfa' for constructing the automaton and then convert it to our
-// format afterwards; the following type definitions are reproduced from the
-// libfa code in order to allow linking with that code.
+// We use 'libfa' for constructing and minimising the automaton, and then
+// convert it to our format afterwards; the following type definitions are
+// reproduced from the libfa code in order to allow linking with that library.
 extern "C" {
 #include <fa.h>
    struct fa {
@@ -50,7 +49,6 @@ extern "C" {
          struct re *re;
       };
    };
-   
 } // End 'extern C' (and end of reproduced code).
 
 
@@ -122,14 +120,14 @@ namespace Command {
                if (trans->min == 0 && trans->max == 0) {
 						RegularAction *action = new RegularAction(".", to_id);
 						dfa->AddRule(from_config, action);
-//                  cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                }
-					else { // 
+					else 
+					{
+						// One specific action name
                   uchar c = trans->min;
                   while (c <= trans->max) {
 							RegularAction *action = new RegularAction(ActionNameFromChar(c), to_id);
 							dfa->AddRule(from_config, action); 
-//                     cout << "adding rule " << converted->ToString() << " -> " << converted_to->ToString() << " via " << action->ToString() << endl;
                      ++c;
                   }
                }
@@ -144,7 +142,9 @@ namespace Command {
             map<string,uchar>::const_iterator iter = _action_name_map.find(name);
             if (iter != _action_name_map.end()) {
                return iter->second;
-            } else {
+            }
+				else
+				{
                uchar d = c++;
                _action_name_map.insert(make_pair<string,uchar>(name, d));
                _action_name_map_inverse.insert(make_pair<uchar,string>(d, name));
@@ -152,7 +152,7 @@ namespace Command {
             }
          }
 
-			// Convert back from the char 
+			// Convert back from a char to an action name
          string ActionNameFromChar(uchar c) const {
             map<uchar,string>::const_iterator iter = _action_name_map_inverse.find(c);
             if (iter != _action_name_map_inverse.end()) {
@@ -229,7 +229,6 @@ namespace Command {
 
             State *initial_state = *(_states.begin());
 
-
 				/* Calculate the possible configurations */
             vector<string> state_names;
 				vector<State*>::const_iterator iter;
@@ -251,7 +250,7 @@ namespace Command {
             }
 
 				/* Store the result in the environment */
-            environment.SetDFA( _identifier, dfa );
+            environment.SetAutomaton( _identifier, dfa );
          }
          virtual ~DeclareRegexCommand() {
             delete _regex;

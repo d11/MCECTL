@@ -2,16 +2,8 @@
  * =====================================================================================
  *
  *       Filename:  LoadFile.h
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  09/11/10 19:36:01
- *       Revision:  none
- *       Compiler:  gcc
- *
+ *    Description:  Load commands from a file
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -39,12 +31,21 @@ namespace Command {
          LoadFile(const string &filename) : _filename(filename) { };
          virtual string ToString() const { string s = ":load(\""; return s + _filename + "\")"; };
          virtual void Execute(Environment &environment, GlobalOptions &options) {
-            FILE *input = fopen(_filename.c_str(), "r");
-            if (NULL == input) {
-               perror("Couldn't open file");
-               throw CommandFailed("Couldn't open file");
-            }
 
+				FILE *input;
+				// Attempt to open the requested file
+				if (_filename == "-") {
+					input = stdin;
+				} else {
+					input = fopen(_filename.c_str(), "r");
+				}
+				if (NULL == input) {
+					string error = "Couldn't open file";
+					perror(error.c_str());
+					throw CommandFailed((error + " '" + _filename + "'").c_str());
+				}
+
+				// Read the list of commands in from the file
             CommandParser parser;
             vector<CommandRef> commands;
             try {
@@ -53,10 +54,8 @@ namespace Command {
                throw CommandFailed(e.what());
             }
             fclose(input);
-            //vector<CommandRef>::const_iterator iter;
-            //for (iter = commands.begin(); iter != commands.end(); ++iter) {
-            //   cout << (*iter)->ToString() << endl;
-            //}
+
+				// Pass the list to the command processor, for execution
             CommandProcessor command_processor(environment, options);
             command_processor.ExecuteCommandList(commands);
 

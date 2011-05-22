@@ -40,7 +40,6 @@ namespace AST {
       }
 
       virtual StackSymbol GetSymbol() const {
-         //throw runtime_error("Can't get symbol; not pushdown effect");
          return "_";
       }
    };
@@ -159,7 +158,7 @@ namespace AST {
       string _stack_symbol;
    public:
       PushDownConfiguration(const string &state_name, const string &stack_symbol) : Configuration(state_name), _stack_symbol(stack_symbol) { }
-      string GetSymbol() { return _stack_symbol; }
+      string GetSymbol() const { return _stack_symbol; }
       virtual string ToString() const {
          stringstream s;
          s << "Pushdown configuration; state name " << _state_name

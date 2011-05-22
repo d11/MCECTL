@@ -1,8 +1,22 @@
 \documentclass[11pt]{article}
+\pdfpagewidth 210mm
+\pdfpageheight 297mm
+\setlength\topmargin{0in}
+\setlength\headheight{0in}
+\setlength\headsep{0in}
+\setlength\textheight{9.0in}
+\setlength\textwidth{6.0in}
+\setlength\oddsidemargin{0in}
+\setlength\evensidemargin{0in}
+
 \usepackage{cite}
 \usepackage{verbatim}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{listings}
+\usepackage{lscape}
+\usepackage{multicol}
+
 \newtheorem{mydef}{Definition}
 
 \begin{document}
@@ -33,8 +47,12 @@ extensions of CTL described in \cite{Kreutzer10}.
 
 \end{abstract}
 
+\newpage
+
 \tableofcontents
 \setcounter{tocdepth}{3}
+
+\newpage
 
 
 \section{Introduction}
@@ -205,7 +223,12 @@ A minor consideration
 
 \subsection{Integration}
  %jimple
-A secondary goal is to provide 
+A secondary goal is to provide some means of applying the model-checker to pushdown systems modelling the control flow of real programs. Most software is complex enough that manually creating such systems would be neither practical nor reliable. Hence there is a need for a way of producing the appropriate pushdown system automatically from program source code.
+
+A similar project which performs this task is Matthew Hague's \textbf{PDSolver}.
+The 
+% cite
+% PDSolver
 
 \section{Design}
 
@@ -296,7 +319,6 @@ I am very grateful to Stephan Kreutzer for acting as my supervisor for this proj
 
 %TODO Matthew Hague
 
-\section{References}
 \bibliography{references}{}
 \bibliographystyle{plain}
 
@@ -351,4 +373,38 @@ the system PATH.
 
 \section{Code Listings}
 
+\lstset{ %
+language=C++,                % the language of the code
+basicstyle=\footnotesize\ttfamily,       % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it's 1, each line 
+                                % will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=single,                   % adds a frame around the code
+tabsize=2,                      % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+title=\lstname,                 % show the filename of files included with \lstinputlisting;
+                                % also try caption instead of title
+}
+
+\setlength\topmargin{0in}
+\setlength\leftmargin{0in}
+\setlength\headheight{0in}
+\setlength\headsep{0in}
+\setlength\textheight{9.0in}
+\setlength\textwidth{7.0in}
+\setlength\oddsidemargin{0in}
+\setlength\evensidemargin{0in}
+\begin{landscape}
+%\begin{multicols}{2}{
+\lstinputlisting[language=C++]{src/MCECTL.cpp}
+%}
+%\end{multicols}
+\end{landscape}
 \end{document}

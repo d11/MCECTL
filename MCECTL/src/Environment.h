@@ -41,6 +41,24 @@ private:
 
 	void SetCheckResultsByID(unsigned int system_id, Formula::Formula::const_reference formula, CheckResults *results);
 	const ResultsTable &GetCheckResultsByID(unsigned int system_id);
+
+   void SetDFA( const string &identifier, const DFA *automaton ) {
+      bool result = _dfas.insert(make_pair(identifier, automaton)).second;
+      if (!result) { throw AlreadyExistsException(identifier); }
+   }
+   void SetPDA( const string &identifier, const PDA *automaton ) {
+      bool result = _pdas.insert(make_pair(identifier, automaton)).second;
+      if (!result) { throw AlreadyExistsException(identifier); }
+   }
+   void SetLTS( const string &identifier, const KripkeStructure *automaton ) {
+      bool result = _ltss.insert(make_pair(identifier, automaton)).second;
+      if (!result) { throw AlreadyExistsException(identifier); }
+   }
+   void SetPDS( const string &identifier, const PushDownSystem *automaton ) {
+      bool result = _pdss.insert(make_pair(identifier, automaton)).second;
+      if (!result) { throw AlreadyExistsException(identifier); }
+   }
+
 public:
    Environment();
    ~Environment();
@@ -88,39 +106,41 @@ public:
    void Visit(const Formula::Until       &until);
    void Visit(const Formula::Release     &release);
 
-   void SetAutomaton( const string &identifier, const FiniteAutomaton<RegularAction,State> *automaton ) {
+   void SetAutomaton(
+         const string &identifier,
+         const FiniteAutomaton<RegularAction,State> *automaton
+      )
+   {
+      cout << "[DFA: "  << identifier << "]" << endl;
       SetDFA(identifier, automaton);
    }
-   void SetAutomaton( const string &identifier, const FiniteAutomaton<RegularAction,KripkeState> *automaton ) {
+
+   void SetAutomaton( 
+         const string &identifier, 
+         const FiniteAutomaton<RegularAction,KripkeState> *automaton 
+      )
+   {
+      cout << "[LTS: "  << identifier << "]" << endl;
       SetLTS(identifier, automaton);
    }
-   void SetAutomaton( const string &identifier, const FiniteAutomaton<PushDownAction,State> *automaton ) {
+
+   void SetAutomaton(
+         const string &identifier, 
+         const FiniteAutomaton<PushDownAction,State> *automaton
+      )
+   {
+      cout << "[PDA: "  << identifier << "]" << endl;
       SetPDA(identifier, automaton);
    }
-   void SetAutomaton( const string &identifier, const FiniteAutomaton<PushDownAction,KripkeState> *automaton ) {
+
+   void SetAutomaton( 
+         const string &identifier,
+         const FiniteAutomaton<PushDownAction,KripkeState> *automaton 
+      )
+   {
+      cout << "[PDS: "  << identifier << "]" << endl;
       SetPDS(identifier, automaton);
    }
-
-
-   
-   void SetDFA( const string &identifier, const DFA *automaton ) {
-      bool result = _dfas.insert(make_pair(identifier, automaton)).second;
-      if (!result) { throw AlreadyExistsException(identifier); }
-   }
-   void SetPDA( const string &identifier, const PDA *automaton ) {
-      bool result = _pdas.insert(make_pair(identifier, automaton)).second;
-      if (!result) { throw AlreadyExistsException(identifier); }
-   }
-   void SetLTS( const string &identifier, const KripkeStructure *automaton ) {
-      bool result = _ltss.insert(make_pair(identifier, automaton)).second;
-      if (!result) { throw AlreadyExistsException(identifier); }
-   }
-   void SetPDS( const string &identifier, const PushDownSystem *automaton ) {
-      bool result = _pdss.insert(make_pair(identifier, automaton)).second;
-      if (!result) { throw AlreadyExistsException(identifier); }
-   }
-
-  // void SetSystem(   const string &identifier, const Automaton *transition_system);
 
    virtual string ToString() const;
 };

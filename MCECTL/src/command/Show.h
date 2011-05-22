@@ -3,7 +3,6 @@
  *
  *       Filename:  Show.h
  *    Description:  
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

@@ -192,24 +192,13 @@ public:
    virtual unsigned int GetID() const { return _id; }
 };
 
-// Abstract
+// Abstract base class
 class Action : public Showable {
 public:
-   typedef const Action &const_reference;
-   typedef const Action *const_ptr;
    virtual ~Action() {}
 };
 
-class NondeterministicAction : public Action {
-
-};
-
-class EpsilonAction : public NondeterministicAction {
-public:
-   string ToString() const;
-};
-
-class RegularAction : public NondeterministicAction {
+class RegularAction : public Action {
 private:
    string _action_name;
    unsigned int _dest_id;
@@ -235,13 +224,8 @@ public:
 
 typedef string StackSymbol;
 
-class NondeterministicPushDownAction : public Action {
-
-};
-
-
-// Abstract
-class PushDownAction : public NondeterministicPushDownAction {
+// Abstract base class
+class PushDownAction : public Action {
 protected:
    string _action_name;
    unsigned int _dest_id;
@@ -366,21 +350,12 @@ public:
       const A *action;
       Rule(unsigned int config, const A *a) : configuration(config), action(a) {}
       Rule() : configuration(0), action(NULL) {  }
-//throw runtime_error("Constructing empty rule!");
    };
 private:
-//   map<const S*, size_t> _index_lookup;
    vector<Rule> _rule_list;
 public:
-   RuleBook( const vector<S*> &states ) {
-      /*
-      typename vector<S*>::const_iterator iter;
-      size_t index = 0;
-      for( iter = states.begin(); iter != states.end(); ++iter ) {
-         _index_lookup.insert( make_pair<S*, size_t>(*iter, index));
-         ++index;
-      }*/
-   }
+   RuleBook( const vector<S*> &states )
+   { }
 
    void AddRule(unsigned int start_id, A *action) {
       _rule_list.push_back(Rule(start_id, action));
@@ -389,8 +364,6 @@ public:
    const vector<Rule> &GetRules() const {
       return _rule_list;
    }
-
-//   vector< pair<typename A::const_ptr, S* > > GetSuccessors( S* state );
 
    string ToString() const {
       stringstream s;
@@ -572,7 +545,7 @@ public:
 typedef FiniteAutomaton<RegularAction,           State>  DFA;
 
 // Non-determinic Finite Automaton
-typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
+//typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
 
 // Deterministic Push Down Automaton
 typedef FiniteAutomaton<PushDownAction,          State>  PDA;

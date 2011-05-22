@@ -90,14 +90,12 @@ namespace Formula {
 
    // Abstract
    class AutomatonFormula : public BinaryFormula {
-   private:
-      //const Automaton *_automaton;
-      string _automaton; // (name)
+   protected:
+      string _automaton; // automaton name
    public:
       AutomatonFormula(
          Formula::const_reference before,
          Formula::const_reference after,
-         //const Automaton *automaton
          const string &automaton
       ) : BinaryFormula(before, after), _automaton(automaton) { }
       virtual ~AutomatonFormula() {};
@@ -105,7 +103,6 @@ namespace Formula {
       Formula::const_reference GetBefore() const { return GetLeft(); }
       Formula::const_reference GetAfter()  const { return GetRight(); }
       const string &GetAutomaton() const { return _automaton; }
-      //const Automaton *GetAutomaton() const { return _automaton; }
       virtual void Accept(Visitor &visitor) const = 0;
    };
 
@@ -114,12 +111,17 @@ namespace Formula {
       Until(
          Formula::const_reference before,
          Formula::const_reference after,
-         //const Automaton *automaton
          const string &automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
-      string ToString() const { stringstream s; s << "E(" << GetLeft().ToString() << " U* " << GetRight().ToString() << ")"; return s.str(); }
+      string ToString() const {
+			stringstream s;
+			s  << "E( " << GetLeft().ToString()
+				<< " U[" << _automaton << "] "
+				<< GetRight().ToString() << " )";
+			return s.str();
+		}
    };
 
    class Release : public AutomatonFormula {
@@ -127,12 +129,17 @@ namespace Formula {
       Release(
          Formula::const_reference before,
          Formula::const_reference after,
-         //const Automaton *automaton
          const string &automaton
       ) : AutomatonFormula(before, after, automaton) { }
 
       virtual void Accept(Visitor &visitor) const;
-      string ToString() const { stringstream s; s << "E(" << GetLeft().ToString() << " R* " << GetRight().ToString() << ")"; return s.str(); }
+      string ToString() const {
+			stringstream s;
+			s  << "E( " << GetLeft().ToString()
+				<< " R[" << _automaton << "] "
+				<< GetRight().ToString() << " )";
+			return s.str();
+		}
    };
 
    class Visitor {

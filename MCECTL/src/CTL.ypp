@@ -123,7 +123,7 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %left  REGEX_LPAREN 
 %right REGEX_RPAREN 
 
-%type <formula_ref> false true pvar not and or implication until release ax rule_formula
+%type <formula_ref> false true pvar not and or implication until all_until release all_release ax ex rule_formula
 %type <string> formula_automaton_name
 
 %type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_lts declare_pds declare_regex
@@ -384,7 +384,6 @@ state:
    DFA_STATE DFA_LPAREN state_name DFA_RPAREN
    {
       AST::State *state = new AST::State(*$3, AST::State::BASIC);
-      cout << "Creating normal STATE" << endl;
       $$ = new AST::Automaton(state);
    };
 
@@ -392,7 +391,6 @@ state:
    DFA_STATE DFA_LPAREN DFA_ASTERISK state_name DFA_RPAREN
    {
       AST::State *state = new AST::State(*$4, AST::State::BASIC);
-      cout << "Creating accepting STATE" << endl;
 		state->SetAccepting();
       $$ = new AST::Automaton(state);
    };
@@ -404,7 +402,6 @@ kripke_state:
       state->AddPropositions(*$5);
       delete $3;
       delete $5;
-      cout << "Creating kripke STATE" << endl;
       $$ = new AST::Automaton(state);
    };
 
@@ -415,7 +412,6 @@ pushdown_kripke_state:
       //AST::State *state = new AST::State($3->GetName(), AST::State::KRIPKE);
       state->SetSymbol($3->GetSymbol());
       state->AddPropositions(*$5);
-      cout << "Creating pushdown kripke state: " << state->ToString() << endl;
       delete $3;
       delete $5;
       $$ = new AST::Automaton(state);
@@ -530,8 +526,6 @@ push:
          AST::PushDownEffect::PUSH 
       );
       effect->SetSymbol(*$2);
-      cout << "!!!!!!!!!" << endl;
-      cout << "Makin' a push: " << effect->ToString() << endl;
       $$ = effect;
    };
 
@@ -581,83 +575,82 @@ formula_name:
    };
 
 rule_formula:
-   not | and | or | implication | ax | until | release | false | true | pvar 
+   not | and | or | implication | ax | ex | until | all_until | release | all_release | false | true | pvar 
    {
-   }
-   ;
+   };
 
 false:
    FORMULA_FALSE
    {
       $$ = new AST::Formula::False();
-   }
-   ;
+   };
 
 true:
    FORMULA_TRUE 
    {
       $$ = new AST::Formula::True();
-   }
-   ;
+   };
 
 pvar:
    FORMULA_PVAR
    {
-      //string name($1);
       $$ = new AST::Formula::PVar(*$1);
-      //free($1);
       delete $1;
-   }
-   ;
+   };
 
 not:
    FORMULA_NOT rule_formula
    {
      $$ = new AST::Formula::Negation($2);
-   }
-   ;
+   };
 
 and:
    FORMULA_LPAREN rule_formula FORMULA_AND rule_formula FORMULA_RPAREN
    {
      $$ = new AST::Formula::Conjunction($2, $4);
-   }
-   ;
+   };
 
 or:
    FORMULA_LPAREN rule_formula FORMULA_OR rule_formula FORMULA_RPAREN
    {
      $$ = new AST::Formula::Disjunction($2, $4);
-   }
-   ;
+   };
 
 implication:
    FORMULA_LPAREN rule_formula FORMULA_IMPLICATION rule_formula FORMULA_RPAREN
    {
      $$ = new AST::Formula::Implication($2, $4);
-   }
-   ;
+   };
 
 ax:
    FORMULA_A FORMULA_X rule_formula
    {
      $$ = new AST::Formula::AX($3);
-   }
-   ;
+   };
+
+ex:
+   FORMULA_E FORMULA_X rule_formula
+   {
+     $$ = new AST::Formula::EX($3);
+   };
 
 formula_automaton_name:
    FORMULA_PVAR
-   { // TODO ^ (change this?)
-      //string name($1);
+   { 
       $$ = $1;
-      //free($1);
-   }
-   ;
+   };
 
 until:
    FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
      $$ = new AST::Formula::Until($3, $8, *$6);
+     delete $6;
+   };
+
+all_until:
+   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   {
+     $$ = new AST::Formula::AllUntil($3, $8, *$6);
      delete $6;
    };
 
@@ -668,4 +661,10 @@ release:
      delete $6;
    };
 
+all_release:
+   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   {
+     $$ = new AST::Formula::AllRelease($3, $8, *$6);
+     delete $6;
+   };
 

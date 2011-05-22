@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Formula.cpp
- *    Description:  
+ *    Description:  Abstract Syntax Trees for Extended CTL formulas
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
@@ -23,6 +23,9 @@ namespace AST {
 		void Disjunction::Accept(Visitor &visitor) const { visitor.Visit(*this); }
 		void Implication::Accept(Visitor &visitor) const { visitor.Visit(*this); }
 		void AX::Accept(Visitor &visitor)          const { visitor.Visit(*this); }
+		void EX::Accept(Visitor &visitor)          const { visitor.Visit(*this); }
+		void AllUntil::Accept(Visitor &visitor)    const { visitor.Visit(*this); }
+		void AllRelease::Accept(Visitor &visitor)  const { visitor.Visit(*this); }
 		void Until::Accept(Visitor &visitor)       const { visitor.Visit(*this); }
 		void Release::Accept(Visitor &visitor)     const { visitor.Visit(*this); }
 	}

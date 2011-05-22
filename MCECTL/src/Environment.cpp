@@ -20,7 +20,26 @@
 #include "exception/AlreadyExistsException.h"
 #include "Util.h"
 
-Environment::Environment() { }
+Environment::Environment() {
+
+   // Create special automata (for AX, EX)
+   State *s1 = new State("s1", false); // initial
+   State *s2 = new State("s2", true);  // accepting
+   vector<State*> states;
+   states.push_back(s1);
+   states.push_back(s2);
+   vector<string> names;
+   names.push_back("s1"); 
+   names.push_back("s2");
+   vector<string> symbols;
+   symbols.push_back("_");
+   ConfigurationSpace *config_space = new ConfigurationSpace(names, symbols);
+   DFA *dfa = new DFA(states, s1, config_space);
+   RegularAction *action = new RegularAction(".", 1);
+   dfa->AddRule(0, action);
+   SetDFA("#X#", dfa);
+
+}
 
 const ResultsTable &Environment::GetCheckResultsByID(unsigned int system_id)  {
    map<unsigned int, ResultsTable *>::const_iterator iter;
@@ -55,10 +74,20 @@ void Environment::SetCheckResultsByID(unsigned int system_id, Formula::Formula::
    }
    table->SetEntry( formula, results );
 }
-void Environment::SetCheckResults(const KripkeStructure *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+void Environment::SetCheckResults(
+      const KripkeStructure *transition_system,
+      Formula::Formula::const_reference formula,
+      CheckResults *results
+   )
+{
    SetCheckResultsByID( transition_system->GetID(), formula, results );
 }
-void Environment::SetCheckResults(const PushDownSystem *transition_system, Formula::Formula::const_reference formula, CheckResults *results) {
+void Environment::SetCheckResults(
+      const PushDownSystem *transition_system,
+      Formula::Formula::const_reference formula,
+      CheckResults *results
+   ) 
+{
    SetCheckResultsByID( transition_system->GetID(), formula, results );
 }
 
@@ -73,12 +102,13 @@ Formula::Formula::const_reference Environment::GetFormula(const string &identifi
 Formula::Formula::const_reference Environment::GetFormulaByID(unsigned int formula_id) const {
    map<unsigned int, const Formula::Formula*>::const_iterator iter(_formulas_by_id.find(formula_id));
    if (iter == _formulas_by_id.end()) {
-      throw NonExistentFormulaException("By ID"); // TODO
+      throw NonExistentFormulaException("Couldn't get formula by ID!");
    }
    return *(iter->second);
 };
 
 void Environment::SetFormula( const string &identifier, Formula::Formula::const_reference formula ) {
+   cout << "[Formula: "  << identifier << "]" << endl;
    bool result = _formulas.insert(make_pair(identifier, &formula)).second;
    if (!result) { throw AlreadyExistsException(identifier); }
 	formula.Accept(*this);
@@ -128,25 +158,40 @@ void Environment::Visit(const Formula::Release     &release) {
 
 string Environment::ToString() const {
    stringstream s;
-   s << "DFAs:" << endl
-	  << accumulate(_dfas.begin(), _dfas.end(), string(""),
-			  JoinKeysWithSquareBrackets<string,const DFA*>)
-     << "PDAs:" << endl
-	  << accumulate(_pdas.begin(), _pdas.end(), string(""),
-			  JoinKeysWithSquareBrackets<string,const PDA*>)
-     << "LTSs:" << endl
-	  << accumulate(_ltss.begin(), _ltss.end(), string(""),
-			  JoinKeysWithSquareBrackets<string,const KripkeStructure*>)
-     << "PDSs:" << endl
-	  << accumulate(_pdss.begin(), _pdss.end(), string(""),
-			  JoinKeysWithSquareBrackets<string,const PushDownSystem*>);
+   s << "Deterministic Finite Automata:" << endl
+	  << accumulate(
+           _dfas.begin(), _dfas.end(), string(""),
+           JoinKeysWithSquareBrackets<string,const DFA*>
+        )
+     << endl;
 
-   s << "FORMULAS:" << endl;
-   map<string, const Formula::Formula*>::const_iterator formula_iter;
-   for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
-      s << "[" << formula_iter->first << "]" << endl;
-   }
-   // TODO ?
+   s << "Pushdown Automata:" << endl
+	  << accumulate(
+           _pdas.begin(), _pdas.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const PDA*>
+        )
+     << endl;
+
+   s << "Labelled Transition Systems:" << endl
+	  << accumulate(
+           _ltss.begin(), _ltss.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const KripkeStructure*>
+        )
+     << endl;
+
+   s << "Pushdown Systems:" << endl
+	  << accumulate(
+           _pdss.begin(), _pdss.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const PushDownSystem*>
+        )
+     << endl;
+
+   s << "Extended CTL Formulas:" << endl
+	  << accumulate(
+           _formulas.begin(), _formulas.end(), string(""),
+			  JoinKeysWithSquareBrackets<string,const Formula::Formula*>
+        )
+     << endl;
 
    return s.str();
 }
@@ -157,10 +202,9 @@ Environment::~Environment() {
    for( iter = _dfas.begin(); iter != _dfas.end(); ++iter ) {
       delete iter->second;
    }
-   // TODO
    map<string, const Formula::Formula*>::const_iterator formula_iter;
    for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
       delete formula_iter->second;
    }
-   // TODO ?
+   // TODO 
 }

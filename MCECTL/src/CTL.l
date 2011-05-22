@@ -20,10 +20,6 @@ using namespace std;
 #include "Automata.h"
 
 #include "CTL_Parse.hh"
-//#include <string.h>
-
-//extern YYLTYPE yylloc;
-//#define YY_USER_INIT yylloc.first_line=1;
 
 enum LexModes {
    LEX_NONE, LEX_FORMULA, LEX_AUTOMATON, LEX_REGEX

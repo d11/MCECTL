@@ -19,6 +19,7 @@ namespace AST {
          typedef const Formula &const_reference;
          virtual ~Formula() {};
 			virtual void Accept(Visitor &visitor) const = 0;
+         virtual Formula *Clone() const = 0;
       };
 
       typedef Formula* FormulaRef;
@@ -29,6 +30,7 @@ namespace AST {
             return "[FALSE]";
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new False(); }
       };
 
       class True : public Formula {
@@ -37,6 +39,7 @@ namespace AST {
             return "[TRUE]";
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new True(); }
       };
 
       class PVar : public Formula {
@@ -54,6 +57,7 @@ namespace AST {
 			}
          virtual ~PVar() { }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new PVar(_name); }
       };
 
       class Unary : public Formula {
@@ -71,6 +75,7 @@ namespace AST {
          }
          Formula::reference GetSubFormula() const { return *_sub_formula; }
 			virtual void Accept(Visitor &visitor) const = 0;
+         virtual Formula *Clone() const = 0;
       };
 
       class Negation : public Unary {
@@ -80,6 +85,7 @@ namespace AST {
             return Unary::Show("NOT");
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new Negation(_sub_formula); }
       };
       class Binary : public Formula {
       protected:
@@ -102,6 +108,7 @@ namespace AST {
             delete _sub_formula_2;
          }
 			virtual void Accept(Visitor &visitor) const = 0;
+         virtual Formula *Clone() const = 0;
       };
 
       class Conjunction : public Binary {
@@ -112,6 +119,8 @@ namespace AST {
             return Binary::Show("AND");
          }
 			virtual void Accept(Visitor &visitor) const;
+
+         virtual Formula *Clone() const { return new Conjunction(_sub_formula_1, _sub_formula_2); }
       };
 
       class Disjunction : public Binary {
@@ -122,6 +131,7 @@ namespace AST {
             return Binary::Show("OR");
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new Disjunction(_sub_formula_1, _sub_formula_2); }
       };
 
       class Implication : public Binary {
@@ -132,6 +142,7 @@ namespace AST {
             return Binary::Show("IMPLIES");
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new Implication(_sub_formula_1, _sub_formula_2); }
       };
 
       class AX : public Unary {
@@ -141,6 +152,16 @@ namespace AST {
             return Unary::Show("AX");
          }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new AX(_sub_formula); }
+      };
+      class EX : public Unary {
+      public:
+         EX(FormulaRef subformula) : Unary(subformula) { }
+         string ToString() const {
+            return Unary::Show("EX");
+         }
+			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new EX(_sub_formula); }
       };
       class Until : public Binary {
       private:
@@ -153,6 +174,22 @@ namespace AST {
          }
          string GetAutomatonName() const { return _automaton_name; }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new Until(_sub_formula_1->Clone(), _sub_formula_2->Clone(), _automaton_name); }
+      };
+      class AllUntil : public Binary {
+      private:
+         string _automaton_name;
+      public:
+         AllUntil(FormulaRef left, FormulaRef right, string automaton_name)
+            : Binary(left, right), _automaton_name(automaton_name) { }
+         string ToString() const {
+            return Binary::Show(string("ALL UNTIL {AUTOMATA ") + _automaton_name + "}");
+         }
+         string GetAutomatonName() const { return _automaton_name; }
+			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const {
+            return new AllUntil(_sub_formula_1->Clone(), _sub_formula_2->Clone(), _automaton_name);
+         }
       };
 
       class Release : public Binary {
@@ -166,6 +203,20 @@ namespace AST {
          }
          string GetAutomatonName() const { return _automaton_name; }
 			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new Release(_sub_formula_1->Clone(), _sub_formula_2->Clone(), _automaton_name); }
+      };
+      class AllRelease : public Binary {
+      private:
+         string _automaton_name;
+      public:
+         AllRelease(FormulaRef left, FormulaRef right, string automaton_name)
+            : Binary(left, right), _automaton_name(automaton_name) { }
+         string ToString() const {
+            return Binary::Show(string("ALL RELEASE[") + _automaton_name + "]");
+         }
+         string GetAutomatonName() const { return _automaton_name; }
+			virtual void Accept(Visitor &visitor) const;
+         virtual Formula *Clone() const { return new AllRelease(_sub_formula_1->Clone(), _sub_formula_2->Clone(), _automaton_name); }
       };
 
 		class Visitor {
@@ -178,8 +229,11 @@ namespace AST {
 			virtual void Visit(const Disjunction &disjunction) = 0;
 			virtual void Visit(const Implication &implication) = 0;
 			virtual void Visit(const AX &ax)                   = 0;
+			virtual void Visit(const EX &ax)                   = 0;
 			virtual void Visit(const Until &until)             = 0;
+			virtual void Visit(const AllUntil &until)          = 0;
 			virtual void Visit(const Release &release)         = 0;
+			virtual void Visit(const AllRelease &release)      = 0;
 			virtual ~Visitor() {};
 		};
 

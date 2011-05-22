@@ -1,10 +1,6 @@
 /*
- *
  *    Filename:  TransitionSystem.h
- *
- *    Description:  
- *
- *    Labelled Transition System
+ *    Description: Labelled Transition System
  */
 
 #ifndef _TRANSITION_SYSTEM_H_
@@ -23,14 +19,26 @@ using namespace std;
 
 typedef vector<string> Valuation;
 
-class KripkeState : public State, Showable {
+class KripkeState : public State, public Showable {
 private:
    string _config_name;
    vector<string> _valuation;
    string _symbol;
 public:
-   KripkeState(const string &name, const string &config_name, const string &symbol, const Valuation &valuation) : State(name, false), _config_name(config_name), _valuation(valuation), _symbol(symbol) { }
+	// Constructor
+   KripkeState(
+			const string &name,
+			const string &config_name,
+			const string &symbol, 
+			const Valuation &valuation
+		)
+		: State(name, false),
+		  _config_name(config_name),
+		  _valuation(valuation),
+		  _symbol(symbol)
+	{ }
 
+	// Determine whether the given proposition variable is true at this state
    bool Evaluate(const string &pvar) const {
       vector<string>::const_iterator iter;
       iter = find(_valuation.begin(), _valuation.end(), pvar);
@@ -43,29 +51,6 @@ public:
    string GetSymbol() const { return _symbol; }
 };
 
-// Abstract
-/*
-class TransitionSystem {
-public:   
-   typedef const TransitionSystem &const_reference;
-   typedef const TransitionSystem *const_ptr;
-				
-   virtual ~TransitionSystem() = 0;
-};
-
-class KripkeStructure : public FiniteAutomaton<RegularAction, KripkeState>, public TransitionSystem {
-public:
-   typedef const KripkeStructure &const_reference;
-   KripkeStructure(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space);
-   string ToString() const;
-}; 
-
-class PushDownSystem : public FiniteAutomaton<PushDownAction, KripkeState>, public TransitionSystem {
-public:
-   PushDownSystem(const vector<KripkeState *> &states, KripkeState *initial_state, const ConfigurationSpace *config_space);
-   string ToString() const;
-};*/
-
 typedef FiniteAutomaton<RegularAction, KripkeState> KripkeStructure;
 typedef FiniteAutomaton<PushDownAction, KripkeState> PushDownSystem;
 
@@ -75,7 +60,11 @@ private:
    __automaton_state _a;
    __system_state _b;
 public:
-   ProductState(const __automaton_state &a, const __system_state &b) : _a(a), _b(b) { }
+   ProductState(
+			const __automaton_state &a,
+			const __system_state &b
+		) : _a(a), _b(b)
+	{ }
    const __automaton_state &GetFirst()  const { return _a; }
    const __system_state &GetSecond() const { return _b; }
    string GetName() const {
@@ -98,7 +87,13 @@ public:
    }
 };
 
-typedef FiniteAutomaton<PushDownAction, ProductState<State,KripkeState> > ProductSystem;
-typedef RuleBook<PushDownAction,ProductState<State,KripkeState> >::Rule ProductRule;
+typedef	FiniteAutomaton<
+				PushDownAction,
+				ProductState<State,KripkeState>
+			> ProductSystem;
+typedef	RuleBook<
+				PushDownAction,
+				ProductState<State,KripkeState>
+			>::Rule ProductRule;
 
 #endif
