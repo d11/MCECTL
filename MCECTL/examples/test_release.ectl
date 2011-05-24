@@ -1,0 +1,173 @@
+LTS t1 {
+	STATE( e1: )
+	STATE( e2: )
+	STATE( e3: p)
+	ACTION( a: e1 -> e2 )
+	ACTION( a: e1 -> e3 )
+}
+
+PDA a1 {
+	STATE( s1 )
+	STATE( *s2 )
+	ACTION( a: s1[_] -> s2[REWRITE _] )
+}
+
+LTS t2 {
+	STATE( e1: p)
+	ACTION( a: e1 -> e1 )
+	ACTION( b: e1 -> e1 )
+}
+
+FORMULA f1 {
+	E( 0 R[a1] !p )
+}
+
+PDA a2 {
+	STATE( s1 )
+	STATE( *s2 )
+	ACTION( a: s1[_] -> s1[PUSH s] )
+	ACTION( c: s1[s] -> s1[PUSH s] )
+	ACTION( b: s1[s] -> s2[POP] )
+}
+
+FORMULA f2 {
+	E( 0 R[a2] !p )
+}
+
+#:check(f2, t1)
+
+LTS t3 {
+   STATE( s1: )
+   STATE( s2: )
+   STATE( s3: )
+   STATE( s4: p )
+   ACTION( a: s1 -> s2 )
+   ACTION( a: s1 -> s3 )
+   ACTION( a: s1 -> s4 )
+   ACTION( a: s2 -> s3 )
+   ACTION( a: s2 -> s1 )
+   ACTION( a: s3 -> s1 )
+   ACTION( a: s3 -> s4 )
+}
+
+PDA a3 {
+   STATE( *t1 )
+   ACTION (a : t1[_] -> t1[REWRITE _])
+}
+
+FORMULA f3 {
+   E( 0 R[a3] !p )
+}
+#:check(f3,t3)
+
+PDA a4 {
+   STATE( s1 )
+   STATE( s2 )
+   STATE( *s3 )
+   ACTION( a: s1[_] -> s2[REWRITE _] )
+   ACTION( b: s2[_] -> s3[REWRITE _] )
+}
+
+LTS t4a {
+   STATE( t1: )
+   STATE( t2: p )
+   STATE( t3: )
+   ACTION( a: t1 -> t2) 
+   ACTION( b: t2 -> t3)
+   ACTION( c: t3 -> t3)
+}
+LTS t4b {
+   STATE( t1: )
+   STATE( t2: )
+   STATE( t3: q)
+   ACTION( a: t1 -> t2) 
+   ACTION( b: t2 -> t3)
+   ACTION( c: t3 -> t3)
+}
+LTS t4c {
+   STATE( t1: )
+   STATE( t2: p)
+   STATE( t3: )
+   ACTION( a: t1 -> t2) 
+   ACTION( b: t2 -> t3)
+}
+LTS t4d {
+   STATE( t1: )
+   STATE( t2: q)
+   STATE( t3: )
+   ACTION( a: t1 -> t2) 
+   ACTION( b: t2 -> t3)
+   ACTION( c: t3 -> t3)
+}
+
+FORMULA f4 {
+   E( p R[a4] q )
+}
+
+########
+
+FORMULA f5 {
+   E( p R[a3] q )
+}
+
+LTS t5a {
+   STATE( t1: q )
+   STATE( t2: q )
+   STATE( t3: q, p )
+   STATE( t4:  )
+   ACTION( a : t1 -> t2 )
+   ACTION( a : t2 -> t3 )
+   ACTION( a : t3 -> t4 )
+}
+
+LTS t5b {
+   STATE( t1: p, q)
+   STATE( t2: )
+   STATE( t3: )
+   ACTION( a: t1 -> t2)
+   ACTION( a: t2 -> t3)
+}
+
+LTS t5c {
+   STATE( t1: q )
+   STATE( t2: q )
+   ACTION( a: t1 -> t1 )
+   ACTION( a: t1 -> t2 )
+}
+
+LTS t5d {
+   STATE( t1: q )
+   ACTION( a: t1 -> t1 )
+}
+
+LTS t5e {
+   STATE( t1: p, q )
+   STATE( t2: q )
+   STATE( t3: )
+   ACTION( a: t1 -> t2 )
+   ACTION( a: t2 -> t1 )
+   ACTION( a: t2 -> t3 )
+}
+
+PDA a6 {
+   STATE( s1 )
+   STATE( *s2 )
+   ACTION( a: s1[_] -> s1[PUSH s] )
+   ACTION( b: s1[s] -> s1[REWRITE t] )
+   ACTION( c: s1[t] -> s2[POP] )
+}
+
+FORMULA f6 {
+   E( p R[a6] q )
+}
+
+LTS t6a {
+   STATE( t1: )
+   STATE( t2: )
+   ACTION( a: t1 -> t1 )
+   ACTION( b: t1 -> t1 )
+   ACTION( c: t1 -> t2 )
+   ACTION( d: t2 -> t2 )
+}
+:check(f6,t6a)
+

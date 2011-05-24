@@ -1,0 +1,25 @@
+LTS t1 {
+   STATE ( s1: p )
+   STATE ( s2: q )
+   STATE ( s3: q )
+   STATE ( s4: p )
+   STATE ( s5: q )
+   STATE ( s6: p )
+   ACTION ( b: s1 -> s1 )
+   ACTION ( a: s1 -> s2 )
+   ACTION ( a: s1 -> s3 )
+   ACTION ( b: s4 -> s4 )
+   ACTION ( a: s4 -> s5 )
+   ACTION ( a: s4 -> s6 )
+}
+PDA a1 {
+   STATE ( t1 )
+   STATE ( t2 )
+   STATE ( *t3 )
+   ACTION ( b: t1[_] -> t2[PUSH s] )
+   ACTION ( a: t2[s] -> t3[POP] )
+}
+FORMULA f1 {
+   A( p U[a1] q )
+}
+:check(f1,t1)

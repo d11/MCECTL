@@ -1,0 +1,80 @@
+PDS pds1 {
+	STATE( p1[_] : )
+	STATE( p1[s] : )
+	STATE( p2[_] : )
+	STATE( p2[s] : )
+	STATE( p3[_] : p )
+	STATE( p3[s] : )
+	ACTION( a: p1[_] -> p1[PUSH s] )
+	ACTION( a: p1[s] -> p1[PUSH s] )
+	ACTION( a: p2[_] -> p2[PUSH s] )
+	ACTION( a: p2[s] -> p2[PUSH s] )
+	ACTION( b: p1[s] -> p2[POP] )
+	ACTION( b: p2[s] -> p3[POP] )
+}
+
+DFA dfa1 {
+	STATE( a1 )
+	STATE( *a2 )
+	ACTION( a : a1 -> a2)
+	ACTION( b : a2 -> a2)
+}
+
+FORMULA p {
+	p
+}
+FORMULA phi1 {
+	E( 1 U[dfa1] p )
+}
+#:check(phi1,pds1)
+#:check(p,pds1)
+
+PDS pds2 {
+	STATE( t1[_] : )
+	STATE( t1[s] : )
+	STATE( t1[t] : )
+	STATE( t1[u] : p )
+	ACTION( a: t1[_] -> t1[PUSH s] )
+	ACTION( a: t1[s] -> t1[PUSH t] )
+	ACTION( a: t1[t] -> t1[PUSH u] )
+}
+
+DFA dfa2 {
+	STATE( s1 )
+	STATE( *s2 )
+	ACTION( a: s1 -> s2 )
+	ACTION( a: s2 -> s1 )
+}
+FORMULA phi2 {
+	E( 1 U[dfa2] p )
+}
+
+PDS pds3 {
+	STATE( t1[_] : )
+	STATE( t1[s] : )
+	STATE( t1[t] : )
+	STATE( t1[u] : )
+	STATE( t2[_] : )
+	STATE( t2[s] : )
+	STATE( t2[t] : )
+	STATE( t2[u] : )
+	STATE( t3[_] : )
+	STATE( t3[s] : )
+	STATE( t3[t] : )
+	STATE( t3[u] : )
+	STATE( t4[_] : )
+	STATE( t4[s] : )
+	STATE( t4[t] : )
+	STATE( t4[u] : )
+	STATE( t5[_] : )
+	STATE( t5[s] : )
+	STATE( t5[t] :  )
+	STATE( t5[u] : p)
+	ACTION( a: t1[_] -> t2[PUSH s] )
+	ACTION( a: t2[s] -> t3[PUSH t] )
+	ACTION( a: t3[t] -> t4[REWRITE u] )
+	ACTION( a: t4[u] -> t3[PUSH t] )
+	ACTION( a: t3[t] -> t2[POP] )
+	ACTION( a: t2[u] -> t5[POP] )
+}
+:check(phi2,pds3)

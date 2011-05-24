@@ -1,0 +1,15 @@
+FORMULA f1 {
+	AX p 
+}
+FORMULA f2 {
+	EX p 
+}
+REGULAR r1 {
+	a* b*
+}
+FORMULA f3 {
+	A( p U[r1] q )
+}
+FORMULA f4 {
+	A( p R[r1] q )
+}
