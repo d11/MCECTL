@@ -3,7 +3,6 @@
  *
  *       Filename:  Formula.cpp
  *    Description:  
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

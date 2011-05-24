@@ -3,7 +3,6 @@
  *
  *       Filename:  Showable.h
  *    Description:  Abstract class for objects which can be shown as a string
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

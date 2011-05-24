@@ -2,8 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Regex.cpp
- *    Description:  
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *    Description:  Visitor implementation for Regex AST
  *
  * =====================================================================================
  */

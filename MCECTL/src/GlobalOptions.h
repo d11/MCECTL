@@ -2,16 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  GlobalOptions.h
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  03/11/10 21:19:26
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
+ *    Description:  Class for storing options needed throughout the program
  *
  * =====================================================================================
  */

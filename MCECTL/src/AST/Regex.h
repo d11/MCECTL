@@ -3,7 +3,6 @@
  *
  *       Filename:  AST_Regex.h
  *    Description:  Abstract syntax tree for regular expressions
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

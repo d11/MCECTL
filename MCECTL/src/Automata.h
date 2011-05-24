@@ -3,7 +3,6 @@
  *
  *       Filename:  Automata.h
  *    Description:  
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -11,8 +10,6 @@
 #ifndef _AUTOMATA_H_
 #define _AUTOMATA_H_
 
-#include <boost/iterator/counting_iterator.hpp>
-#include <boost/checked_delete.hpp>
 #include <vector>
 #include <string>
 #include <map>
@@ -21,41 +18,20 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
+#include <boost/iterator/counting_iterator.hpp>
+#include <boost/checked_delete.hpp>
 
 #include "Showable.h"
+#include "exception/CommandFailed.h"
 
+// Foreward declararations
 typedef unsigned int Configuration;
 class KripkeState;
 class State;
 template<class S,class T>
 class ProductState;
 
-/*struct numbering_ostream_iterator : public ostream_iterator<string> {
-   private:
-      unsigned int _count;
-   public:
-   numbering_ostream_iterator(ostream &s) : ostream_iterator<string>(s, "\n"), _count(0) { }
-   numbering_ostream_iterator(const numbering_ostream_iterator& iter) : ostream_iterator<string>(iter), _count(iter._count) { }
-         numbering_ostream_iterator&
-      operator=(const string& s)
-      {
-         return *this;
-      }
-         
-      ostream_iterator&
-      operator*()
-      { 
-         return *this; }
-
-      ostream_iterator&
-      operator++()
-      { return *this; }
-
-      ostream_iterator&
-      operator++(int)
-      { return *this; }
-};*/
-
+// TODO describe
 class ConfigurationSpace : public Showable {
 private:
    vector<string> _states;
@@ -78,7 +54,7 @@ public:
       }
       stringstream s;
       s << "Can't find ID for state " << state_name << " in configuration space";
-      throw runtime_error(s.str());
+      throw CommandFailed(s.str());
    }
    unsigned int GetSymbolID(const string &stack_symbol) const {
       typename vector<string>::const_iterator iter = _stack_alphabet.begin();
@@ -87,7 +63,7 @@ public:
          if (iter == _stack_alphabet.end()) {
             stringstream s;
             s << "Can't find ID for symbol " << stack_symbol << " in configuration space";
-            throw runtime_error(s.str());
+            throw CommandFailed(s.str());
          }
          ++id;
          ++iter;
@@ -494,7 +470,7 @@ public:
       typename vector<S*>::const_iterator state_iter;
       for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
          if (!(*state_iter)) {
-            throw runtime_error("bad state");
+            throw CommandFailed("bad state");
          }
          s << "node [shape = \"";
          if ((*state_iter)->GetAccepting()) {
@@ -520,7 +496,7 @@ public:
       for (rule_iter = rules.begin(); rule_iter != rules.end(); ++rule_iter) {
 
          if (!rule_iter->action) {
-            throw runtime_error("Bad action");
+            throw CommandFailed("Bad action");
          }
          s << _config_space->GetStateName(rule_iter->configuration)
            << " -> ";

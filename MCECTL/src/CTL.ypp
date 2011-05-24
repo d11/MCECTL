@@ -1,4 +1,8 @@
 %{
+/* Bison/yacc input, for parsing ECTL input language into lists of command
+ * objects.
+ */
+
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -39,12 +43,10 @@ void yyerror(const char *error)
    throw ParseException(error);
 }
 
-// In which the result of the parse is stored
+// Vector in which the result of the parse is stored
 vector<Command::Command*> *commands_read = NULL;
 
-std::vector<Command::Command*> CommandParser::ParseString(string input) {
-
-   yy_scan_string( input.c_str() );
+std::vector<Command::Command*> CommandParser::Parse() {
    try {
       yyparse();
    } catch (ParseException e) {
@@ -52,25 +54,17 @@ std::vector<Command::Command*> CommandParser::ParseString(string input) {
       throw;
    }
    yylex_destroy();
-
    return *commands_read;
+}
+std::vector<Command::Command*> CommandParser::ParseString(string input) {
+   yy_scan_string( input.c_str() );
+   return Parse();
 }
 
 std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
-
    YY_BUFFER_STATE buffer = yy_create_buffer ( input, YY_BUF_SIZE );
    yy_switch_to_buffer ( buffer );
-
-   try {
-      yyparse();
-   } catch (ParseException e) {
-      yylex_destroy();
-      throw;
-   }
-   yylex_destroy(); // TODO .. ??
-
-   //yy_delete_buffer ( buffer );
-   return *commands_read;
+   return Parse();
 }
 
 %}
@@ -123,37 +117,37 @@ std::vector<Command::Command*> CommandParser::ParseFile(FILE *input) {
 %left  REGEX_LPAREN 
 %right REGEX_RPAREN 
 
-%type <formula_ref> false true pvar not and or implication until all_until release all_release ax ex rule_formula
+// Types for all of the rules
+%type <formula_ref> false true pvar not and or implication until all_until 
+%type <formula_ref> release all_release ax ex rule_formula
 %type <string> formula_automaton_name
-
-%type <command_ref> rule_command declare_formula declare_dfa declare_pda declare_lts declare_pds declare_regex
+%type <command_ref> rule_command declare_formula declare_dfa declare_pda 
+%type <command_ref> declare_lts declare_pds declare_regex
 %type <string> formula_name automaton_name
-
 %type <string> single_proposition action_name state_name
 %type <string_list> proposition_list
 %type <automaton_ref> rule_dfa rule_lts rule_pda rule_pds rule_automaton
-%type <automaton_ref> automaton_component state kripke_state pushdown_kripke_state regular_action pushdown_action
+%type <automaton_ref> automaton_component state kripke_state 
+%type <automaton_ref> pushdown_kripke_state regular_action pushdown_action
 %type <push_down_config_ref> pushdown_state_identifier
 %type <push_down_effect_ref> pushdown_state_destination
 %type <string> stack_symbol
-
-%type <command_ref> null_command load_command quit_command show_command xshow_command check_command
+%type <command_ref> null_command load_command quit_command show_command 
+%type <command_ref>xshow_command check_command
 %token <string> QUOTED
 %type <string> filename
 %type <string> show_item 
-
 %token <string> REGEX_ACTION
-%type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or regex_any regex_action
-
-%token DFA_LPAREN DFA_RPAREN DFA_ASTERISK DFA_STATE DFA_COLON DFA_COMMA DFA_ACTION DFA_TRANSITION
+%type <regex_ref> rule_regex parenthesised_regex regex_kleene regex_seq regex_or
+%type <regex_ref> regex_any regex_action
+%token DFA_LPAREN DFA_RPAREN DFA_ASTERISK DFA_STATE DFA_COLON DFA_COMMA 
+%token DFA_ACTION DFA_TRANSITION
 %token <string> DFA_IDENTIFIER
-
 %type <command_list> top rule_command_list unit_command_list cons_command_list
-
 %type <push_down_effect_ref> push pop rewrite pushdown_stack_manipulation
 
+// Begin rule definitions
 %%
-
 
 top:
    rule_command_list
@@ -187,9 +181,10 @@ cons_command_list:
    };
 
 rule_command:
-   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds | declare_regex | load_command | quit_command | show_command | xshow_command | check_command | null_command
-   {
-   };
+   declare_formula | declare_dfa | declare_pda | declare_lts | declare_pds
+   | declare_regex | load_command | quit_command | show_command | xshow_command
+   | check_command | null_command
+   { };
 
 null_command:
    EMPTY
@@ -262,7 +257,6 @@ declare_formula:
 declare_dfa:
    DFA_DECLARATION automaton_name LBRACE rule_dfa RBRACE
    {
-      //string name($2); free($2);
       $$ = new DeclareAutomatonCommand<RegularAction, State>(*$2, $4);
       delete $2;
    };
@@ -270,7 +264,6 @@ declare_dfa:
 declare_pda:
    PDA_DECLARATION automaton_name LBRACE rule_pda RBRACE
    {
-      //.string name($2); free($2);
       $$ = new DeclareAutomatonCommand<PushDownAction, State>(*$2, $4);
       delete $2;
    };
@@ -278,7 +271,6 @@ declare_pda:
 declare_lts:
    LTS_DECLARATION automaton_name LBRACE rule_lts RBRACE
    {
-      //.string name($2); free($2);
       $$ = new DeclareAutomatonCommand<RegularAction, KripkeState>(*$2, $4);
       delete $2;
    };
@@ -286,7 +278,6 @@ declare_lts:
 declare_pds:
    PDS_DECLARATION automaton_name LBRACE rule_pds RBRACE
    {
-      //.string name($2); free($2);
       $$ = new DeclareAutomatonCommand<PushDownAction, KripkeState>(*$2, $4);
       delete $2;
    };
@@ -294,7 +285,6 @@ declare_pds:
 declare_regex:
    REGEX_DECLARATION automaton_name LBRACE rule_regex RBRACE
    {
-      //string name($2); free($2);
       $$ = new DeclareRegexCommand(*$2, $4);
       delete $2;
       //free($2)
@@ -303,7 +293,8 @@ declare_regex:
 // REGULAR EXPRESSIONS
 
 rule_regex:
-   regex_seq | regex_or | regex_kleene | regex_action | regex_any | parenthesised_regex
+   regex_seq | regex_or | regex_kleene | regex_action | regex_any |
+   parenthesised_regex
 
 parenthesised_regex:
    REGEX_LPAREN rule_regex REGEX_RPAREN %prec REGEX_LPAREN
@@ -332,10 +323,8 @@ regex_kleene:
 regex_action:
    REGEX_ACTION
    { 
-      //string action($1);
       $$ = new AST::Regex::Action(*$1);
       delete $1;
-      //free($1);
    };
 
 regex_any:
@@ -344,7 +333,7 @@ regex_any:
       $$ = new AST::Regex::Any();
    };
 
-// AUTOMATA
+// AUTOMATA/SYSTEMS
 
 automaton_name:
    IDENTIFIER
@@ -370,14 +359,15 @@ rule_automaton: rule_automaton automaton_component
       AST::Automaton *main_automaton = $1;
       AST::Automaton *to_add = $2;
       if (!to_add) {
-         throw runtime_error("bad component");
+         throw ParseException("Bad automaton component");
       }
       main_automaton->Assimilate(*to_add);
       $$ = main_automaton;
    };
 
 automaton_component:
-   state | kripke_state | pushdown_kripke_state | regular_action | pushdown_action
+   state | kripke_state | pushdown_kripke_state | regular_action 
+   | pushdown_action
    { };
 
 state:
@@ -406,10 +396,13 @@ kripke_state:
    };
 
 pushdown_kripke_state:
-   DFA_STATE DFA_LPAREN pushdown_state_identifier DFA_COLON proposition_list DFA_RPAREN
+   DFA_STATE DFA_LPAREN pushdown_state_identifier DFA_COLON proposition_list
+   DFA_RPAREN
    {
-      AST::State *state = new AST::State($3->GetName(), AST::State::PUSHDOWN_KRIPKE);
-      //AST::State *state = new AST::State($3->GetName(), AST::State::KRIPKE);
+      AST::State *state = new AST::State(
+         $3->GetName(), 
+         AST::State::PUSHDOWN_KRIPKE
+      );
       state->SetSymbol($3->GetSymbol());
       state->AddPropositions(*$5);
       delete $3;
@@ -446,7 +439,8 @@ single_proposition:
    };
 
 regular_action:
-   DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION state_name DFA_RPAREN
+   DFA_ACTION DFA_LPAREN action_name DFA_COLON state_name DFA_TRANSITION 
+   state_name DFA_RPAREN
    {
       AST::Effect *effect = new AST::Effect(*$7);
       AST::Configuration *config = new AST::Configuration(*$5);
@@ -459,7 +453,8 @@ regular_action:
    };
 
 pushdown_action:
-   DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier DFA_TRANSITION pushdown_state_destination DFA_RPAREN
+   DFA_ACTION DFA_LPAREN action_name DFA_COLON pushdown_state_identifier 
+   DFA_TRANSITION pushdown_state_destination DFA_RPAREN
    {
       AST::PushDownEffect *effect($7);
 
@@ -488,7 +483,8 @@ pushdown_action:
 pushdown_state_identifier:
    state_name AUTOMATON_LBRACKET stack_symbol AUTOMATON_RBRACKET
    {
-      AST::PushDownConfiguration *config = new AST::PushDownConfiguration(*$1, *$3);
+      AST::PushDownConfiguration *config
+         = new AST::PushDownConfiguration(*$1, *$3);
       delete $1;
       delete $3;
       $$ = config;
@@ -516,8 +512,7 @@ stack_symbol:
 
 pushdown_stack_manipulation:
    push | pop | rewrite
-   {
-   };
+   { };
 
 push:
    AUTOMATON_PUSH stack_symbol
@@ -560,13 +555,7 @@ state_name:
       $$ = $1;
    };
 
-// PUSHDOWN SYSTEMS
-
-rule_pda:
-   {
-   };
-
-// ECTL FORMULA
+// FORMULAS
 
 formula_name:
    IDENTIFIER
@@ -575,9 +564,9 @@ formula_name:
    };
 
 rule_formula:
-   not | and | or | implication | ax | ex | until | all_until | release | all_release | false | true | pvar 
-   {
-   };
+   not | and | or | implication | ax | ex | until | all_until | release 
+   | all_release | false | true | pvar 
+   { };
 
 false:
    FORMULA_FALSE
@@ -641,30 +630,34 @@ formula_automaton_name:
    };
 
 until:
-   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET 
+      formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Until($3, $8, *$6);
-     delete $6;
+      $$ = new AST::Formula::Until($3, $8, *$6);
+      delete $6;
    };
 
 all_until:
-   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_U FORMULA_LBRACKET
+      formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::AllUntil($3, $8, *$6);
-     delete $6;
+      $$ = new AST::Formula::AllUntil($3, $8, *$6);
+      delete $6;
    };
 
 release:
-   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   FORMULA_E FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET
+      formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::Release($3, $8, *$6);
-     delete $6;
+      $$ = new AST::Formula::Release($3, $8, *$6);
+      delete $6;
    };
 
 all_release:
-   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
+   FORMULA_A FORMULA_LPAREN rule_formula FORMULA_R FORMULA_LBRACKET 
+      formula_automaton_name FORMULA_RBRACKET rule_formula FORMULA_RPAREN
    {
-     $$ = new AST::Formula::AllRelease($3, $8, *$6);
-     delete $6;
+      $$ = new AST::Formula::AllRelease($3, $8, *$6);
+      delete $6;
    };
 

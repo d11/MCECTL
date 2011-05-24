@@ -2,8 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  XShow.h
- *    Description:  Show automata via graphviz
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *    Description:  Show automata graphically, via GraphViz
  *
  * =====================================================================================
  */
@@ -60,7 +59,7 @@ namespace Command {
 				// TODO check return codes
 				FILE *dot = popen("dot -Tx11", "w");
 				if (NULL == dot) {
-					throw runtime_error("Couldn't open pipe to 'dot' command");
+					throw CommandFailed("Couldn't open pipe to 'dot' command");
 				}
 				fputs(s.c_str(), dot);
 				pclose(dot);

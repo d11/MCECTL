@@ -94,7 +94,7 @@ namespace Command {
             map<struct state*, State*>::const_iterator iter;
             iter = _state_map.find(libfa_state);
             if (iter == _state_map.end()) {
-               throw runtime_error("Transition refers to state which hasn't been added");
+               throw CommandFailed("Transition refers to state which hasn't been added");
             }
             State *converted = iter->second;
 				const ConfigurationSpace &config_space = dfa->GetConfigurationSpace();
@@ -106,12 +106,12 @@ namespace Command {
             while (index < libfa_state->tused) {
                trans = libfa_state->trans + index;
                if (!trans->to) {
-                  throw runtime_error("Destination state is NULL");
+                  throw CommandFailed("Destination state is NULL");
                }
 					// Find the destination state
                iter = _state_map.find(trans->to);
                if (iter == _state_map.end()) {
-                  throw runtime_error("Transition refers to state which hasn't been added");
+                  throw CommandFailed("Transition refers to state which hasn't been added");
                }
 					State *converted_to = iter->second;
 					Configuration to_id = config_space.GetStateID(converted_to->GetName());
@@ -159,7 +159,7 @@ namespace Command {
                return iter->second;
             }
             else {
-               throw runtime_error("Could not find the action in the map");
+               throw CommandFailed("Could not find the action in the map");
             }
          }
       public:
@@ -211,13 +211,13 @@ namespace Command {
             _regex->Accept(*this);
 
             if (NULL == _fa) {
-               throw runtime_error("Failed to construct regex automaton");
+               throw CommandFailed("Failed to construct regex automaton");
             }
 
 				/* Minimise the produced automaton */
             int r = fa_minimize(_fa);
             if ( r != REG_NOERROR ) {
-               throw runtime_error("Failed to minimise regex automaton");
+               throw CommandFailed("Failed to minimise regex automaton");
             }
 
 				/* Convert the states to State objects */

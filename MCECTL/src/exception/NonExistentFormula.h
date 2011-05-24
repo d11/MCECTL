@@ -3,7 +3,6 @@
  *
  *       Filename:  NonExistentFormula.h
  *    Description:  Tried to look up a formula that doesn't exist
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

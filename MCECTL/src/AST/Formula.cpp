@@ -3,7 +3,6 @@
  *
  *       Filename:  Formula.cpp
  *    Description:  Abstract Syntax Trees for Extended CTL formulas
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

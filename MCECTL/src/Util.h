@@ -3,7 +3,6 @@
  *
  *       Filename:  Util.h
  *    Description:  Misc utility functions
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -17,8 +16,12 @@
 
 using namespace std;
 
+// The following are used in various forms of output accumulation procedures
+
+// Append b to a, inserting ", " between the two and returning the result
 string JoinWithComma(const string &a, const string &b);
 
+// 
 template <class K, class V>
 string JoinPairsWithColon( const string &a, const pair<K,V> &b ) {
    stringstream bs;

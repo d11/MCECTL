@@ -3,7 +3,6 @@
  *
  *       Filename:  FormulaBuilder.h
  *    Description:  Exception for when the formula builder has gone wrong
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

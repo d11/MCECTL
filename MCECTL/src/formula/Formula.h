@@ -3,7 +3,6 @@
  *
  *       Filename:  Formula.h
  *    Description:  
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

@@ -3,7 +3,6 @@
  *
  *       Filename:  Util.cpp
  *    Description:  Misc utility functions
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

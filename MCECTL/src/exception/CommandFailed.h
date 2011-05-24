@@ -3,8 +3,6 @@
  *
  *       Filename:  CommandFailed.h
  *    Description:  Generic exception for when a command has not completed correctly
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -20,8 +18,9 @@ class CommandFailed : public exception
       string _parse_error;
    public:
       CommandFailed(const char *message) : _parse_error(message) { }
+      CommandFailed(const string &message) : _parse_error(message) { }
       virtual const char* what() const throw () {
-         string s = "Syntax error: ";
+         string s = "Command failed: ";
          s += _parse_error;
          return s.c_str();
       }

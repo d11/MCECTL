@@ -3,7 +3,6 @@
  *
  *       Filename:  NonExistentAutomaton.h
  *    Description:  Tried to look up an automaton that doesn't exist
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

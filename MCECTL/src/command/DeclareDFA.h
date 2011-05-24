@@ -3,7 +3,6 @@
  *
  *       Filename:  DeclareDFA.h
  *    Description:  Command for creating automaton/system objects from their ASTs
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -44,7 +43,7 @@ namespace Command {
 		) const {
 			// This default functor shouldn't be used, so if called it indicates a
 			// template error
-         throw runtime_error("don't know how to convert");
+         throw CommandFailed("don't know how to convert");
       }
    };
 
@@ -73,7 +72,7 @@ namespace Command {
             command.CreateState(state);
          }
          else {
-            throw runtime_error("Bad state type");
+            throw CommandFailed("Bad state type");
          }
       }
    };
@@ -124,7 +123,7 @@ namespace Command {
             command.CreateState(state);
          }
          else {
-            throw runtime_error("Bad state type");
+            throw CommandFailed("Bad state type");
          }
       }
    };
@@ -216,7 +215,7 @@ namespace Command {
 		// Create a regular action object
 		void CreateAction(RegularAction **action, AST::Action *ast_action) {
 			if (ast_action->GetType() != AST::Action::REGULAR) {
-				throw runtime_error("Action type is not regular");
+				throw CommandFailed("Action type is not regular");
 			}
 			*action = new RegularAction(
 					ast_action->GetName(),
@@ -228,7 +227,7 @@ namespace Command {
 		void CreateAction(PushDownAction **action, AST::Action *ast_action) {
 			switch(ast_action->GetType()) {
 				case AST::Action::REGULAR:
-					throw runtime_error("Action type shouldn't be regular");
+					throw CommandFailed("Action type shouldn't be regular");
 					break;
 				case AST::Action::PUSH:
 					*action = new PushAction(
@@ -251,7 +250,7 @@ namespace Command {
 						);
 					break;
 				default:
-					throw runtime_error("Bad action type");
+					throw CommandFailed("Bad action type");
 					break;
 			}
 
@@ -263,7 +262,7 @@ namespace Command {
 			int start_id = config->GetID(*_config_space);
 			A *action = NULL;
 			CreateAction(&action, ast_action);
-			if (!action) { throw runtime_error("failed to create action"); }
+			if (!action) { throw CommandFailed("failed to create action"); }
 			_automaton->AddRule(start_id, action);
 		}
 
@@ -335,7 +334,7 @@ namespace Command {
 		virtual void Execute(Environment &environment, GlobalOptions &options) {
 			CreateAutomaton();
 			if (!_automaton) {
-				throw runtime_error("Failed to construct automaton");
+				throw CommandFailed("Failed to construct automaton");
 			}
 			environment.SetAutomaton( _automaton_name, _automaton );
 		}

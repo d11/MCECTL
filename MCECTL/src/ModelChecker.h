@@ -2,10 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  ModelChecker.h
- *
  *    Description:  
- *
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -20,7 +17,6 @@
 
 using namespace Formula;
 
-
 class TraceStep {
 private:
    string _state;
@@ -30,14 +26,7 @@ private:
 public:
    TraceStep(const string &state_name, const vector<string> &stack)
       : _state(state_name), _stack(stack), _has_rule(false) { }
-//   TraceStep(string state_name) : _state(state_name){ }
-//   ~TraceStep() {
-//      delete _stack;
-//      if (_rule) {
-//         delete _rule;
-//      }
-//   }
-   void AddRule(const ProductRule &rule){
+   void AddRule(const ProductRule &rule) {
       _rule = rule;
       _has_rule = true;
    }
@@ -78,21 +67,18 @@ public:
    void AddTraceStep(const TraceStep &trace_step) {
       _trace_steps.push_back(trace_step);
    }
-//   ~Result() {
-//      for_each(_trace_steps.begin(), _trace_steps.end(),
-//            boost::checked_deleter<TraceStep>() );
-//   }
 };
 
 class CheckResults : public Showable {
 private:
-   map<unsigned int, Result*> _result_map; // from configuration to value
+   // Map from configuration to corresponding results
+   map<Configuration, Result*> _result_map;
 public:
    CheckResults();
    void AddResult(Result *result );
    string ToString() const;
-   const Result &GetResult(unsigned int id) const;
-   const map<unsigned int, Result *> &GetResults() const;
+   const Result &GetResult(Configuration id) const;
+   const map<Configuration, Result *> &GetResults() const;
 };
 
 class ResultsTable : public Showable {
@@ -162,12 +148,6 @@ public:
       Formula::Formula::const_reference x,
       Formula::Formula::const_reference y
    );
-
-//   ProductSystem *ConstructReleaseSystem(
-//      const PDA &automaton,
-//      Formula::Formula::const_reference x,
-//      Formula::Formula::const_reference y
-//   );
 
    ReleaseSystem *ConstructReleaseSystemFromPDS(
       const PushDownSystem &pds,

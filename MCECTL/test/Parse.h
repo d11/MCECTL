@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Parse.h
- *    Description:  
+ *    Description:  Tests for parsing
  *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================

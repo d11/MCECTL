@@ -2,10 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Command.h
- *
- *    Description:  
- *
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *    Description:  Base class for command objects
  *
  * =====================================================================================
  */

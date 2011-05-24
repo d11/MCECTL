@@ -3,7 +3,6 @@
  *
  *       Filename:  NonExistentTransitionSystem.h
  *    Description:  Tried to look up a transition_system that doesn't exist
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

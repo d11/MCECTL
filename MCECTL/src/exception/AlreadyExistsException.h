@@ -4,7 +4,6 @@
  *       Filename:  AlreadyExistsException.h
  *    Description:  Exception indicating that the user tried to create
  *                  something with a name that has already been used
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

@@ -2,8 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  RunCheck.h
- *    Description:  Do some model-checking
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
+ *    Description:  Model-check a formula against a system
  *
  * =====================================================================================
  */
@@ -45,7 +44,7 @@ namespace Command {
 						model_checker = new ModelChecker(environment, *pds);
 					}
 					catch (NonExistentAutomatonException e) {
-						throw runtime_error("System must be an LTS or a PDS!");
+						throw CommandFailed("System must be an LTS or a PDS!");
 					}
 				}
 

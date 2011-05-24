@@ -3,7 +3,6 @@
  *
  *       Filename:  AST/TransitionSystem.h
  *    Description:  AST for systems
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -43,6 +42,7 @@ namespace AST {
          return "_";
       }
    };
+
    class PushDownEffect : public Effect {
    public:
       StackSymbol _symbol;

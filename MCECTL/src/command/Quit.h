@@ -3,7 +3,6 @@
  *
  *       Filename:  Quit.h
  *    Description:  Command which signals program exit
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -14,7 +13,6 @@
 #include "Command.h"
 
 namespace Command {
-
    class QuitCommand : public Command {
    public:
       QuitCommand() { }
@@ -25,7 +23,5 @@ namespace Command {
          options.SetQuitting();
       }
    };
-
 }
-
 #endif

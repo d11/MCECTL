@@ -3,7 +3,6 @@
  *
  *       Filename:  LoadFile.h
  *    Description:  Load commands from a file
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -32,8 +31,8 @@ namespace Command {
          virtual string ToString() const { string s = ":load(\""; return s + _filename + "\")"; };
          virtual void Execute(Environment &environment, GlobalOptions &options) {
 
-				FILE *input;
 				// Attempt to open the requested file
+				FILE *input;
 				if (_filename == "-") {
 					input = stdin;
 				} else {

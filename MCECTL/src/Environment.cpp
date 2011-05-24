@@ -3,7 +3,6 @@
  *
  *       Filename:  Environment.cpp
  *    Description:  Definitions for the Environment class
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */

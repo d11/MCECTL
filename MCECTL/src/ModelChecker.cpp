@@ -3,7 +3,6 @@
  *
  *       Filename:  ModelChecker.cpp
  *    Description:  Extended CTL model-checking algorithm
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
  *
  * =====================================================================================
  */
@@ -16,18 +15,16 @@
 #include <climits>
 #include <cstdio>
 #include <cstring>
-
-#include <utility> // std::pair
+#include <utility>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/strong_components.hpp>
-
-// temp
-#include <boost/graph/graphviz.hpp>
+#include <boost/graph/graphviz.hpp> // temp
 
 #include "TransitionSystem.h"
 #include "ModelChecker.h"
 #include "Util.h"
+#include "exception/CommandFailed.h"
 
 extern "C" {
 #include "wpds.h"
@@ -36,14 +33,15 @@ extern "C" {
 
 using namespace std;
 
-
 // RESULT
 
-Result::Result(unsigned int config_id, const string &config_name) : _config_id(config_id), _config_name(config_name) {
-}
-Result::Result(unsigned int config_id, const string &config_name, bool evaluation) : _config_id(config_id), _config_name(config_name), _evaluation(evaluation) {
+Result::Result(unsigned int config_id, const string &config_name)
+: _config_id(config_id), _config_name(config_name) 
+{ }
 
-}
+Result::Result(unsigned int config_id, const string &config_name, bool evaluation)
+: _config_id(config_id), _config_name(config_name), _evaluation(evaluation) 
+{ }
 
 void Result::SetEvaluation(bool evaluation) {
    _evaluation = evaluation;
@@ -87,7 +85,6 @@ string CheckResults::ToString() const {
    s << "Results: {" << endl;
    map<unsigned int, Result*>::const_iterator iter;
    for (iter = _result_map.begin(); iter != _result_map.end(); ++iter) {
-      //s << "  State " << (*iter).first << " -> [" << (*iter).second->ToString() <<"]" << endl;
       s << "   " << (*iter).second->ToString() << endl;
    }
    s << "}" << endl;
@@ -97,7 +94,7 @@ string CheckResults::ToString() const {
 const Result &CheckResults::GetResult(unsigned int id) const {
    map<unsigned int, Result *>::const_iterator iter = _result_map.find(id);
    if (iter == _result_map.end()) {
-      throw runtime_error("Error retrieving result - bad ID");
+      throw CommandFailed("Error retrieving result - bad ID");
    }
    return *(iter->second);
 }
@@ -117,11 +114,18 @@ bool ResultsTable::HasEntry( Formula::Formula::const_reference formula ) const {
    return iter != _entries.end();
 }
 
-const CheckResults *ResultsTable::GetEntry( Formula::Formula::const_reference formula ) const {
+const CheckResults *ResultsTable::GetEntry(
+      Formula::Formula::const_reference formula
+   ) const
+{
    return _entries.find(formula.GetID())->second;
 }
 
-void ResultsTable::SetEntry(Formula::Formula::const_reference formula, CheckResults *check_results) {
+void ResultsTable::SetEntry(
+      Formula::Formula::const_reference formula,
+      CheckResults *check_results
+   )
+{
    _entries.insert(make_pair(formula.GetID(), check_results));
 }
 
@@ -146,11 +150,13 @@ public:
 
    JoinCheckResults(const Environment &env) : _environment(env){ }
 
-   string operator()( const string &a, const pair<unsigned int,CheckResults*> &b ) {
+   string operator()(const string &a, const pair<unsigned int,CheckResults*> &b)
+   {
       const map<unsigned int, Result *> &result_map = b.second->GetResults();
       stringstream bs;
       unsigned int formula_id = b.first;
-      bs << "Results for " << _environment.GetFormulaByID(formula_id).ToString() << ": {" << endl
+      bs << "Results for " << _environment.GetFormulaByID(formula_id).ToString()
+         << ": {" << endl
          << accumulate(result_map.begin(),
                     result_map.end(),
                     string(""),
@@ -165,19 +171,18 @@ string ResultsTable::ToString() const {
    stringstream s;
    s << "==================" << endl;
    s << "FULL RESULTS TABLE" << endl;
-   s << accumulate(_entries.begin(), _entries.end(), string(""), JoinCheckResults(_environment));
+   s <<  accumulate(
+            _entries.begin(), _entries.end(), string(""),
+            JoinCheckResults(_environment)
+         );
    s << "==================" << endl;
    return s.str();
 }
 
-// Used by libwpds semiring
-void *nullfn (void *a, void *b) { return NULL; }
-int   eqfn (void *a, void *b)   { return a==b;    }
-void* plusfn (void *a, void *b) { return (void*)((int)a+(int)b); }
-void* minfn  (void *a, void *b) { return (a<b)? a : b; }
-void* onefn ()		 	{ return NULL; }
-void* null ()		 	{ return NULL; }
-void* zerofn ()		 	{ return (void*)INT_MAX; }
+// Evaluation functions used by the wpds semiring
+void* null0() { return NULL; }
+void *null2(void *a, void *b) { return NULL; }
+int   eqfn(void *a, void *b) { return a == b; }
 
 /* Wrap wPDS functionality in an object */
 class WPDSWrapper {
@@ -205,24 +210,15 @@ public:
       _wpds_refcount++;
 
       // Setup null semiring for wpds automata
-      _semiring.extend   = &nullfn;
-      _semiring.combine  = &nullfn;
+      _semiring.extend   = &null2;
+      _semiring.combine  = &null2;
       _semiring.diff     = NULL;
-      _semiring.one      = &null;
-      _semiring.zero     = &null;
+      _semiring.one      = &null0;
+      _semiring.zero     = &null0;
       _semiring.quasione = NULL;
       _semiring.eq       = &eqfn;
       _semiring.ref      = NULL;
       _semiring.deref    = NULL;
-//      _semiring.extend   = &plusfn;
-//      _semiring.combine  = &minfn;
-//      _semiring.diff     = NULL;
-//      _semiring.one      = &onefn;
-//      _semiring.zero     = &zerofn;
-//      _semiring.quasione = NULL;
-//      _semiring.eq       = &eqfn;
-//      _semiring.ref      = NULL;
-//      _semiring.deref    = NULL;
       _p_semiring = &_semiring;
       _fa = wFACreate(_p_semiring);
    }
@@ -248,7 +244,9 @@ public:
       ProductRule rule = LookupRule(r);
 
       cout << "Rule: " << rule.action->GetName() << ": ";
-      cout << "<" << wIdentString(r->from_state)<< ","<< wIdentString(r->from_stack)<< "> -> <" << wIdentString(r->to_state);
+      cout << "<" << wIdentString(r->from_state)<< ","
+           << wIdentString(r->from_stack)<< "> -> <"
+           << wIdentString(r->to_state);
       if (r->to_stack1) cout << "," << wIdentString(r->to_stack1);
       if (r->to_stack2) cout << " " << wIdentString(r->to_stack2);
       cout << ">";
@@ -342,7 +340,7 @@ public:
       map<const wRule*,ProductRule>::const_iterator iter;
       iter = _rule_map.find(wpds_rule);
       if (iter == _rule_map.end()) {
-         throw runtime_error("Tried to look up rule which is not in the map");
+         throw CommandFailed("Tried to look up rule which is not in the map");
       }
       return iter->second;
    }
@@ -375,7 +373,8 @@ public:
          char *temp = strdup(f_mod.c_str());
          _state_idents[*f] = wIdentCreate(temp);
          free(temp);
-         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
+         cout << "State: " << f_mod 
+              << " Ident: " << _state_idents[f_mod] << endl;
       }
 
    }
@@ -390,7 +389,8 @@ public:
             _stack_idents[*iter] = wIdentCreate(temp);
          }
          free(temp);
-         cout << "Symbol: " << *iter << " ident: " << _stack_idents[*iter] << endl;
+         cout << "Symbol: " << *iter
+              << " ident: " << _stack_idents[*iter] << endl;
       }
    }
 
@@ -399,7 +399,8 @@ public:
 
       // The same state should not be added more than once, except in the case
       // where one instance is final and the other isn't
-      if (!goal_state && _state_idents.find(state_name) != _state_idents.end()) {
+      if (!goal_state && _state_idents.find(state_name) != _state_idents.end())
+      {
          return;
       }
 
@@ -418,31 +419,45 @@ public:
       free(temp);
 
       // debug
-      cout << "State: " << f_mod << " Ident: " << _state_idents[state_name] << endl;
+      cout << "State: " << f_mod
+           << " Ident: " << _state_idents[state_name] << endl;
    }
 
 
    // Add a self-loop for the state, via the given stack symbol
    void AddConfiguration(const string &state_name, const string &stack_symbol) {
       wIdent state_ident = _state_idents[state_name.c_str()];
-      wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], state_ident, NULL, NULL);
+      wFAInsert(
+         _fa,
+         state_ident,
+         _stack_idents[stack_symbol],
+         state_ident,
+         NULL, NULL
+     );
    }
 
    // Convert a PDS to a libwpds one
-   void CreatePDS( const vector<ProductRule> &product_rules, const ConfigurationSpace &config_space ) {
+   void CreatePDS(
+         const vector<ProductRule> &product_rules,
+         const ConfigurationSpace &config_space
+      ) {
 
       _pds = wPDSCreate(_p_semiring);
 
       // Call wPDSInsert for each rule
       vector<ProductRule>::const_iterator rule_iter;
-      for (rule_iter = product_rules.begin(); rule_iter != product_rules.end(); ++rule_iter) {
+      for (rule_iter = product_rules.begin();
+           rule_iter != product_rules.end(); ++rule_iter) {
 
          // Obtain the names of the states and symbols for the rule
          Configuration from_configuration = rule_iter->configuration;
-         string from_state_name   = config_space.GetStateName(from_configuration);
-         string from_stack_symbol = config_space.GetSymbolName(from_configuration);
+         string from_state_name
+            = config_space.GetStateName(from_configuration);
+         string from_stack_symbol 
+            = config_space.GetSymbolName(from_configuration);
          const PushDownAction *action = rule_iter->action;
-         string to_state_name   = config_space.GetStateNameByID(action->GetDestStateID());
+         string to_state_name 
+            = config_space.GetStateNameByID(action->GetDestStateID());
          string to_symbol_name1 = "";
          string to_symbol_name2 = from_stack_symbol;
          action->ApplyToStackTop(to_symbol_name1, to_symbol_name2);
@@ -472,7 +487,11 @@ public:
    // symbol.  
    //
    // Precondition: predecessor configurations have been computed
-   vector<string> GetSuccessors(const ConfigurationSpace &config_space, const string &state_name, const string &stack_symbol) {
+   vector<string> GetSuccessors(
+         const ConfigurationSpace &config_space,
+         const string &state_name, 
+         const string &stack_symbol)
+   {
       vector<string> successor_names;
 
       wIdent source_ident = _state_idents[state_name];
@@ -481,7 +500,8 @@ public:
       vector<string>::const_iterator iter;
       for (iter = state_names.begin(); iter != state_names.end(); ++iter) {
          wIdent target_ident = _state_idents[*iter];
-         if (NULL != wFAFind(_fa_pre, source_ident, symbol_ident, target_ident)) {
+         if (NULL != wFAFind(_fa_pre, source_ident, symbol_ident, target_ident))
+         {
             cout << "Found successor " << *iter << endl;
             successor_names.push_back(*iter);
          }
@@ -496,19 +516,25 @@ public:
    //
    // Precondition: predecessor configurations have been computed
    // Postcondition: result contains appropriate output data
-   void CheckPreStar(const ProductState<State,KripkeState> &state, const string &stack_symbol, Result &result) {
+   void CheckPreStar(
+         const ProductState<State,KripkeState> &state,
+         const string &stack_symbol, Result &result)
+   {
       bool found = false; wTrans *t;
       string pre_state_name = state.GetName();
       for (t = _fa_pre->transitions; t && !found; t = t->next) {
-         cout << "  ...found <" << wIdentString(t->from) << ","  << wIdentString(t->name) << "> ";
-         if (t->from == _state_idents[pre_state_name] && t->name == _stack_idents[stack_symbol]) {
+         cout << "  ...found <" << wIdentString(t->from) << ","
+              << wIdentString(t->name) << "> ";
+         if (t->from == _state_idents[pre_state_name]
+               && t->name == _stack_idents[stack_symbol]) 
+         {
             wConfig *config = wConfigCreate(t->from, t->name, 0); 
             wPath *path = wPathFind(_fa_pre, config);
             bool done = false;
             if (path->transitions && path->transitions->target) {
                PrintTrace(_fa_pre, path->transitions->target);
                // TODO
-//               StoreTrace(result, _fa_pre, path->transitions->target);
+               StoreTrace(result, _fa_pre, path->transitions->target);
                done = true;
                result.SetEvaluation(true);
             }
@@ -577,69 +603,12 @@ public:
 
 };
 
-// Configurations for the release pushdown system
-// Normal product configurations plus those for two extra states (g and b)
-/*
-class RConfigurationSpace : public Showable {
-private:
-   ConfigurationSpace *_product_space;
-   Configuration _goal_state;
-   Configuration _fail_state;
-public:
-   RConfigurationSpace(ConfigurationSpace *product_space) : _product_space(product_space) {
-      _goal_state = product_space->GetStateCount()-1;
-      _fail_state = _goal_state + 1;
-   }
-
-   ~RConfigurationSpace() {
-      delete _product_space;
-   }
-
-   string GoalState() const { 
-      return _goal_state;
-   }
-   string FailStateName() const { 
-      return _
-   }
-
-   string GetStateName(Configuration c) const {
-      const vector<string> stack_alphabet = GetStackAlphabet();
-      Configuration state_id = c / stack_alphabet.size();
-      if (state_id == _goal_state) {
-         return GoalStateName();
-      }
-      else if (state_id == _fail_state) {
-         return FailStateName();
-      }
-      else {
-         return _product_space->GetStateName(c);
-      }
-   }
-   string GetSymbolName(Configuration c) const {
-      const vector<string> stack_alphabet = GetStackAlphabet();
-      return stack_alphabet.at(c % stack_alphabet.size());
-   }
-   const vector<string> GetStackAlphabet() const {
-      return _product_space->GetStackAlphabet();
-   }
-   string ToString() const {
-      return _product_space->ToString();
-   }
-};
-*/
-
 class ReleaseSystem : public Showable {
 private:
    ConfigurationSpace *_config_space;
    vector<ProductState<State,KripkeState>*> _product_states;
 
    typedef RuleBook<PushDownAction, ProductState<State, KripkeState> >::Rule Rule;
-//   struct Rule {
-//      unsigned int configuration;
-//      const PushDownAction *action;
-//      Rule(unsigned int config, const PushDownAction *a) : configuration(config), action(a) {}
-//      Rule() : configuration(0), action(NULL) {  }
-//   };
    vector<Rule> _rule_list;
 public:
    ReleaseSystem(const vector<ProductState<State,KripkeState>*> &produce_states, ConfigurationSpace *config_space) : _config_space(config_space) {
@@ -781,6 +750,8 @@ public:
 
          } else {
             cout << "pop rule" << endl;
+            Configuration dest_config = config_space.MakeConfiguration(dest_id, "_");
+            edges.push_back(Edge(configuration, dest_config));
             // pop
          }
       }
@@ -862,8 +833,13 @@ public:
             cout << vertex << " ";
 
             // TODO comment
-            if (config_space.GetStateName(vertex) != "_fail_state_") { // TODO
+//            if (config_space.GetStateName(vertex) != "_fail_state_") { // TODO
+//            // experiment
+            if (config_space.GetStateName(vertex) != "_fail_state_"
+//                 &&  config_space.GetStateName(vertex) != "_goal_state_"
+                  ) { // TODO
                // If there are no successors, it counts as repeating for us
+               // TODO - dubious
                typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
                pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
                if (out_list.second == out_list.first) {
@@ -876,6 +852,10 @@ public:
                   _repeating_heads.insert(vertex);
                }
                
+            }
+            else {
+               // experiment
+//               _repeating_heads.insert(vertex);
             }
 
          }
@@ -1053,7 +1033,7 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
 	}
 
 	if (initial_state == NULL) {
-		throw runtime_error("Failed to find initial state..!");
+		throw CommandFailed("Failed to find initial state..!");
 	}
 
 	const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
@@ -1205,7 +1185,7 @@ ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
 	}
 
 	if (initial_state == NULL) {
-		throw runtime_error("Failed to find initial state..!");
+		throw CommandFailed("Failed to find initial state..!");
 	}
 
 	const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
@@ -1283,7 +1263,7 @@ ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
 	}
 
 	if (initial_state == NULL) {
-		throw runtime_error("Failed to find initial state..!");
+		throw CommandFailed("Failed to find initial state..!");
 	}
 
 	const ConfigurationSpace &system_config_space(pds.GetConfigurationSpace());

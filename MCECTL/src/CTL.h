@@ -2,16 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  CTL.h
- *
  *    Description:  
- *
- *        Version:  1.0
- *        Created:  27/10/10 20:49:46
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Dan Horgan (danhgn), danhgn@googlemail.com
- *        Company:  
  *
  * =====================================================================================
  */
@@ -28,7 +19,7 @@ using namespace std;
 
 class CommandParser {
 private:
-
+   vector<Command::Command*> Parse();
 public:
    CommandParser() { }
 
