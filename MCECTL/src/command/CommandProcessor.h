@@ -33,7 +33,7 @@ public:
 		try {
 			command.Execute(_environment, _global_options);
 			success = true;
-		} catch (exception &e) {
+		} catch (CommandFailed e) {
          cerr << "## Error: " << e.what() << " ##" << endl;
 		}
 

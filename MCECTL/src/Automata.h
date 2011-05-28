@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 #include <sstream>
 #include <iostream>
 #include <iterator>
@@ -319,7 +320,7 @@ struct less_state_name {
 };
 
 template <class A, class S>
-class RuleBook : public Showable {
+class FiniteAutomaton : public Automaton {
 public:
    struct Rule {
       unsigned int configuration;
@@ -327,59 +328,25 @@ public:
       Rule(unsigned int config, const A *a) : configuration(config), action(a) {}
       Rule() : configuration(0), action(NULL) {  }
    };
-private:
-   vector<Rule> _rule_list;
-public:
-   RuleBook( const vector<S*> &states )
-   { }
-
-   void AddRule(unsigned int start_id, A *action) {
-      _rule_list.push_back(Rule(start_id, action));
-   }
-
-   const vector<Rule> &GetRules() const {
-      return _rule_list;
-   }
-
-   string ToString() const {
-      stringstream s;
-      typename vector<Rule>::const_iterator iter;
-      for (iter = _rule_list.begin(); iter != _rule_list.end(); ++iter) {
-         s << "(" << iter->configuration << ") -> [";
-         if (iter->action) {
-            s << iter->action->ToString();
-         } else {
-            s << "?? NULL !!";
-         }
-         s << "]" << endl;
-      }
-
-      return s.str();
-   }
-
-};
-
-template <class A, class S>
-class FiniteAutomaton : public Automaton {
 protected:
    vector<S*>     _states;
    S *            _initial_state;
-   RuleBook<A, S> _rules;
    const ConfigurationSpace *_config_space;
+   vector<Rule> _rule_list;
 public:
    typedef unsigned int ConfigID;
 	typedef       FiniteAutomaton &reference;
 	typedef const FiniteAutomaton &const_reference;
 
    FiniteAutomaton(const vector<S*> &states, S *initial_state, const ConfigurationSpace *config_space)
-      : _states(states), _initial_state(initial_state), _rules(states), _config_space(config_space)
+      : _states(states), _initial_state(initial_state), _config_space(config_space)
    { }
 
    // TODO - needed ?
    FiniteAutomaton(const FiniteAutomaton<A,S> &automaton) {
       _states        = automaton._states;
       _initial_state = automaton._initial_state;
-      _rules         = automaton._rules;
+      _rule_list         = automaton._rule_list;
       _config_space  = automaton._config_space;
    }
 
@@ -402,7 +369,7 @@ public:
 	}
 
    void AddRule(unsigned int start_id, A *action) {
-      _rules.AddRule(start_id, action);
+      _rule_list.push_back(Rule(start_id, action));
    };
 
    vector<S> GetStates() const {
@@ -414,8 +381,8 @@ public:
       return states;
    };
 
-   const RuleBook<A,S> &GetRules() const {
-      return _rules;
+   const vector<Rule> &GetRules() const {
+      return _rule_list;
    }
 
    const S &GetState(Configuration c) const {
@@ -442,31 +409,44 @@ public:
       s << "CONFIGURATION SPACE:" << endl;
       s << _config_space->ToString() << endl;
       s << "STATES:" << endl;
-      typename vector<S*>::const_iterator iter; size_t index = 0;
-      for (iter = _states.begin(); iter != _states.end(); ++iter) {
-         s << (*iter == _initial_state ? "*" : " ")
-            << " " << _config_space->GetStateID((*iter)->GetName()) << ": " << (*iter)->ToString();
-         if ((*iter)->GetAccepting()) {
-            s << " [accepting]";
+      typename vector<S*>::const_iterator i_state;
+      size_t index = 0;
+      for (i_state = _states.begin(); i_state != _states.end(); ++i_state) {
+         s << (*i_state == _initial_state ? "*" : " ")
+            << " " << _config_space->GetStateID((*i_state)->GetName())
+            << ": " << (*i_state)->ToString();
+         if ((*i_state)->GetAccepting()) {
+            s << " [Accepting]";
          }
          s << endl;
          index++;
       }
 
-      s << "RULES:" << endl << _rules.ToString() << endl;
+      s << "RULES:" << endl;
+      typename vector<Rule>::const_iterator i_rule;
+      for (i_rule = _rule_list.begin(); i_rule != _rule_list.end(); ++i_rule) {
+         s << "(" << i_rule->configuration << ") -> [";
+         if (i_rule->action) {
+            s << i_rule->action->ToString();
+         } else {
+            s << "!! NULL !!";
+         }
+         s << "]" << endl;
+      }
+
       return s.str();
    }
 
 
-   /* Return a string containing a representation of the automaton in Graphviz
-    * 'dot' format, to be rendered to an image.
-    */
+   // Return a string containing a representation of the automaton in Graphviz
+   // 'dot' format, to be rendered to an image.
    string ToDot() const {
       stringstream s;
       s << "digraph automaton { " << endl
         << "rankdir=LR;"          << endl
         << "size=\"8,5\""         << endl;
 
+      // Print states / vertices
       typename vector<S*>::const_iterator state_iter;
       for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
          if (!(*state_iter)) {
@@ -480,7 +460,6 @@ public:
             s << "circle";   
          }
          s << "\"";
-         //s << ", label = \"" << (*state_iter)->ToString() << "\"]; ";
          s << ", label = \"" << (*state_iter)->GetName() << "\"]; ";
          s << (*state_iter)->GetName() << endl;
          if (*state_iter == _initial_state) {
@@ -489,11 +468,9 @@ public:
          }
       }
 
-      typedef typename RuleBook<A,S>::Rule Rule;
-      const vector<Rule> &rules(_rules.GetRules());
-
+      // Print rules / edges
       typename vector<Rule>::const_iterator rule_iter;
-      for (rule_iter = rules.begin(); rule_iter != rules.end(); ++rule_iter) {
+      for (rule_iter = _rule_list.begin(); rule_iter != _rule_list.end(); ++rule_iter) {
 
          if (!rule_iter->action) {
             throw CommandFailed("Bad action");
@@ -515,15 +492,66 @@ public:
       return s.str();
    }
 
+   // Obtain a set of the action names used in the rules of the automaton
+   set<string> GetActionNames() const {
+      set<string> actions;
+      typename vector<Rule>::const_iterator iter;
+      for (iter = _rule_list.begin(); iter != _rule_list.end(); ++iter) {
+         actions.insert(iter->action->GetName());
+      }
+      return actions;
+   }
+
+   // Check whether the automaton is deterministic
+   // This is true iff there is exactly one rule for any given head
+   // configuration and action pair
+   bool IsDeterministic() const {
+      set< pair<Configuration, string> > all_heads;
+      vector<Configuration> v_configs = GetConfigurations();
+      set<string> v_actions = GetActionNames();
+      vector<Configuration>::const_iterator iter_config;
+      set<string>::const_iterator iter_action;
+      for (iter_config = v_configs.begin(); iter_config != v_configs.end(); ++iter_config) {
+         for (iter_action = v_actions.begin(); iter_action != v_actions.end(); ++iter_action) {
+            all_heads.insert(make_pair(*iter_config, *iter_action));
+         }
+      }
+      //temp
+      cout << "All:" << endl;
+      set< pair<Configuration, string> >::const_iterator h_iter ;
+      for (h_iter = all_heads.begin(); h_iter != all_heads.end(); ++h_iter) {
+         cout << h_iter->first << ", " << h_iter->second << endl;
+      }
+
+      cout << "Got:" << endl;
+      set< pair<Configuration,string> > transitions;
+      typename vector<Rule>::const_iterator iter;
+      for (iter = _rule_list.begin(); iter != _rule_list.end(); ++iter) {
+         Configuration head = iter->configuration;
+         const string &action = iter->action->GetName();
+
+         cout << head << ", " << action << endl;
+         pair<Configuration,string> transition(head, action);
+         // More than one rule with the same head
+         if (transitions.find(transition) != transitions.end()) {
+            cout << "Duplicate transition: " << endl;
+            return false;
+         }
+         transitions.insert(transition);
+      }
+
+      cout << "transitions " << transitions.size() << endl;
+      cout << "all heads " << all_heads.size() << endl;
+      // Transition function must be total
+      return transitions.size() == all_heads.size();
+   }
+
 };
 
-// Deterministic Finite Automaton
-typedef FiniteAutomaton<RegularAction,           State>  DFA;
+// Finite Automaton (May actually be non-deterministic)
+typedef FiniteAutomaton<RegularAction, State>  DFA;
 
-// Non-determinic Finite Automaton
-//typedef FiniteAutomaton<NondeterministicAction,  State>  NFA;
-
-// Deterministic Push Down Automaton
-typedef FiniteAutomaton<PushDownAction,          State>  PDA;
+// Push Down Automaton
+typedef FiniteAutomaton<PushDownAction, State>  PDA;
 
 #endif

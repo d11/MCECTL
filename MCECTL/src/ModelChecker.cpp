@@ -566,7 +566,7 @@ public:
    }
 
    void CreatePDS() {
-      WPDSWrapper::CreatePDS(_product_system.GetRules().GetRules(), _product_system.GetConfigurationSpace());
+      WPDSWrapper::CreatePDS(_product_system.GetRules(), _product_system.GetConfigurationSpace());
    }
    void AddPDSState(const ProductState<State,KripkeState> &state, bool goal_state) {
       WPDSWrapper::AddPDSState(state.GetName(), goal_state);
@@ -608,7 +608,7 @@ private:
    ConfigurationSpace *_config_space;
    vector<ProductState<State,KripkeState>*> _product_states;
 
-   typedef RuleBook<PushDownAction, ProductState<State, KripkeState> >::Rule Rule;
+   typedef FiniteAutomaton<PushDownAction, ProductState<State, KripkeState> >::Rule Rule;
    vector<Rule> _rule_list;
 public:
    ReleaseSystem(const vector<ProductState<State,KripkeState>*> &produce_states, ConfigurationSpace *config_space) : _config_space(config_space) {
@@ -732,7 +732,6 @@ public:
                // A push rule
                cout << "push rule ";
 
-//               /* TODO
                string dest_state = config_space.GetStateNameByID(dest_id);
                cout << "getting successors for " << dest_state << ", " << top_symbol << endl;
                vector<string> successors = reachability.GetSuccessors(config_space, dest_state, top_symbol);
@@ -756,7 +755,6 @@ public:
          }
       }
 
-      // TODO
       using namespace boost;
       typedef adjacency_list<vecS, vecS, bidirectionalS, 
                  property<vertex_color_t, default_color_type>
@@ -833,11 +831,8 @@ public:
             cout << vertex << " ";
 
             // TODO comment
-//            if (config_space.GetStateName(vertex) != "_fail_state_") { // TODO
-//            // experiment
             if (config_space.GetStateName(vertex) != "_fail_state_"
-//                 &&  config_space.GetStateName(vertex) != "_goal_state_"
-                  ) { // TODO
+                  ) {
                // If there are no successors, it counts as repeating for us
                // TODO - dubious
                typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
@@ -932,7 +927,7 @@ public:
       char *temp = strdup(final_state_name.c_str());
       wIdent final_state_ident = wIdentCreate(temp);
       free(temp);
-      // TODO
+
       set<Configuration>::const_iterator iter;
       for ( iter = _repeating_heads.begin(); iter != _repeating_heads.end(); ++iter ) {
 
@@ -1010,17 +1005,22 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
 ) {
    cout << "Constructing release system from lts" << endl;
 
+   // Check PDA is deterministic
+   if (!automaton.IsDeterministic()) {
+      throw CommandFailed("Release automaton must be deterministic!");
+   }
+
    vector<ProductState<State,KripkeState>*> product_states;
    ProductState<State,KripkeState> *initial_state = NULL;
 	vector<string> product_state_names;
-	vector<KripkeState> system_states(lts.GetStates());
-	vector<State> automaton_states(automaton.GetStates());
+	const vector<KripkeState> &system_states(lts.GetStates());
+	const vector<State> &automaton_states(automaton.GetStates());
 	vector<KripkeState>::const_iterator i1;
 	vector<State>::const_iterator i2;
 	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
 		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
-			ProductState<State, KripkeState> *new_state;
-         new_state = new ProductState<State,KripkeState>(*i2, *i1);
+			ProductState<State, KripkeState> *new_state
+            = new ProductState<State,KripkeState>(*i2, *i1);
 
          product_states.push_back(new_state);
          product_state_names.push_back(new_state->GetName());
@@ -1064,10 +1064,10 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
       }
    }
 
-	typedef RuleBook<PushDownAction,State>::Rule AutomatonRule;
-	typedef RuleBook<RegularAction,KripkeState>::Rule SystemRule;
-	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
-	const vector<SystemRule> &system_rules = lts.GetRules().GetRules();
+	typedef FiniteAutomaton<PushDownAction,State>::Rule AutomatonRule;
+	typedef FiniteAutomaton<RegularAction,KripkeState>::Rule SystemRule;
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
+	const vector<SystemRule> &system_rules = lts.GetRules();
 
    // Recursively check the first subformula (dynamic programming)
    const CheckResults *x_results = Check(x);
@@ -1087,10 +1087,6 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
             system_config != system_configurations.end();
             ++system_config) {
 
-//         cout << "X results: "<< x_results->ToString()<< endl;
-//         cout << "Y results: "<< y_results->ToString()<< endl;
-//         cout << "system config: "<< *system_config << endl;
-
          const Result &x_res = x_results->GetResult(*system_config);
          const Result &y_res = y_results->GetResult(*system_config);
          bool in_Lx = x_res.GetEvaluation();
@@ -1098,7 +1094,6 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
 
          Configuration start_id = *automaton_config + *system_config * automaton_configurations.size();
          if (in_Lx && (!final || in_Ly)) {
-//            cout << "ADDING GOAL LINK" << endl;
             Configuration dest_id = product_state_names.size()-2;
             PushDownAction *action = new RewriteAction("#goal#", dest_id, "_" );
 				release_system->AddRule(start_id, action);
@@ -1195,11 +1190,11 @@ ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
 
 	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
 
-	typedef RuleBook<PushDownAction,State>::Rule AutomatonRule;
-	typedef RuleBook<RegularAction,KripkeState>::Rule SystemRule;
+	typedef FiniteAutomaton<PushDownAction,State>::Rule AutomatonRule;
+	typedef FiniteAutomaton<RegularAction,KripkeState>::Rule SystemRule;
 
-	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
-	const vector<SystemRule> &system_rules = lts.GetRules().GetRules();
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
+	const vector<SystemRule> &system_rules = lts.GetRules();
 
    // Recursively check the first subformula (dynamic programming)
 	const CheckResults *x_results  = Check(x);
@@ -1240,7 +1235,6 @@ ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
 ) {
    // Create product states
    vector<ProductState<State,KripkeState>*> product_states;
-   Valuation v;
    ProductState<State,KripkeState> *initial_state = NULL;
 	vector<string> product_state_names;
 	vector<KripkeState> system_states(pds.GetStates());
@@ -1267,52 +1261,43 @@ ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
 	}
 
 	const ConfigurationSpace &system_config_space(pds.GetConfigurationSpace());
-	const vector<unsigned int> &system_configurations = system_config_space.GetConfigurations();
-	const vector<string> &stack_alphabet = system_config_space.GetStackAlphabet();
-	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
+	const vector<Configuration> &system_configurations
+      = system_config_space.GetConfigurations();
+	const vector<string> &stack_alphabet
+      = system_config_space.GetStackAlphabet();
+	ConfigurationSpace *config_space
+      = new ConfigurationSpace(product_state_names, stack_alphabet);
 
    // Initialise the product system object
-	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
+	ProductSystem *product_system
+      = new ProductSystem(product_states, initial_state, config_space);
 
    // Create rules
-	typedef RuleBook<RegularAction,State>::Rule AutomatonRule;
-	typedef RuleBook<PushDownAction,KripkeState>::Rule SystemRule;
-	const vector<AutomatonRule> &automaton_rules = automaton.GetRules().GetRules();
-	const vector<SystemRule> &system_rules = pds.GetRules().GetRules();
+	typedef FiniteAutomaton<RegularAction,State>::Rule AutomatonRule;
+	typedef FiniteAutomaton<PushDownAction,KripkeState>::Rule SystemRule;
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
+	const vector<SystemRule> &system_rules = pds.GetRules();
 
    // Recursively check the first subformula (dynamic programming)
 	const CheckResults *x_results  = Check(x);
 
 	vector<AutomatonRule>::const_iterator j1;
 	vector<SystemRule>::const_iterator j2;
-	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
-		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
+   unsigned int multiplier = system_states.size() / stack_alphabet.size();
+   for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
+
+      // Check system state satisfies x
+      const Result &res = x_results->GetResult(j2->configuration);
+      if (!res.GetEvaluation()) {
+         continue;
+      }
+
+      for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
 			if (j1->action->GetName() == j2->action->GetName()) {
-
-				// Check system state satisfies x
-				const Result &res = x_results->GetResult(j2->configuration);
-				if (!res.GetEvaluation()) {
-					continue;
-				}
-
-				unsigned int start_id;
-				start_id = j2->configuration + j1->configuration * system_configurations.size();
-
-//            cout << "automaton rule: " << j1->configuration << " " << automaton_config_space.GetStateName(j1->configuration)
-//                 << " -> " << j1->action->GetDestStateID() <<" "<< automaton_config_space.GetStateNameByID(j1->action->GetDestStateID()) << endl;
-//            cout << "system rule: " << j2->configuration << " " << system_config_space.GetStateName(j2->configuration)
-//                 << "[" << system_config_space.GetSymbolName(j2->configuration) << "]"
-//                 << " -> " << j2->action->GetDestStateID() <<" "<< system_config_space.GetStateNameByID(j2->action->GetDestStateID()) << endl;
-//            cout << "product rule: " << j2->action->GetName()  << ": ";
-//            cout << "" << start_id << " " << config_space->GetStateName(start_id);
-//            cout << "[" << config_space->GetSymbolName(start_id) << "]";
-
-				unsigned int dest_id;
-				dest_id = j2->action->GetDestStateID() + j1->action->GetDestStateID() * system_states.size() / stack_alphabet.size();
-//            cout << " -> " << dest_id;
-//            cout << " " << config_space->GetStateNameByID(dest_id) << endl;
-
-//            cout << endl;
+				unsigned int start_id = j2->configuration 
+               + j1->configuration * system_configurations.size();
+				unsigned int dest_id = j2->action->GetDestStateID() 
+               + j1->action->GetDestStateID() * multiplier;
 
 				PushDownAction *action = j2->action->Clone();
 				action->SetDestStateID(dest_id);

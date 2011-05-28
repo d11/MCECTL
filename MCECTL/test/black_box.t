@@ -101,7 +101,6 @@ sub test_suite {
    return [ map { $_->{name} = "[$name] " . $_->{name}; $_ } @{$ra_tests} ];
 }
 
-
 my $until_tests = test_suite("Until", [
    {
       name     => "1. LTS, basic non-pushdown",
@@ -171,14 +170,25 @@ my $until_tests = test_suite("Until", [
       ],
       expected => { "<t1,_>" => 1, "<t1,s>" => 0, "<t1,t>" => 1, "<t1,u>" => 0 }
    }
-#   {
-#      name     => "#2 - ",
-#      formula  => { name => "", formula => "" },
-#      system   => ,
-#      automata => [],
-#      expected => { }
-#   },
 ]);
+
+# Define a pushdown automata; used below
+my $pda_match_ab = {
+   type => "PDA",
+   name => "a1",
+   states => ["*t1", 't2', 'x'],
+   rules => [
+      'a: t1[_] -> t2[PUSH t]'   , 'a: t2[t] -> t2[PUSH s]'   , 
+      'a: t2[s] -> t2[PUSH s]'   , 'b: t2[s] -> t2[POP]'      , 
+      'b: t2[t] -> t1[POP]'      , 'a: t2[_] -> x[REWRITE _]' , 
+      'a: t1[s] -> x[REWRITE _]' , 'a: t1[t] -> x[REWRITE _]' , 
+      'a: x[_]  -> x[REWRITE _]' , 'a: x[s]  -> x[REWRITE _]' , 
+      'a: x[t]  -> x[REWRITE _]' , 'b: t2[_] -> x[REWRITE _]' , 
+      'b: t1[_] -> x[REWRITE _]' , 'b: t1[s] -> x[REWRITE _]' , 
+      'b: t1[t] -> x[REWRITE _]' , 'b: x[_]  -> x[REWRITE _]' , 
+      'b: x[s]  -> x[REWRITE _]' , 'b: x[t]  -> x[REWRITE _]' , 
+   ]
+};
 
 my $release_tests = test_suite("Release", [
    {
@@ -194,8 +204,12 @@ my $release_tests = test_suite("Release", [
          {
             type => "PDA",
             name => "a2",
-            states => [ 't1', '*t2' ],
-            rules => [ 'a: t1[_] -> t2[REWRITE _]' ]
+            states => [ 't1', '*t2', 'x' ],
+            rules => [ 
+               'a: t1[_] -> t2[REWRITE _]',
+               'a: t2[_] -> x[REWRITE _]',
+               'a: x[_] -> x[REWRITE _]',
+            ]
          }
       ],
       expected => { s1 => 1, s2 => 1, s3 => 1}
@@ -213,8 +227,13 @@ my $release_tests = test_suite("Release", [
          {
             type => "PDA",
             name => "ra4",
-            states => [ 't1', 't2', '*t3' ],
-            rules => [ 'a: t1[_] -> t2[REWRITE _]', 'b: t2[_] -> t3[REWRITE _]' ]
+            states => [ 't1', 't2', '*t3','x' ],
+            rules => [ 
+               'a: t1[_] -> t2[REWRITE _]' , 'b: t2[_] -> t3[REWRITE _]' , 
+               'b: t1[_] -> x[REWRITE _]'  , 'a: t2[_] -> x[REWRITE _]'  , 
+               'a: x[_]  -> x[REWRITE _]'  , 'b: x[_]  -> x[REWRITE _]'  , 
+               'a: t3[_] -> x[REWRITE _]'  , 'b: t3[_] -> x[REWRITE _]'  , 
+            ]
          } 
       ],
       expected => { s1 => 0, s2 => 1, s3 => 1 }
@@ -274,11 +293,20 @@ my $release_tests = test_suite("Release", [
          {
             type => "PDA",
             name => "a1",
-            states => ["t1", 't2', '*t3'],
-            rules => ['b: t1[_] -> t2[PUSH s]','a: t2[s] -> t3[POP]'  ]
+            states => ["t1", 't2', '*t3', 'x'],
+            rules => [
+               'b: t1[_] -> t2[PUSH s]'   , 'a: t2[s] -> t3[POP]'      , 
+               'a: t1[_] -> x[REWRITE _]' , 'a: t2[_] -> x[REWRITE _]' , 
+               'b: t2[_] -> x[REWRITE _]' , 'b: t2[s] -> x[REWRITE _]' , 
+               'a: t1[s] -> x[REWRITE _]' , 'b: t1[s] -> x[REWRITE _]' , 
+               'a: t3[_] -> x[REWRITE _]' , 'b: t3[_] -> x[REWRITE _]' , 
+               'a: t3[s] -> x[REWRITE _]' , 'b: t3[s] -> x[REWRITE _]' , 
+               'a: x[_]  -> x[REWRITE _]' , 'b: x[_]  -> x[REWRITE _]' , 
+               'a: x[s]  -> x[REWRITE _]' , 'b: x[s]  -> x[REWRITE _]' , 
+            ]
          }
       ],
-      expected => { s1 => 1, s2 => 1, s3 => 1, s4 => 0, s5 => 1, s6 => 0 }
+      expected => { s1 => 0, s2 => 0, s3 => 0, s4 => 0, s5 => 0, s6 => 0 }
    },
    {
       name => "6. LTS, pushdown; all-until 2",
@@ -296,22 +324,123 @@ my $release_tests = test_suite("Release", [
          {
             type => "PDA",
             name => "a1",
-            states => ["t1", '*t2'],
+            states => ["t1", '*t2', 'x'],
             rules => [
-               'a: t1[_] -> t1[PUSH s]',
-               'a: t1[s] -> t1[PUSH s]',
-               'b: t1[s] -> t1[POP]',
-               'c: t1[_] -> t2[REWRITE _]'  
+               'a: t1[_] -> t1[PUSH s]'   , 'a: t1[s] -> t1[PUSH s]'    , 
+               'b: t1[s] -> t1[POP]'      , 'c: t1[_] -> t2[REWRITE _]' , 
+               'a: t2[_] -> x[REWRITE _]' , 'a: t2[s] -> x[REWRITE _]'  , 
+               'b: t1[_] -> x[REWRITE _]' , 'b: t2[_] -> x[REWRITE _]'  , 
+               'b: t2[s] -> x[REWRITE _]' , 'c: t1[s] -> x[REWRITE _]'  , 
+               'c: t2[_] -> x[REWRITE _]' , 'c: t2[s] -> x[REWRITE _]'  , 
+               'a: x[_]  -> x[REWRITE _]' , 'a: x[s]  -> x[REWRITE _]'  , 
+               'b: x[_]  -> x[REWRITE _]' , 'b: x[s]  -> x[REWRITE _]'  , 
+               'c: x[_]  -> x[REWRITE _]' , 'c: x[s]  -> x[REWRITE _]'  , 
             ]
          }
       ],
-      expected => { s1 => 1, s2 => 1, s3 => 1, s4 => 1, s5 => 0, s6 => 1, s7 => 0 }
-   }
+      expected => { s1 => 1, s2 => 0, s3 => 1, s4 => 0, s5 => 0, s6 => 0, s7 => 0 }
+   },
 
+   {
+      name => "8. LTS, pushdown; linear I",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: ', 's2: ' ],
+         rules => [ 'a: s1 -> s2' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 0, s2 => 0 }
+   },
+   {
+      name => "9. LTS, pushdown; linear II",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q', 's2: ' ],
+         rules => [ 'a: s1 -> s2' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 1, s2 => 0 }
+   },
+   {
+      name => "10. LTS, pushdown; linear III",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: ', 's2: q' ],
+         rules => [ 'a: s1 -> s2' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 0, s2 => 1 }
+   },
+   {
+      name => "11. LTS, pushdown; linear IV",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q', 's2: ', 's3: '],
+         rules => [ 'a: s1 -> s2','b: s2 -> s3' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 0, s2 => 0, s3 => 0}
+   },
+   {
+      name => "12. LTS, pushdown; linear V",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q', 's2: ', 's3: q'],
+         rules => [ 'a: s1 -> s2','b: s2 -> s3' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 1, s2 => 0, s3 => 1}
+   },
+   {
+      name => "13. LTS, pushdown; linear VI",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q, p', 's2: ', 's3: '],
+         rules => [ 'a: s1 -> s2','b: s2 -> s3' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 1, s2 => 0, s3 => 0}
+   },
+   {
+      name => "14. LTS, pushdown; cycle I",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q', 's2: '],
+         rules => [ 'a: s1 -> s2','b: s2 -> s1' ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 1, s2 => 0 }
+   },
+   {
+      name => "14. LTS, pushdown; cycle II",
+      formula => { name => "f1", formula => "E( p R[a1] q )"},
+      system => {
+         type => "LTS",
+         name => "t1",
+         states => ['s1: q', 's2: '],
+         rules => [ 'a: s1 -> s2','b: s2 -> s1', 'a: s2 -> s2','b: s2 -> s2'  ]
+      },
+      automata => [ $pda_match_ab ],
+      expected => { s1 => 1, s2 => 0}
+   },
 ]);
 
+# Group and run all of the tests
 my $tests = [ @{$until_tests}, @{$release_tests} ];
-
 for my $check (@{$tests}) {
    test_one($check);
 }

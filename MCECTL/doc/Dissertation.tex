@@ -10,15 +10,17 @@
 \setlength\evensidemargin{0in}
 
 \usepackage{cite}
-\usepackage{verbatim}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{listings}
 \usepackage{lscape}
 \usepackage{multicol}
+\usepackage{verbatim}
 
 % no indents
 \usepackage{parskip}
+
+\usepackage{alltt}
 
 \theoremstyle{definition}
 \newtheorem{mydef}{Definition}
@@ -28,37 +30,34 @@
 \title{Model Checking Extended Computation Tree Logic}
 \author{Daniel Horgan}
 % don't put candidate no.
-%\date{Today}
 \maketitle
-
-\begin{comment}
-[scratch]
-Blablabla said Nobody ~\cite{Nobody06}.
-\end{comment}
 
 \begin{abstract}
 
 %TODO abstract
 %Move 1:  Background to the project
-Computation Tree Logic is widely used for modelling the behaviour of
-simple systems over time, but its expressive power is limited.
-More powerful logics such as CTL* and the modal mu-calculus have
-the disadvantage that their model-checking problems are comparatively intractable
-(EXPTIME as opposed to PTIME). A recent contribution by Axelsson et al.
-introduces the `Extended CTL' family of logics, in which the Until and Release
-operators of CTL are parameterised by various classes of automaton. This
-increases the expressive power of the logic, whilst (in the case of pushdown
+Computation Tree Logic is widely used for modelling the behaviour of simple
+systems over time, but its expressive power is limited.  More powerful logics
+such as CTL* and the modal mu-calculus have the disadvantage that their
+model-checking problems are comparatively intractable, and they can be
+unintuitive.  A recent contribution by Axelsson et al. introduces the `Extended
+CTL' family of logics, in which the Until and Release operators of CTL are
+parameterised by various classes of automaton. This has the advantage of
+increasing the expressive power of the logic, whilst (in the case of pushdown
 automata) preserving the tractability of model checking. 
 %Move 2: Purpose of the project
 %Move 3: Problem tackled
-This project implements (to the best of my knowledge) the first system for
-model checking CTL[PDA, DPDA], using algorithms based on those described in the
-paper. 
+Using algorithms based on those described in the paper, this project implements
+(to the best of my knowledge) the first concrete system for model checking
+CTL[PDA, DPDA], the logic in which both operators are refined by pushdown
+automata, which are deterministic in the case of Release. 
 %Move 4: Work carried out
-To this end I have developed % TODO
+
+% TODO
 %Move 5: Results 
 
 %Move 6: Conclusions or implications
+
 
 %Move 7: Achievements of the project
 
@@ -76,26 +75,44 @@ To this end I have developed % TODO
 % move 1: background
 %        - why is area important?
 Automatic formal verification of programs is an important topic in computer
-science, because it is difficult to determine the correctness of complex
+science, because it is difficult to evaluate correctness properties of complex
 programs manually. One of the main approaches is based on \textit{model
 checking}: relevant aspects of the behaviour of a program are represented as an
 abstract logical model, and the program specification is formulated as a set of
-formulas. By checking whether the model satisfies the formulas, we can discover
-whether the program meets the specification.
+formulas of a corresponding logic. By checking whether the model satisfies the
+formulas, we can discover whether the program meets the specification they
+embody.
 
 %        - background info
 Many different logics have been developed and used in this way; amongst the
 most popular have been the temporal logics CTL and LTL. Their formulas are
-evaluated over \textit{transition systems}: such systems consist of a finite
-set of states at which various propositions may hold, together with rules
-specifying the possible movements between them. % TODO rewrite
+evaluated over \textit{labelled transition systems}: such systems consist of a
+finite set of states at which various propositions may hold, together with
+rules specifying the possible movements between them. % TODO rewrite
 
 %        - previous research
 % move 2: problem/need
+While both of these logics are useful and well-studied, they are unable to
+express many of the more complicated properties that we may wish to check.
+Moreover, labelled transition systems cannot directly be used to represent
+programs with infinitely many states. Since we wish to permit software with
+unbounded recursion, this is a severe limitation. For example, consider the
+case of a shared resource whose lifetime is controlled by reference-counting.
+We wish to check that the count is decremented exactly the same number of times
+as it is incremented, and that the count does not reach zero before it is safe
+for the resource to be released. Since the count may legitimately become
+arbitrarily large, a finite state system cannot be used to track this property.
 
 % efficient, but not powerful: 
 % can't do buffer specification; non-regular
 % can't do infinite states; mostly used for hardware
+
+More powerful logics have their own problems\footnote{A detailed
+justification for Extended CTL is naturally given by Axelsson et al. (2010),
+upon which this summary is based.}. The model checking problem for CTL* is
+PSPACE-complete\cite{Kreutzer10}\cite{sistla1985complexity}
+
+The modal mu-calculus 
 
 %CTL*, mu-calculus
 % others?
@@ -105,17 +122,35 @@ in which CTL is extended by classes of automata (or, equivalently, of formal lan
 
 it was shown, in particular, that CTL[PDA, DPDA] was in P
 
+
+As well as being computationally efficient, this technique is relatively
+intuitive. Many programmers have a good understanding of regular expressions
+and context-free grammars, but the fixed-point operators which lend the modal
+mu-calculus its power are likely to be unfamiliar.
+
 % move 3: presenting project
 %        - purposes,aims,objectives
 
-%        - work carried out
-%        - justification/importance
+At least in theory, then, CTL[PDA, DPDA] has good potential as a practical
+logic for software verification. For this reason, and to determine to what
+extent this is borne out in practice, the aim of this project was to create a
+concrete, working implementation of the model checking algorithms described in
+Axelsson et al.
 
+%        - work carried out
+
+To this end, an input language was defined for specifying pushdown and
+non-pushdown automata and systems, as well as extended CTL formulas.  A set of
+commands is provided for interacting with these objects, and in particular for
+checking formulas against systems.  This is possible both when the pushdown
+component is in the automaton and when it is in the transition system.
+
+%        - justification/importance
 
 %        - outline of structure of report
 
 The report is structured as follows. We formally define the syntax and
-semantics of Extended CTL, based on the description in the paper. We also
+semantics of CTL[PDA,DPDA], based on the description in the paper. We also
 recall the algorithms for model checking the Until and Release clauses set out
 therein, and elaborate on them with some thought to implementation.
 
@@ -128,7 +163,8 @@ names, and let $\Gamma$ be a finite set of stack symbols.
 \subsection{Computation-tree logic}
 
 Standard CTL has become %TODO cite
-one of the most widely-used logics for software verification, since it is both intuitive and computationally amenable.
+one of the most widely-used logics for software verification, since it is both
+intuitive and computationally amenable.
 
 with LTL
 
@@ -148,7 +184,6 @@ where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times
 The syntax of a standard CTL formula is defined recursively by
 
 \[ \phi := q | \phi \vee \phi | \neg \phi | \texttt{E}(\phi_1 \texttt{U} \phi_2) | \texttt{E}(\phi_1 \texttt{R} \phi_2) \]
-%semantics%TODO
 
 $\mathcal{T}, s \models \phi$ denotes that state $s \in \mathcal{S}$ satisfies
 the formula $\phi$, which 
@@ -156,22 +191,24 @@ inductively over formulas as follows:
 
 $\mathcal{T}, s \models q$ if $q \in l(s)$ \\
 $\mathcal{T}, s \models \phi_1 \vee \phi_2$ if $\mathcal{T}, s \models \phi_1$
-and $\mathcal{T}, s \models \phi_2$ \\
+or $\mathcal{T}, s \models \phi_2$ \\
 $\mathcal{T}, s \models \neg \phi $ if $\mathcal{T}, s \not\models \phi$ \\
-$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U} \phi_2) $ if %TODO \\
+$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U} \phi_2) $ if there exists
+a path $\pi = s_0,a_1,s_1,\dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$ \\
+%TODO \\
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R} \phi_2) $ if %TODO \\
 
 \end{mydef}
-However, its expressive power is limited, and there are properties which we
-would like to be able to check that are beyond its power.
-For example: 
+%However, its expressive power is limited, and there are properties which we
+%would like to be able to check that are beyond its power.
+%For example: 
 % TODO example - buffer ?
-To address this, more powerful logics have been proposed. CTL* % TODO CTL*
- PDL % TODO
-and the modal mu-calculus
-While these are all important and worthwhile tools, they suffer from two key problems: 
-unintuitive
-exponential-time model-checking
+%To address this, more powerful logics have been proposed. CTL* % TODO CTL*
+% PDL % TODO
+%and the modal mu-calculus
+%While these are all important and worthwhile tools, they suffer from two key problems: 
+%unintuitive
+%exponential-time model-checking
 
 
 % Description of the formalism...
@@ -185,9 +222,9 @@ below is CTL[PDA,DPDA].
 
 % Define pushdown automata
 \begin{mydef}
-A pushdown automaton (PDA) $\mathcal{A}$ is a 5-tuple $(Q, \Sigma, \Gamma, \delta, q_0, F)$ where
+A pushdown automaton (PDA) $\mathcal{A}$ is a 5-tuple $(Q, \Sigma, \Gamma, \Delta, q_0, F)$ where
 $Q$ is a set of states, $\Sigma$ and $\Gamma$ are as established above,
-$\delta$ is a set of pushdown transition rules, $q_0$ is the initial state, and
+$\Delta$ is a set of pushdown transition rules, $q_0$ is the initial state, and
 $F$ is the set of accepting states.
 % TODO explain transition rules
 \end{mydef}
@@ -208,12 +245,13 @@ Formulas are evaluated with respect to states of an LTS $\mathcal{T} = (\mathcal
 $\mathcal{T}, s \models q$ iff $q \in l(s)$
 $\mathcal{T}, s \models q$ iff $q \in l(s)$ \\
 $\mathcal{T}, s \models \phi_1 \vee \phi_2$ iff $\mathcal{T}, s \models \phi_1$
-and $\mathcal{T}, s \models \phi_2$ \\
+or $\mathcal{T}, s \models \phi_2$ \\
 $\mathcal{T}, s \models \neg \phi $ iff $\mathcal{T}, s \not\models \phi$ \\
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U}^\mathcal{A} \phi_2) $ iff 
-$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$
+$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $a_1 \dots a_n \in L(\mathcal{A}$ and $\mathcal{T}, s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$
 \\ %TODO 
-$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R}^\mathcal{B} \phi_2) $ iff \\ %TODO
+$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R}^\mathcal{A} \phi_2) $ iff 
+$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\forall n \in dom(\pi): a_1 \dots a_n \not\in L(\mathcal{A}$ or $\mathcal{T}, s_n \models \psi$ or $\exists i < n$ s.t. $\mathcal{T}, s_i \models \phi$\\ %TODO
 %\end{center}
 \end{mydef}
 
@@ -227,6 +265,7 @@ $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R}^\mathcal{B} \phi_2) $ iff \
 
 Given a formula and a labelled transition system, the global model checking
 problem consists of determining which states of the system satisfy the formula.
+The 
 
 \subsection{Applications of Logic to Software Verification}
 
@@ -257,9 +296,9 @@ the design process.
 \subsection{Correctness}
 The first priority for the system was -- perhaps obviously -- that of
 correctness. Since one of the primary applications of model-checking in general
-is the analysis and verification of other programs, it is vital that
-an implementation produce accurate results. Mainstream adoption of formal
-verification methods has been slow,\cite{mitra2008strategies} and if these
+is the analysis and verification of other programs, it is vital that an
+implementation produce accurate results. Mainstream adoption of formal
+verification methods has been slow\cite{mitra2008strategies}, and if these
 techniques are ever to be more widely used, they must in the first place be
 reliable.
 
@@ -272,6 +311,8 @@ Using the system should be simple and practical.
 
 The system must accept problem specifications in a clear format, 
 and produce results in an intelligible manner.
+
+
 
 \subsection{Efficiency}
 
@@ -291,7 +332,7 @@ undermined if it takes a long time to produce results.
 
 \subsection{Extensibility}
 
-A minor consideration 
+The system should be extensible
 
 \subsection{Integration}
  %jimple
@@ -311,7 +352,7 @@ The
 
 
 Since the model checking algorithms are highly automata-theoretic, it was clear
-that an important component of the system would need to be automata classes
+that an important component of the system would need to be a set of automata classes
 with support for the necessary operations. In particular, two of the most
 significant features required were the ability to construct a minimised DFA from a
 regular expression, and to compute the predecessor configurations of a set in a
@@ -323,51 +364,135 @@ Unfortunately, investigation found no single library of automata classes which
 would support all of these. For this reason, it was necessary to develop new
 classes for the various types of automata and systems, and use the various
 libraries by converting between the different representations as necessary.
-This was perhaps less elegant than an entirely self-contained solution, but is
+This was perhaps less elegant than an entirely self-contained solution, but was
 a pragmatic approach -- since the focus of the project was the new model
-checking algorithm, it makes sense to use robust and well-tested external code
+checking algorithm, it made sense to use robust and well-tested external code
 where possible, rather than re-implement these algorithms from scratch.
 
 % why C++ ? -libraries
 
 C++ was chosen for this project because it allows for linkage with the wpds
 library (which is written in C) whilst permitting an object-oriented approach.
-%convert between
 
+\subsection{Overview}
+
+The user interacts with the system via a command line. A typical session
+involves loading system and formula definitions from a file, followed by
+specifying checks to run against these objects. It is also possible to display
+the automata and systems that have been loaded.
+
+The interpretation of the command text, whether input directly or loaded from a file, is handled by 
+%TODO
+
+
+
+\subsection{Systems and Automata}
+
+By using C++ templates, it was possible to create the four necessary
+automaton\footnote{The term `automata' is taken here also to include transition
+systems} types (DFA, PDA, LTS, PDS) as a single class (with two template
+parameters).  The class is parameterised by \textit{state type} and
+\textit{action type}.  Using the plain \texttt{State} class results in
+automata; using \texttt{KripkeState} produces systems, with labelled states.
+Similarly, \texttt{RegularAction} and \texttt{PushDownAction} provide the
+different types of transition rule used.
+
+This approach reduced code duplication and increased flexibility; for example,
+to create the product system used for the Until checking, it was sufficient to
+change the state type to a new \texttt{ProductState} class, acting as a pair
+\texttt{(State, KripkeState)} drawn from the Cartesian product.
+
+\subsection{Configuration Space}
+
+While the control states of the automata are stored explicitly, the actual
+configurations are not\footnote{Here `configuration' refers to a combination of
+a control state and a top stack symbol.}; instead, an automaton has an
+associated `configuration space', which is used whenever it is necessary to
+directly make reference to configurations. The configuration space stores the
+names of control states and of stack symbols, and associates each pair thereof
+with a unique integer. This ID number is used to refer to states and
+configurations in the transition rules and elsewhere, so that potentially long
+name strings do not need to be copied unnecessarily. It also simplifies the
+construction of product systems.
 
 % class breakdown, diagrams ?
+
+%configuration space
 
 % algorithms, data structures
 
 % user interface
 
-% environment
-
+\subsection{Regular Expressions}
 % regex, libfa
+Since it can be tedious to define automata manually, it is also possible to
+specify a DFA using a regular expression. The regex is parsed into its own AST
+-- as with the other structures -- but when interpreted, libfa is used to
+construct a DFA with the name given. The decision to use libfa was taken
+because to reimplement the necessary minimisation algorithms would have been
+time-consuming and potentially less robust. However, libfa naturally uses its
+own representation for automata and regular expressions, so we need to convert
+between them to retrieve the results. This is done by the
+\texttt{DeclareRegexCommand} class.
 
-The core of the system is the MCECTL module; this accepts input in the form of commands in the MCECTL input language. 
+% environment
+\subsection{Environment}
 
-Commands may update the internal state by defining new automata, systems and formulas.
-stored internally
+The environment is used to store all of the automata, systems, and formulas
+that have been loaded at any given point in the program. It also stores the
+results of model-checks, so that it is only necessary to check a formula once
+-- to recall the results again, they are simply looked up in the environment.
+This has the potential to save computation time if the user wishes to check
+several similar formulas against a system. It also allows the user a greater
+degree of interactivity; it's possible to define and check a new formula during
+a session, without needing to reload the transition system.
 
-They may produce output
+\subsection{Read-eval-print loop}
 
-Read-eval-print loop
-% TODO repl; GNU readline
-The REPL makes use of the \textbf{GNU readline} library, so that standard
-keyboard shortcuts can be used for such operations as retrieving previously
-entered commands from the history, and auto-completing filenames. 
+Given the usability requirements, a traditional read-eval-print loop was an
+obvious choice as a front-end to the system.  The REPL makes use of the
+\textbf{GNU readline} library, so that standard keyboard shortcuts can be used
+for such operations as retrieving previously entered commands from the history,
+and auto-completing filenames. 
+
+A full graphical user interface would have provided an even greater degree of
+usability, but was judged to be beyond the scope of this project. However,
+since the main core of the model checker is built as a separate (static)
+library, it would be easy to extend the system with an alternative front-end.
 
 % dot
 
+
 \subsection{Input}
-input language is tokenised and parsed using \textbf{flex} and \textbf{Bison} respectively. 
+The input language is tokenised and parsed using \textbf{flex} and
+\textbf{Bison} respectively. See the Appendix for a detailed explanation of the
+input language.
 % TODO bison/flex
 
 An Abstract Syntax Tree is constructed recursively during the parse; ultimately
-the input text is transformed into a series of Command objects. 
+the input text is transformed into a series of Command objects. This helps to
+modularise functionality, and means that the actual execution of the commands
+can be delayed. As well as generally adding flexibility, this decision means
+that it is possible to ensure definitions are well-formed before they are
+undertaken.
 
+In the case of formulas, the intermediate representation as an AST has another
+advantage: it affords an opportunity to rewrite clauses into another form.
+This allows us to provide model checking procedures for only a minimal portion
+of the logic; other types of formula are converted to this according to the
+usual equivalences.
 
+In particular, checking procedures are implemented for the base cases true and
+false, propositional variables, negation, conjunction,
+$\texttt{E}(\phi\texttt{U}\psi)$ and $\texttt{E}(\phi\texttt{R}\psi)$.
+
+Disjunction and implication are handled by transforming the AST as follows:
+\[ \phi \vee \psi \Rightarrow \neg ( \neg \phi \wedge \neg \psi ) \]
+\[ \phi \rightarrow \psi \Rightarrow \neg ( \phi \wedge \neg \psi ) \]
+
+By a similar duality, we can define the universal path quantifiers:\cite{Kreutzer10}
+\[ \texttt{A}(\phi\texttt{U}\psi) = \neg\texttt{E}(\neg\phi\texttt{R}\neg\psi) \]
+\[ \texttt{A}(\phi\texttt{R}\psi) = \neg\texttt{E}(\neg\phi\texttt{U}\neg\psi) \]
 
 
 % algorithm
@@ -376,20 +501,122 @@ the input text is transformed into a series of Command objects.
 As with standard CTL, the global model-checking problem for CTL Extended with
 pushdown automaton admits a polynomial-time dynamic programming solution.
 
-Specifically, the problem of checking a formula can be divided into the
-sub-problems of checking the sub-formulas. %TODO rewrite
+Specifically, the problem of checking a formula has sub-problems of checking
+each of the sub-formulas. In the %TODO
 
-bottom-up
+In dynamic programming, one achieves an efficient solution by solving the
+sub-problems in topological order; in our case this simply means checking the
+sub-formulas in a `bottom up' manner. 
+
+
 % visitor pattern
+We use the Visitor pattern to recurse over the structure of the formula being
+checked. This allows us to 
+% dynamic dispatch
+
+
+
+\subsection{
 
 \subsection{Until}
 
+Check subformulas
+
+Construct product system
+
+Construct an automaton recognising the configurations which are accepting and also satisfy the second subformula.
+
+Compute their predecessor configurations.
+
+For each state of the system:
+   check whether the state's `bottom configuration' is a predecessor.
+
 \subsection{Release}
+
 % section from kreutzer paper
+
+In Axelsson et al. (2010) the problem of checking $\texttt{E}(x\texttt{R}^\mathcal{A}y)$ is reduced to evaluating the LTL formula \texttt{F}$p_b$ on a constructed pushdown system $\mathcal{A}_\mathcal{T} = (Q \times \mathcal{S} \cup \{g, b\}, \Gamma, \Delta, l')$, where 
+
+\begin{displaymath}
+   l'(s) =  \left\{
+     \begin{array}{lr}
+       \{p_b\} & \text{if} \hspace{2mm} s = b\\
+       \{\} & \text{if}  \hspace{2mm} s = g \\
+       l(s) & \text{otherwise}
+     \end{array}
+   \right.
+\end{displaymath}
+   
+and 
+
+\begin{displaymath}
+   ((p,s),\gamma) \rightarrow \left\{
+     \begin{array}{ll}
+       (g, \epsilon) & \text{if } s \in l'(x) \text{ and} \\
+                     & (p \in F \text{ implies } s \in l'(y)) \\
+       & \\
+       (b, \epsilon) & \text{if}  \hspace{2mm} p \in F \text{ and } s \not \in l'(y) \\
+       & \\
+       ((q,t),w)     & \text{if neither of the above match} \\
+                     & \text{and there exists } a \in \Sigma \text{ s.t. } \\
+                     & s \xrightarrow{a} t \text{ and } (p, a, \gamma) \rightarrow (q, w) \\
+                     & \text{ for some } \gamma \in \Gamma, w \in \Gamma^*
+     \end{array}
+   \right.
+\end{displaymath}
+
+
+% LTL checkign
 To check the LTL formula, we use a method based on the one described in \cite{EHRS00b} %TODO check right cite
 
 But since we only need to be able to check the specific type of LTL formula
 that occurs here, it is possible to make some simplifications.
+
+The first step in checking \texttt{F}$p_b$ is to construct a B\"{u}chi automaton
+corresponding to negation of the formula. This will have one state, which is
+accepting, and has a self-loop for every valuation except those in which $p_b$ is
+true. 
+
+\[ 
+\mathcal{B} = (\Sigma_\mathcal{B}, Q_\mathcal{B}, \delta_\mathcal{B}, q_{0_\mathcal{B}}, F_\mathcal{B})
+\]
+where
+\[ \Sigma_\mathcal{B} = 2^{\textbf{Prop}\cup\{p_b\}} \]
+\[ Q_\mathcal{B} = \] %TODO
+
+\[ \delta_\mathcal{B} = \]
+
+\[ q_{0_\mathcal{B}} = \]
+
+\[ F_\mathcal{B} =  \]
+
+
+The product of this B\"{u}chi automaton with our pushdown system, then, is a B\"{u}chi pushdown system 
+
+\[ 
+\mathcal{BA_T} = ( Q_\mathcal{B} \times (Q \times \mathcal{S} \cup \{g, b\}) , ) %TODO
+\]
+
+
+% Compute repeating heads
+
+% Compute pre*(R\Gamma^*)
+
+
+
+
+Hence our final algorithm is (in pseudo-code):
+Check the subformulas
+Construct the Release pushdown system, as above
+Construct an automaton recognising the `stack bottom' configurations
+Compute their predecessor configurations
+Create a reachability graph
+Find its strongly connected components
+A vertex is a repeating head if it is in a component with an edge, or it has no successors.
+Construct an automaton recognising the repeating heads
+Compute their predecessor configurations
+For each state, check whether its `stack bottom' configuration is a predecessor
+
 
 \section{Testing}
 
@@ -400,12 +627,18 @@ subsystems, as well as extensive black-box testing of the whole system.
 For the unit tests, the \textbf{Boost Unit Test Framework} was used, since this
 granted a direct interface to the classes being tested. The black-box tests, in
 contrast, concerned only the input and ultimate output. For this reason, a
-separate script was written in Perl, which sends the input to the model checker
+separate script was written in Perl, which sends problems to the model checker
 via standard input, and then verifies that the recieved output matches the
 expected output. This script uses the standard Perl \textbf{Test::More} test
 harness.
 
 \subsection{Unit tests}
+
+Unit tests were used primarily for the part of the system which dealt with
+parsing. The tests each checked that the AST resulting from parsing some string
+matched the expected one (or failed to parse, if the string was invalid). These
+tests were helpful during development for preventing regressions as new
+features were added.
 
 
 \subsection{Black Box tests}
@@ -436,6 +669,9 @@ the global model checking problem for CTL[PDA,DPDA].
 % lessons learnt
 
 %further work
+
+\subsection{Further work}
+
 While the system works well and demonstrates the potential usefulness of
 Extended CTL as a logic for program verification, there is much scope to
 improve upon this initial implementation. 
@@ -462,15 +698,20 @@ reachability analysis of pushdown systems; it may be worth investigating
 whether their tool is able to improve upon the performance of the wpds library
 in practice.
 % BDDs
+For systems with very large numbers of variables, it would be sensible to use
+Binary Decision Diagrams to represent valuations symbolically. 
+This approach has been undertaken successfully by such projects as
+Bebop\cite{ball2000bebop} and NuSMV\cite{cimatti2002nusmv}; indeed it has been
+applied to the checking of pushdown systems at least in the case of
+LTL\cite{esparza2001bdd}.
 
 \section{Acknowledgements}
 
-I am very grateful to Stephan Kreutzer for acting as my supervisor for this project, %TODO
+I am very grateful to Stephan Kreutzer for acting as my supervisor for this
+project, in which capacity he was most helpful.
 
 I would also like to thank Matthew Hague for his help with searching for
 automata libraries and general advice concerning PDSolver.
-
-%TODO Matthew Hague ?
 
 \bibliography{references}{}
 \bibliographystyle{plain}
@@ -481,28 +722,28 @@ automata libraries and general advice concerning PDSolver.
 \subsection{Compilation}
 
 If you wish to build MCECTL yourself, you will require the following:
-\begin{verbatim}
+\begin{alltt}
 CMake >= 2.8.2
 Boost >= 1.43.0
 GNU Bison >= 2.4.3
 flex >= 2.5.35
 GNU Readline >= 6.1.002
-\end{verbatim}
+\end{alltt}
 
 Earlier versions may work, but this has not been tested.
 
 All other libraries used are provided with the source distribution. These include:
-\begin{verbatim}
+\begin{alltt}
 libfa >= 0.7.4 (part of the Augeas project)
 wpds >= 16/05/2006 (available from the Institute of Formal Methods 
 in Computer Science, University of Stuttgart)
-\end{verbatim}
+\end{alltt}
 
 From the main directory, the following commands will build the system:
-\begin{verbatim}
+\begin{alltt}
 $ cmake .
 $ make
-\end{verbatim}
+\end{alltt}
 
 This produces two executables: \textbf{MCECTL-REPL}, for using the system
 interactively, and \textbf{Test}, which runs the Boost unit tests. 
@@ -510,16 +751,21 @@ interactively, and \textbf{Test}, which runs the Boost unit tests.
 \subsection{MCECTL-REPL}
 
 MCECTL-REPL takes two command line options.
-
-
+\begin{alltt}
+--verbose         If this flag is present, produce more detailed output
+--file filename   Load and execute commands from a file
+\end{alltt}
 
 \subsection{Input Language}
 
 The MCECTL input language is defined as follows.
-Definitions are signalled by the keyword for the type of data being defined, in all caps (e.g. PDS) followed by the actual definition, in curly braces.
+Definitions are signalled by the keyword for the type of data being defined, in
+all caps (e.g. PDS) followed by the actual definition, in curly braces.
+
 Commands in lower case and preceded by a colon 
 for example, checking a formula against a system.
-%\begin{verbatim}
+
+\begin{alltt}
 DFA
 Declare a finite automaton explicitly
 
@@ -546,6 +792,8 @@ End the session. (Also ctrl-D)
 
 :check(formula, system)
 Check which states of the system model the formula.
+If the system is an LTS, any formula automata should be PDAs.
+If the system is a PDS, the formula automata should be DFAs.
 
 :show(formula)
 :show(automaton)
@@ -557,13 +805,18 @@ Print a textual description of the named object.
 Display a graphical representation of the named automaton or system.
 This requires that GraphViz is installed, and that the `dot'
 tool is present in the system PATH.
-%\end{verbatim}
+\end{alltt}
 
 \subsection{Conversion from JimpleToPDSolver output}
+
+
+
 %TODO convert.pl
 
 
 \section{Code Listings}
+
+%% NOT USED ? %%
 
 \begin{comment}
 \lstset{ %

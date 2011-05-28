@@ -85,7 +85,7 @@ namespace AST {
             return Unary::Show("NOT");
          }
 			virtual void Accept(Visitor &visitor) const;
-         virtual Formula *Clone() const { return new Negation(_sub_formula); }
+         virtual Formula *Clone() const { return new Negation(_sub_formula->Clone()); }
       };
       class Binary : public Formula {
       protected:
@@ -120,7 +120,7 @@ namespace AST {
          }
 			virtual void Accept(Visitor &visitor) const;
 
-         virtual Formula *Clone() const { return new Conjunction(_sub_formula_1, _sub_formula_2); }
+         virtual Formula *Clone() const { return new Conjunction(_sub_formula_1->Clone(), _sub_formula_2->Clone()); }
       };
 
       class Disjunction : public Binary {
@@ -131,7 +131,7 @@ namespace AST {
             return Binary::Show("OR");
          }
 			virtual void Accept(Visitor &visitor) const;
-         virtual Formula *Clone() const { return new Disjunction(_sub_formula_1, _sub_formula_2); }
+         virtual Formula *Clone() const { return new Disjunction(_sub_formula_1->Clone(), _sub_formula_2->Clone()); }
       };
 
       class Implication : public Binary {
@@ -142,7 +142,7 @@ namespace AST {
             return Binary::Show("IMPLIES");
          }
 			virtual void Accept(Visitor &visitor) const;
-         virtual Formula *Clone() const { return new Implication(_sub_formula_1, _sub_formula_2); }
+         virtual Formula *Clone() const { return new Implication(_sub_formula_1->Clone(), _sub_formula_2->Clone()); }
       };
 
       class AX : public Unary {
@@ -152,7 +152,7 @@ namespace AST {
             return Unary::Show("AX");
          }
 			virtual void Accept(Visitor &visitor) const;
-         virtual Formula *Clone() const { return new AX(_sub_formula); }
+         virtual Formula *Clone() const { return new AX(_sub_formula->Clone()); }
       };
       class EX : public Unary {
       public:
@@ -161,7 +161,7 @@ namespace AST {
             return Unary::Show("EX");
          }
 			virtual void Accept(Visitor &visitor) const;
-         virtual Formula *Clone() const { return new EX(_sub_formula); }
+         virtual Formula *Clone() const { return new EX(_sub_formula->Clone()); }
       };
       class Until : public Binary {
       private:

@@ -15,14 +15,15 @@
 class CommandFailed : public exception
 {
    private:
-      string _parse_error;
+      string _message;
+      static inline string FormMessage(const string &message) {
+         return string("Command failed: ") + message;
+      }
    public:
-      CommandFailed(const char *message) : _parse_error(message) { }
-      CommandFailed(const string &message) : _parse_error(message) { }
+      CommandFailed(const char *message) : _message(FormMessage(message)) {}
+      CommandFailed(const string &message) : _message(FormMessage(message)) {}
       virtual const char* what() const throw () {
-         string s = "Command failed: ";
-         s += _parse_error;
-         return s.c_str();
+         return _message.c_str();
       }
       virtual ~CommandFailed() throw () { }
 };

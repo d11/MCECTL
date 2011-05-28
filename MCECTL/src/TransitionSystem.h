@@ -91,9 +91,6 @@ typedef	FiniteAutomaton<
 				PushDownAction,
 				ProductState<State,KripkeState>
 			> ProductSystem;
-typedef	RuleBook<
-				PushDownAction,
-				ProductState<State,KripkeState>
-			>::Rule ProductRule;
+typedef	ProductSystem::Rule ProductRule;
 
 #endif
