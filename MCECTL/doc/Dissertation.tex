@@ -17,13 +17,25 @@
 \usepackage{multicol}
 \usepackage{verbatim}
 
+% figures with borders
+\usepackage{float}
+\floatstyle{boxed} 
+\restylefloat{figure}
+
 % no indents
 \usepackage{parskip}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{graphviz}
 
 \usepackage{alltt}
 
 \theoremstyle{definition}
 \newtheorem{mydef}{Definition}
+
+% TODOs general:
+% MCECTL name
+
 
 \begin{document}
 
@@ -52,14 +64,15 @@ Using algorithms based on those described in the paper, this project implements
 CTL[PDA, DPDA], the logic in which both operators are refined by pushdown
 automata, which are deterministic in the case of Release. 
 %Move 4: Work carried out
-
-% TODO
 %Move 5: Results 
-
 %Move 6: Conclusions or implications
-
-
 %Move 7: Achievements of the project
+As well as a robust and tested core checking procedure, we provide a set of
+commands for loading and displaying automata, systems and formulas. It is
+possible to check both regular and pushdown systems, and checking a fixed
+formula is possible in time polynomial in the size of the system and the
+automata used.
+
 
 \end{abstract}
 
@@ -107,12 +120,12 @@ arbitrarily large, a finite state system cannot be used to track this property.
 % can't do buffer specification; non-regular
 % can't do infinite states; mostly used for hardware
 
-More powerful logics have their own problems\footnote{A detailed
-justification for Extended CTL is naturally given by Axelsson et al. (2010),
-upon which this summary is based.}. The model checking problem for CTL* is
+More powerful logics have their own problems\footnote{A detailed justification
+for Extended CTL is given by Axelsson et al. (2010), upon which this summary is
+based.}. The model checking problem for CTL* is
 PSPACE-complete\cite{Kreutzer10}\cite{sistla1985complexity}
 
-The modal mu-calculus 
+The modal mu-calculus   %TODO
 
 %CTL*, mu-calculus
 % others?
@@ -120,6 +133,7 @@ The modal mu-calculus
 To address these issues, Axelsson et al. have developed a group of new logics 
 in which CTL is extended by classes of automata (or, equivalently, of formal languages)
 
+% TODO
 it was shown, in particular, that CTL[PDA, DPDA] was in P
 
 
@@ -133,12 +147,13 @@ mu-calculus its power are likely to be unfamiliar.
 
 At least in theory, then, CTL[PDA, DPDA] has good potential as a practical
 logic for software verification. For this reason, and to determine to what
-extent this is borne out in practice, the aim of this project was to create a
-concrete, working implementation of the model checking algorithms described in
-Axelsson et al.
+extent this is borne out in practice, the primary aim of this project was to
+create a concrete, working implementation of the model checking algorithms
+described in Axelsson et al.
 
 %        - work carried out
 
+% TODO ?
 To this end, an input language was defined for specifying pushdown and
 non-pushdown automata and systems, as well as extended CTL formulas.  A set of
 commands is provided for interacting with these objects, and in particular for
@@ -265,7 +280,7 @@ $\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\forall n \in 
 
 Given a formula and a labelled transition system, the global model checking
 problem consists of determining which states of the system satisfy the formula.
-The 
+The %TODO
 
 \subsection{Applications of Logic to Software Verification}
 
@@ -278,11 +293,12 @@ Model checking
 
 \subsection{Programs as Pushdown systems}
 
-CTL extended by pushdown automata is an effective choice for verification of real programs
+CTL extended by pushdown automata is an effective choice for verification of
+real programs because the control flow of a recursive program can naturally be
+modelled by a pushdown system. In this case, the stack of the pushdown system
+corresponds directly to the call stack of the program.
 
-because the control flow of a recursive program can naturally be 
-interpreted
-as a pushdown system
+
 
 \section{Requirements}
 
@@ -292,8 +308,8 @@ Extended CTL for the pushdown (i.e. context-free) case.
 A number of key requirements were identified, and these goals helped to direct
 the design process. 
 
-
 \subsection{Correctness}
+
 The first priority for the system was -- perhaps obviously -- that of
 correctness. Since one of the primary applications of model-checking in general
 is the analysis and verification of other programs, it is vital that an
@@ -302,17 +318,19 @@ verification methods has been slow\cite{mitra2008strategies}, and if these
 techniques are ever to be more widely used, they must in the first place be
 reliable.
 
-% use algorithms that are proven correct, where possible
-% testing
+The key algorithms used should therefore be proven correct, and care must be
+taken to ensure that the implementation reflects the abstract version.
+Ultimately though, establishing confidence in the checking procedures will
+require extensive testing.
 
 \subsection{Usability}
 
-Using the system should be simple and practical.
-
-The system must accept problem specifications in a clear format, 
-and produce results in an intelligible manner.
-
-
+Using the system should be simple and practical.  The system must accept
+problem specifications in a clear format, and produce results in an
+intelligible manner.  If a state is found to satisfy an existence formula, a
+trace should be provided as evidence.  This is important for the software
+verification use case, since the knowledge that a program does not meet a
+specification is not very useful without some indication as to why this is.
 
 \subsection{Efficiency}
 
@@ -342,32 +360,38 @@ complex enough that manually creating such systems would be neither practical
 nor reliable. Hence there is a need for a way of producing the appropriate
 pushdown system automatically from program source code.
 
-A similar project which performs this task is Matthew Hague's \textbf{PDSolver}.
-The 
-% cite
-% PDSolver
+%TODO ??
 
 \section{Design}
 
+The design process essentially followed a top-down model. It was clear that
+certain specific sub-systems would be required:
+\begin{itemize}
+\item{\textbf{Input}: some way of reading model checking problems into the system}
+\item{\textbf{Core}:  the actual model checking algorithms}
+\item{\textbf{Output}: printing results and traces obtained from checks}
+\end{itemize}
 
+Central to all of these systems would be the data structures used in the
+checking process.  
 
-Since the model checking algorithms are highly automata-theoretic, it was clear
-that an important component of the system would need to be a set of automata classes
-with support for the necessary operations. In particular, two of the most
-significant features required were the ability to construct a minimised DFA from a
-regular expression, and to compute the predecessor configurations of a set in a
-pushdown system. %TODO rewrite
-% predecessors of pushdown system
-% construct minimised from regex 
+Since the model checking algorithms are highly
+automata-theoretic, it was clear that an important component of the system
+would need to be a set of automata classes with support for certain necessary
+operations. In particular, two of the most significant features required were
+the ability to construct a minimised DFA from a regular expression, and to
+compute the predecessor configurations of a set in a pushdown system. %TODO
+rewrite
 
-Unfortunately, investigation found no single library of automata classes which
-would support all of these. For this reason, it was necessary to develop new
-classes for the various types of automata and systems, and use the various
-libraries by converting between the different representations as necessary.
-This was perhaps less elegant than an entirely self-contained solution, but was
-a pragmatic approach -- since the focus of the project was the new model
-checking algorithm, it made sense to use robust and well-tested external code
-where possible, rather than re-implement these algorithms from scratch.
+Unfortunately, investigation found no single pre-existing library of automata
+classes which would support all of these. For this reason, it was necessary to
+develop new classes for the various types of automata and systems, and use the
+various libraries by converting between the different representations as
+necessary.  This was perhaps less elegant than an entirely self-contained
+solution, but was a pragmatic approach -- since the focus of the project was
+the new model checking algorithm, it made sense to use robust and well-tested
+external code where possible, rather than re-implement these algorithms from
+scratch.
 
 % why C++ ? -libraries
 
@@ -389,10 +413,10 @@ The interpretation of the command text, whether input directly or loaded from a 
 \subsection{Systems and Automata}
 
 By using C++ templates, it was possible to create the four necessary
-automaton\footnote{The term `automata' is taken here also to include transition
-systems} types (DFA, PDA, LTS, PDS) as a single class (with two template
-parameters).  The class is parameterised by \textit{state type} and
-\textit{action type}.  Using the plain \texttt{State} class results in
+automaton\footnote{For brevity, the term `automata' is taken here also to
+include transition systems} types (DFA, PDA, LTS, PDS) as a single class (with
+two template parameters).  The class is parameterised by \textit{state type}
+and \textit{action type}.  Using the plain \texttt{State} class results in
 automata; using \texttt{KripkeState} produces systems, with labelled states.
 Similarly, \texttt{RegularAction} and \texttt{PushDownAction} provide the
 different types of transition rule used.
@@ -403,6 +427,8 @@ change the state type to a new \texttt{ProductState} class, acting as a pair
 \texttt{(State, KripkeState)} drawn from the Cartesian product.
 
 \subsection{Configuration Space}
+
+%configuration space
 
 While the control states of the automata are stored explicitly, the actual
 configurations are not\footnote{Here `configuration' refers to a combination of
@@ -417,11 +443,11 @@ construction of product systems.
 
 % class breakdown, diagrams ?
 
-%configuration space
-
 % algorithms, data structures
 
 % user interface
+
+%SHOWABLE
 
 \subsection{Regular Expressions}
 % regex, libfa
@@ -487,13 +513,14 @@ false, propositional variables, negation, conjunction,
 $\texttt{E}(\phi\texttt{U}\psi)$ and $\texttt{E}(\phi\texttt{R}\psi)$.
 
 Disjunction and implication are handled by transforming the AST as follows:
-\[ \phi \vee \psi \Rightarrow \neg ( \neg \phi \wedge \neg \psi ) \]
-\[ \phi \rightarrow \psi \Rightarrow \neg ( \phi \wedge \neg \psi ) \]
+\[ \phi \vee \psi \equiv \neg ( \neg \phi \wedge \neg \psi ) \]
+\[ \phi \rightarrow \psi \equiv \neg ( \phi \wedge \neg \psi ) \]
 
 By a similar duality, we can define the universal path quantifiers:\cite{Kreutzer10}
-\[ \texttt{A}(\phi\texttt{U}\psi) = \neg\texttt{E}(\neg\phi\texttt{R}\neg\psi) \]
-\[ \texttt{A}(\phi\texttt{R}\psi) = \neg\texttt{E}(\neg\phi\texttt{U}\neg\psi) \]
+\[ \texttt{A}(\phi\texttt{U}\psi) \equiv \neg\texttt{E}(\neg\phi\texttt{R}\neg\psi) \]
+\[ \texttt{A}(\phi\texttt{R}\psi) \equiv \neg\texttt{E}(\neg\phi\texttt{U}\neg\psi) \]
 
+%TODO EX AX
 
 % algorithm
 \subsection{Model checking algorithm}
@@ -511,31 +538,41 @@ sub-formulas in a `bottom up' manner.
 
 % visitor pattern
 We use the Visitor pattern to recurse over the structure of the formula being
-checked. This allows us to 
+checked. This allows us to break up the code with a separate method for
+checking each type of clause, and the check action is dispatched according to
+the class of the formula.
 % dynamic dispatch
 
 
 
-\subsection{
+\subsection{Basic clauses}
 
 \subsection{Until}
 
-Check subformulas
+\begin{figure}[h!] %TODO
+\caption{\textbf{Until} checking algorithm}
+\begin{enumerate}
+\item{Check subformulas}
 
-Construct product system
+\item{Construct product system}
 
-Construct an automaton recognising the configurations which are accepting and also satisfy the second subformula.
+\item{Construct an automaton recognising the configurations which are accepting and also satisfy the second subformula.}
 
-Compute their predecessor configurations.
+\item{Compute their predecessor configurations.}
 
-For each state of the system:
-   check whether the state's `bottom configuration' is a predecessor.
+\item{For each state of the system:
+   check whether the state's `bottom configuration' is a predecessor.}
+   \end{enumerate}
+\end{figure}
 
 \subsection{Release}
 
 % section from kreutzer paper
 
-In Axelsson et al. (2010) the problem of checking $\texttt{E}(x\texttt{R}^\mathcal{A}y)$ is reduced to evaluating the LTL formula \texttt{F}$p_b$ on a constructed pushdown system $\mathcal{A}_\mathcal{T} = (Q \times \mathcal{S} \cup \{g, b\}, \Gamma, \Delta, l')$, where 
+In Axelsson et al. (2010) the problem of checking
+$\texttt{E}(x\texttt{R}^\mathcal{A}y)$ is reduced to evaluating the LTL formula
+\texttt{F}$p_b$ on a constructed pushdown system $\mathcal{A}_\mathcal{T} = (Q
+\times \mathcal{S} \cup \{g, b\}, \Gamma, \Delta, l')$, where 
 
 \begin{displaymath}
    l'(s) =  \left\{
@@ -565,58 +602,117 @@ and
    \right.
 \end{displaymath}
 
+% LTL checking
+To check the LTL formula, we use a method based on the one described in Esparza et al. (2000)\cite{EHRS00b}.
 
-% LTL checkign
-To check the LTL formula, we use a method based on the one described in \cite{EHRS00b} %TODO check right cite
+\begin{figure}[h!]
+\caption{Checking an LTL formula against a pushdown system: method from Esparza et al. (2000)\cite{EHRS00b} }
+\begin{enumerate}
+\item{Construct a B\"{u}chi automaton $\mathcal{B}$ with initial state $q_0$ corresponding to the negation of the formula}
+\item{Compute the B\"{u}chi pushdown system $\mathcal{BP}$ as the product of $\mathcal{B}$ and the pushdown system}
+\item{Compute the set of repeating heads $R$ of $\mathcal{BP}$}
+\item{Construct an automaton $\mathcal{A}$ accepting $R\Gamma^*$.}
+\item{Compute $pre^*(R\Gamma^*)$}
+\end{enumerate}
+A configuration $\langle p, w \rangle$ violates the formula iff $\mathcal{A}_{pre^*}$ accepts $\langle (p, q_0 ), w\rangle$.
+
+\end{figure}
 
 But since we only need to be able to check the specific type of LTL formula
 that occurs here, it is possible to make some simplifications.
 
-The first step in checking \texttt{F}$p_b$ is to construct a B\"{u}chi automaton
-corresponding to negation of the formula. This will have one state, which is
-accepting, and has a self-loop for every valuation except those in which $p_b$ is
-true. 
+The first step in checking \texttt{F}$p_b$ is to construct a B\"{u}chi
+automaton corresponding to the negation of the formula. This will have one
+state, which is accepting, and has a self-loop for every valuation except those
+in which $p_b$ is true. 
 
 \[ 
-\mathcal{B} = (\Sigma_\mathcal{B}, Q_\mathcal{B}, \delta_\mathcal{B}, q_{0_\mathcal{B}}, F_\mathcal{B})
+\mathcal{B} := (\Sigma_\mathcal{B}, Q_\mathcal{B}, \delta_\mathcal{B}, q_{0_\mathcal{B}}, F_\mathcal{B})
 \]
 where
-\[ \Sigma_\mathcal{B} = 2^{\textbf{Prop}\cup\{p_b\}} \]
-\[ Q_\mathcal{B} = \] %TODO
+\begin{displaymath}
+     \begin{array}{cc}
+     \Sigma_\mathcal{B} := 2^{\textbf{Prop}}                        
+     & Q_\mathcal{B} := \{ * \} \\
+     \delta_\mathcal{B} := \{ * \xrightarrow{v} * : v \in 2^{\textbf{Prop}\backslash\{p_b\}}  \}
+     & q_{0_\mathcal{B}} := * \\
+        & F_\mathcal{B} := \{*\}
+   \end{array}
+\end{displaymath}
+(`*' is used as the name of the single state, since this is arbitrary)
 
-\[ \delta_\mathcal{B} = \]
 
-\[ q_{0_\mathcal{B}} = \]
-
-\[ F_\mathcal{B} =  \]
-
-
-The product of this B\"{u}chi automaton with our pushdown system, then, is a B\"{u}chi pushdown system 
+Following the standard definition\cite{EHRS00b}, the product of this B\"{u}chi automaton with our pushdown system, then, is a B\"{u}chi pushdown system given by:
 
 \[ 
-\mathcal{BA_T} = ( Q_\mathcal{B} \times (Q \times \mathcal{S} \cup \{g, b\}) , ) %TODO
+\mathcal{BA_T} = ( (Q \times \mathcal{S} \cup \{g, b\}) \times Q_\mathcal{B}, \Gamma, \Delta', G) 
 \]
+where
+%TODO
+\[ G = \{ (p, *) : p \in Q \times \mathcal{S} \cup \{g, b\} \} \]
+and 
+\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle, *
+\xrightarrow{\sigma} *\text{ and }\sigma \subseteq l'(\langle p, \gamma
+\rangle) \]
+Noting that $* \xrightarrow{\sigma} *$ iff $\sigma \subseteq \textbf{Prop}\backslash\{p_b\}$ we obtain 
+\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle,\text{ and } \textbf{Prop}\backslash\{p_b\} \cap l'(\langle p, \gamma
+\rangle) \neq \emptyset\]
 
+or equivalently
+
+\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle,\text{ and } \{ p_b \} \neq l'(\langle p, \gamma \rangle) \]
+
+But note further that $ \{ p_b \} \neq l'(\langle p, \gamma \rangle) $ iff $ p
+\neq b $ by construction of the pushdown system. In fact, we see that there are no rules with $b$ as a head state -- so finally we simply have:
+
+\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle \]
+
+and clearly in fact $\mathcal{BA_T} \cong \mathcal{A_T}$ via $(p, *) \mapsto p$.
 
 % Compute repeating heads
+The next step is to compute the repeating heads of $\mathcal{BA_T}$.
 
 % Compute pre*(R\Gamma^*)
 
 
 
 
+\begin{figure}[h!] %TODO
+\caption{\textbf{Release} checking algorithm}
 Hence our final algorithm is (in pseudo-code):
-Check the subformulas
-Construct the Release pushdown system, as above
-Construct an automaton recognising the `stack bottom' configurations
-Compute their predecessor configurations
-Create a reachability graph
-Find its strongly connected components
-A vertex is a repeating head if it is in a component with an edge, or it has no successors.
-Construct an automaton recognising the repeating heads
-Compute their predecessor configurations
-For each state, check whether its `stack bottom' configuration is a predecessor
+\begin{enumerate}
+\item{Check the sub-formulas}
+\item{Construct the Release pushdown system, as above}
+\item{Construct an automaton recognising the `stack bottom' configurations}
+\item{Compute their predecessor configurations}
+\item{Create a reachability graph}
+\item{Find its strongly connected components}
+\item{A vertex is a repeating head if it is in a component with an edge, or it has no successors.}
+\item{Construct an automaton recognising the repeating heads}
+\item{Compute their predecessor configurations}
+\item{For each state, check whether its `stack bottom' configuration is a predecessor}
+\end{enumerate}
+\end{figure}
 
+\subsection{WPDS Wrapper}
+
+Since libwpds is written in C and so has a non-object oriented interface, a
+wrapper class was used to simplify the code and prevent unnecessary access to
+the internal data structures. The library must also be initialised and
+de-initialised before and after use; using a wrapper means this can be
+performed conveniently via the constructor/destructor methods. In the case of
+release checking, it is necessary to compute two sets of predecessor
+configurations, so two instances of the wrapper class are used simultaneously
+-- for this reason, a count of the active instances of libwpds is kept, so that
+initialisation and de-initialisation need only be performed once.
+
+\section{Examples}
+
+% TODO
 
 \section{Testing}
 
@@ -628,7 +724,7 @@ For the unit tests, the \textbf{Boost Unit Test Framework} was used, since this
 granted a direct interface to the classes being tested. The black-box tests, in
 contrast, concerned only the input and ultimate output. For this reason, a
 separate script was written in Perl, which sends problems to the model checker
-via standard input, and then verifies that the recieved output matches the
+via standard input, and then verifies that the received output matches the
 expected output. This script uses the standard Perl \textbf{Test::More} test
 harness.
 
@@ -640,11 +736,121 @@ matched the expected one (or failed to parse, if the string was invalid). These
 tests were helpful during development for preventing regressions as new
 features were added.
 
+%TODO
+Example:
+\begin{alltt}
+test_case_t("FORMULA foo { E(hungry U[dfa] eat) }",
+            "FORMULA foo { [[PVAR hungry] UNTIL {AUTOMATA dfa} [PVAR eat]] }"),
+\end{alltt}
+checks that an \textbf{Until} formula parses.
+
+Example:
+\begin{alltt}
+test_case_t("REGULAR foo { (toast|coffee)* }",
+            "REGULAR foo { [KLEENE [[ACTION toast] UNION [ACTION coffee]]] }"),
+\end{alltt}
+checks a regular expression's AST.
+
+See the appendix for a full list.
 
 \subsection{Black Box tests}
 % examples ?
 
+The black-box tests are specified in self-contained Perl hash objects, and are
+all evaluated independently, using different sessions of MCECTL. The results
+for each state are extracted using a regular expression, and compared with
+those expected.
 
+Example:
+\begin{alltt}
+\{
+   name     => "2. LTS, five states, pushdown with one symbol",
+   formula  => \{ name => "phi8", formula => "E( 1 U[a8] p )" \},
+   system   => \{
+      type => "LTS", 
+      name => "t13", 
+      states => ['t0 : ' ,'t1 : ' ,'t2 : ' ,'t3 : ' ,'t4 : ' ,'t5 : p'],
+      rules => [ 'a:t0->t1' ,'b:t1->t2' ,'a:t2->t3' ,'b:t3->t4' ,'c:t4->t5']
+   \},
+   automata => [
+      \{
+         type => "PDA",
+         name => "a8",
+         states => [ 's1', '*s2' ],
+         rules => [
+            'a: s1[_] -> s1[PUSH s]',
+            'b: s1[s] -> s1[POP]',
+            'c: s1[_] -> s2[REWRITE _]'
+         ]
+      \}
+   ],
+   expected => \{ t0 => 1, t1 => 0, t2 => 1, t3 => 0, t4 => 1, t5 => 0\}
+\}
+\end{alltt}
+
+This is one of the cases for testing \textbf{Until} checking.
+
+The transition system:
+
+\digraph[scale=0.9]{BlackBoxExampleLTS1}{
+   rankdir=LR; 
+   margin=0;
+   fixedsize=true;
+	node [shape = circle,  width=0.3] t0 t1 t2 t3 t4 t5;
+	t0 -> t1 [ label = "a" ];
+	t1 -> t2 [ label = "b" ];
+	t2 -> t3 [ label = "a" ];
+	t3 -> t4 [ label = "b" ];
+	t4 -> t5 [ label = "c" ];
+}
+
+where $p$ holds at \texttt{t5} only.
+
+The pushdown automaton:
+
+\digraph[scale=0.9]{BlackBoxExamplePDA1}{
+   rankdir=LR; 
+   margin=0;
+	node [shape = circle,  width=0.3] s1;
+	node [shape = doublecircle,  width=0.3] s2;
+	node [shape = plaintext, label=""] INIT;
+	INIT -> s1 [ label = "" ];
+	s1 -> s1 [ label = "a: _/s" ];
+	s1 -> s1 [ label = "b: s/_" ];
+	s1 -> s2 [ label = "c: _/_" ];
+}
+
+The formula: $\phi = $ \texttt{E}( true $\texttt{R}^{\mathcal{A}}$ $p$ ), where
+$\mathcal{A}$ is the above automaton.
+
+It is clear that the automaton accepts the language \{ (ab)*c \}. States t1, t3
+and t5 have no initial $a$-transition, so there can be no accepting path to a
+$p$-state from these. States t0, t2 and t4 do have such paths though, as
+$(\text{t0}, \text{s1}) \xrightarrow{a} (\text{t1}, \text{s1}) \xrightarrow{b}
+(\text{t2}, \text{s1}) \xrightarrow{a} (\text{t3}, \text{s1}) \xrightarrow{b}
+(\text{t4}, \text{s1}) \xrightarrow{c} (\text{t5}, \text{s2})$ in the product
+system.
+
+Hence t0, s2, s4 are expected to be satisfying, whereas the other states are
+not. This is specified in the test case.
+
+The results returned by the model checker are:
+\footnotesize
+\begin{alltt}
+Results: {
+   t0: T     [ <> s(s1,t0) --a--> <_> s(s1,t1) --b--> <> s(s1,t2) --a--> 
+               <_> s(s1,t3) --b--> <> s(s1,t4) --c--> <> s(s2,t5)__ ]
+   t1: F
+   t2: T     [ <> s(s1,t2) --a--> <_> s(s1,t3) --b--> <> s(s1,t4) --c--> <> s(s2,t5)__ ]
+   t3: F
+   t4: T     [ <> s(s1,t4) --c--> <> s(s2,t5)__ ]
+   t5: F
+}
+\end{alltt}
+\normalsize
+so the test passes.
+
+%TODO
 % strategy for testing
 % results ?
 
@@ -652,7 +858,14 @@ features were added.
 \section{Application to Checking Java Programs}
 
 %PDsolver and jimple
-\cite{hague2010analysing}
+% TODO
+A similar project which performs this task is Matthew Hague's
+\textbf{PDSolver}\cite{hague2010analysing}.  The focus of PDSolver is checking
+modal mu-calculus properties; however, it includes a \textbf{JimpleToPDSolver}
+tool for extracting pushdown control-flow graphs from Java programs. This tool
+produces output in the format used by PDSolver; by combining it with a script
+for converting PDSolver problems to MCECTL ones, we can obtain a convenient way
+of applying the model checker to real programs.
 
 \section{Conclusions}
 
@@ -661,6 +874,7 @@ I have implemented the first (to my knowledge) system for automated solution of
 the global model checking problem for CTL[PDA,DPDA].
 % regular expressions, jimple
 % testing
+%TODO
 
 % achievements
 
@@ -705,6 +919,17 @@ Bebop\cite{ball2000bebop} and NuSMV\cite{cimatti2002nusmv}; indeed it has been
 applied to the checking of pushdown systems at least in the case of
 LTL\cite{esparza2001bdd}.
 
+% integration
+
+Finally, there is much scope for better integration with other systems, to
+better allow verification of real programs. It would be possible, for example,
+to create an Eclipse plug-in for automatically building a pushdown control flow
+graph from a source file, and perhaps checking a set of standard formulas
+against it.
+
+Similarly, it is possible to use GCC to create control flow graphs of C++ code;
+tools for checking these conveniently could be very useful.
+
 \section{Acknowledgements}
 
 I am very grateful to Stephan Kreutzer for acting as my supervisor for this
@@ -715,6 +940,7 @@ automata libraries and general advice concerning PDSolver.
 
 \bibliography{references}{}
 \bibliographystyle{plain}
+%\bibliographystyle{apalike}
 
 \appendix
 \section{User Manual}

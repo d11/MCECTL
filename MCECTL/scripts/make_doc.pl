@@ -18,6 +18,7 @@ if (-x $input_tex) {
 
 run3 [
    'pdflatex',
+   "-shell-escape",
    "-output-directory=$doc_dir",
    $input_tex,
 ];
