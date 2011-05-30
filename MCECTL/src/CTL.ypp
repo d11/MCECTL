@@ -23,7 +23,7 @@
 #include "command/XShow.h"
 #include "command/Quit.h"
 #include "command/DeclareFormula.h"
-#include "command/DeclareDFA.h"
+#include "command/DeclareAutomaton.h"
 #include "command/DeclareRegex.h"
 #include "command/RunCheck.h"
 #include "exception/ParseException.h"

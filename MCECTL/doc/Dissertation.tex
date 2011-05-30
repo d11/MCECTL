@@ -9,6 +9,7 @@
 \setlength\oddsidemargin{0in}
 \setlength\evensidemargin{0in}
 
+\usepackage{url}
 \usepackage{cite}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -16,15 +17,21 @@
 \usepackage{lscape}
 \usepackage{multicol}
 \usepackage{verbatim}
+\usepackage{amssymb}
+%\usepackage{amsfonts}
+%\usepackage{eufrak}
 
+%\usepackage{mathtools}
 % figures with borders
 \usepackage{float}
 \floatstyle{boxed} 
 \restylefloat{figure}
 
+%\pdfmapline{ufm7 EUFM7 <eufm7.pfb}
+%\pdfmapline{ufm10 EUFM10 <eufm10.pfb}
 % no indents
 \usepackage{parskip}
-
+\pdfmapfile{+euler.map}
 \usepackage[pdftex]{graphicx}
 \usepackage{graphviz}
 
@@ -33,8 +40,6 @@
 \theoremstyle{definition}
 \newtheorem{mydef}{Definition}
 
-% TODOs general:
-% MCECTL name
 
 
 \begin{document}
@@ -46,7 +51,6 @@
 
 \begin{abstract}
 
-%TODO abstract
 %Move 1:  Background to the project
 Computation Tree Logic is widely used for modelling the behaviour of simple
 systems over time, but its expressive power is limited.  More powerful logics
@@ -120,22 +124,35 @@ arbitrarily large, a finite state system cannot be used to track this property.
 % can't do buffer specification; non-regular
 % can't do infinite states; mostly used for hardware
 
-More powerful logics have their own problems\footnote{A detailed justification
+More powerful logics have their own problems.\footnote{A detailed justification
 for Extended CTL is given by Axelsson et al. (2010), upon which this summary is
-based.}. The model checking problem for CTL* is
-PSPACE-complete\cite{Kreutzer10}\cite{sistla1985complexity}
+based.} The model checking problem for CTL* is
+PSPACE-complete\cite{Kreutzer10}\cite{sistla1985complexity}.  Checking modal
+mu-calculus formulas on pushdown systems is
+EXPTIME-complete\cite{walukiewicz1996pushdown} -- while strong steps have been
+made towards solving this efficiently\cite{hague2010analysing}, the logic is
+also frequently unintuitive and is unable to express non-regular properties.
 
-The modal mu-calculus   %TODO
+To address these issues, Axelsson et al. have developed a group of new logics
+in which CTL is extended by classes of automata (or, equivalently, of formal
+languages).\cite{Kreutzer10} Automata associated with a formula can refine the path quantifiers
+of CTL such that it is possible to specify such properties as `there exists a
+path where $p$ holds at every second step'. This is an example of a regular
+property, since the language of paths of even length can be accepted by a
+deterministic finite automaton (DFA). Properties from elsewhere in the Chomsky
+Hierarchy can be used depending on the classes of automaton permitted in a
+given CTL-extension -- for example, equipping the path quantifiers with
+pushdown automata (PDA) allows the specification of context-free properties.
+The logic in which existential \textbf{Until} formulas may be refined by
+automata from a class $\mathfrak{A}$ and \textbf{Release} from $\mathfrak{B}$ is
+written CTL[$\mathfrak{A}, \mathfrak{B}$]. For a more detailed explanation of the
+semantics of Extended CTL, see the Background section (or, indeed, the original
+paper\cite{Kreutzer10}).
 
-%CTL*, mu-calculus
-% others?
-
-To address these issues, Axelsson et al. have developed a group of new logics 
-in which CTL is extended by classes of automata (or, equivalently, of formal languages)
-
-% TODO
-it was shown, in particular, that CTL[PDA, DPDA] was in P
-
+Most interestingly from a verification standpoint, the investigation yielded
+some promising complexity results for certain Extended CTL model checking
+problems. In particular, it was shown  that CTL[PDA, DPDA]\footnote{A
+DPDA is a deterministic pushdown automaton.} was in P.
 
 As well as being computationally efficient, this technique is relatively
 intuitive. Many programmers have a good understanding of regular expressions
@@ -165,9 +182,20 @@ component is in the automaton and when it is in the transition system.
 %        - outline of structure of report
 
 The report is structured as follows. We formally define the syntax and
-semantics of CTL[PDA,DPDA], based on the description in the paper. We also
-recall the algorithms for model checking the Until and Release clauses set out
-therein, and elaborate on them with some thought to implementation.
+semantics of CTL[$\mathfrak{A}, \mathfrak{B}$], based on the description in the
+paper. We also recall the algorithms for model checking the Until and Release
+clauses set out therein, and elaborate on them with some thought to
+implementation. We see briefly how the logic can be used for verifying
+programs, by representing
+control-flow with pushdown systems. 
+
+Next we analyse the requirements for the concrete implementation, followed by
+explaining and justifying the design of the system in detail. We cover some
+examples and the strategies used for testing. Finally, we use the system to
+check a Java program, and conclude with some thoughts to future work.
+
+We also include a concise user manual, and listings of some of the project
+code.
 
 \section{Background}
 
@@ -175,112 +203,136 @@ In all of the exposition that follows, let $\textbf{Prop}$ be a countably
 infinite set of proposition variables, let $\Sigma$ be a finite set of action
 names, and let $\Gamma$ be a finite set of stack symbols.
 
-\subsection{Computation-tree logic}
+We now recall some standard definitions.
 
-Standard CTL has become %TODO cite
-one of the most widely-used logics for software verification, since it is both
-intuitive and computationally amenable.
-
-with LTL
-
-To better understand the nature of extended CTL, we now briefly recall the
-usual definitions of syntax and semantics for ordinary CTL.
+\begin{mydef}
+A deterministic finite automaton (DFA) $\mathcal{A}$ is a 5-tuple $(Q, \Sigma, \delta, q_0, F)$ where
+$Q$ is a set of states, $\Sigma$ is as established above,
+$\delta : (Q \times \Sigma) \rightarrow \Sigma $ is a (total) transition function, $q_0 \in Q$ is the initial state, and
+$F$ is the set of accepting states. We write $ s \xrightarrow{a} s'$ if $((s, a), s') \in \delta$.
+The accepting language of the DFA is defined as $L(\mathcal{A}) = \{ a_1 a_2
+... a_n \in \Sigma^* : \exists\text{ a path } q_0 \xrightarrow{a_1} q_1
+\xrightarrow{a_2} \dots \xrightarrow{a_n}
+ q_n \text{ for some } q_1 \dots q_n
+\in Q \text{ with } q_n \in F
+\}$.
+\end{mydef}
 
 % define LTS
 \begin{mydef}
-A Labelled Transition System (LTS) is a triple $\mathcal{T} = (\mathcal{S}, \rightarrow, l)$,
-where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \Sigma \times
-\Gamma \times \Sigma$ is the transition relation, and $l:\mathcal{S}
-\rightarrow \mathcal{P}(\textbf{Prop})$ is a labelling function.
+A labelled transition system (LTS) is a triple $\mathcal{T} = (\mathcal{S},
+\rightarrow, l)$,
+where $\mathcal{S}$ is a set of states, $\rightarrow \subseteq \mathcal{S} \times
+\Sigma \times \mathcal{S}$ is the transition relation, and $l:\mathcal{S}
+\rightarrow 2^{\textbf{Prop}}$ is a labelling function.
+A \textit{path} in the LTS is a sequence $\pi = s_0, a_1, s_1, a_2, s_2, \dots$
+where $s_i \in \mathcal{S}$ and $a_i \in \Sigma$ such that $s_i
+\xrightarrow{a_{i+1}} s_{i+1} $ for each $i \in \mathbb{N}$, and such that
+$\pi$ is infinite or ends in some $s_n$ which is not the head of any transition
+rule. 
 \end{mydef}
 
-%define CTL
+% Define pushdown automata
 \begin{mydef}
-The syntax of a standard CTL formula is defined recursively by
-
-\[ \phi := q | \phi \vee \phi | \neg \phi | \texttt{E}(\phi_1 \texttt{U} \phi_2) | \texttt{E}(\phi_1 \texttt{R} \phi_2) \]
-
-$\mathcal{T}, s \models \phi$ denotes that state $s \in \mathcal{S}$ satisfies
-the formula $\phi$, which 
-inductively over formulas as follows:
-
-$\mathcal{T}, s \models q$ if $q \in l(s)$ \\
-$\mathcal{T}, s \models \phi_1 \vee \phi_2$ if $\mathcal{T}, s \models \phi_1$
-or $\mathcal{T}, s \models \phi_2$ \\
-$\mathcal{T}, s \models \neg \phi $ if $\mathcal{T}, s \not\models \phi$ \\
-$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U} \phi_2) $ if there exists
-a path $\pi = s_0,a_1,s_1,\dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$ \\
-%TODO \\
-$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R} \phi_2) $ if %TODO \\
-
+A pushdown automaton (PDA) $\mathcal{A}$ is a 6-tuple $(Q, \Sigma, \Gamma,
+\Delta, q_0, F)$ where
+$Q$ is a set of states, $\Sigma$ and $\Gamma$ are as established above,
+$\Delta \subseteq (Q \times \Gamma \times \Sigma) \times (\Sigma \times
+\Gamma^*)$ is a set of pushdown transition rules, $q_0 \in Q$ is the initial
+state, and
+$F$ is the set of accepting states. We write $\langle s, \gamma \rangle
+\xrightarrow{a} \langle s', \gamma' \rangle$ if $((s, \gamma, a), (s',
+\gamma')) \in \Delta$.
+% TODO explain transition rules
+The accepting language of the PDA is defined as $L(\mathcal{A}) = \{ a_1 a_2
+... a_n \in \Sigma^* : \exists\text{ a path }\langle q_0, \epsilon \rangle \xrightarrow{a_1} \langle q_1, \gamma_1 \rangle
+\xrightarrow{a_2} \dots \xrightarrow{a_n}
+\langle q_n, \gamma_n \rangle \text{ for some } q_1 \dots q_n
+\in Q \text{ with } q_n \in F
+\text{ and } \gamma_1 \dots \gamma_n \in \Gamma^*
+\}$. If $\Delta$ is a total function $(Q \times \Gamma \times \Sigma) \rightarrow (\Sigma \times \Gamma^*)$ then we say the PDA is \textit{deterministic} -- it is a DPDA.
 \end{mydef}
-%However, its expressive power is limited, and there are properties which we
-%would like to be able to check that are beyond its power.
-%For example: 
-% TODO example - buffer ?
-%To address this, more powerful logics have been proposed. CTL* % TODO CTL*
-% PDL % TODO
-%and the modal mu-calculus
-%While these are all important and worthwhile tools, they suffer from two key problems: 
-%unintuitive
-%exponential-time model-checking
+
+%define pushdown system
+\begin{mydef}
+A pushdown system (PDS) is a 4-tuple $\mathcal{P} = (\mathcal{S}, \Gamma,
+\rightarrow, l)$ where $\mathcal{S}$ is a set of states, $\Gamma$ is as above,
+$\rightarrow \subseteq (Q \times \Gamma \times \Sigma) \times (\Sigma \times
+\Gamma^*)$ is a set of pushdown transition rules, and $l: \mathcal{S} \times
+\Gamma \rightarrow 2^{\textbf{Prop}}$ is the labelling function. The PDS is
+\textit{deterministic} if $\rightarrow : (Q \times \Gamma \times \Sigma)
+\rightarrow (\Sigma \times \Gamma^*)$ is a total function.
+A \textit{path} in the PDS is a sequence $\pi = \langle s_0, \gamma_0 \rangle,
+a_1, \langle s_1, \gamma_1 \rangle, a_2, \langle s_2, \gamma_2 \rangle, \dots$
+such that $\langle s_i, \gamma_i \rangle \xrightarrow{a_{i+1}} \langle s_{i+1},
+\gamma_{i+1} \rangle $ for each $i \in \mathbb{N}$, and such that $\pi$ is
+infinite or ends in some $s_n$ which is not the head of any transition rule.
+\end{mydef}
+
+
+
 
 
 % Description of the formalism...
 \subsection{Extended Computation-tree logic}
 
-Note that in \cite{Kreutzer10}, the logic is defined for general classes of
-automata. Here we are concerned only with the case of (non-deterministic) %TODO
-pushdown automata, since this is the fragment for which we wish to implement
-model-checking. In the terminology of \cite{Kreutzer10}, the logic defined
-below is CTL[PDA,DPDA].
-
-% Define pushdown automata
-\begin{mydef}
-A pushdown automaton (PDA) $\mathcal{A}$ is a 5-tuple $(Q, \Sigma, \Gamma, \Delta, q_0, F)$ where
-$Q$ is a set of states, $\Sigma$ and $\Gamma$ are as established above,
-$\Delta$ is a set of pushdown transition rules, $q_0$ is the initial state, and
-$F$ is the set of accepting states.
-% TODO explain transition rules
-\end{mydef}
-% TODO semantics
-
 % Define ectl
 \begin{mydef}
-The syntax for an Extended CTL formula is defined recursively as follows:
-   \[ \phi := q | \phi \vee \phi | \neg \phi | \texttt{E}(\phi \texttt{U}^\mathcal{A} \phi) | \texttt{E}(\phi
+The syntax for an CTL[$\mathfrak{A}, \mathfrak{B}$] formula is defined recursively as follows:
+   \[ \phi ::= q | \phi \wedge \phi | \neg \phi | \texttt{E}(\phi \texttt{U}^\mathcal{A} \phi) | \texttt{E}(\phi
    \texttt{R}^\mathcal{B} \phi) \]
-where $q \in \textbf{Prop}$, $\mathcal{A}$ is a PDA, and $\mathcal{B}$ is a DPDA.
+where $q \in \textbf{Prop}$, $\mathcal{A} \in \mathfrak{A}$, and $\mathcal{B} \in \mathfrak{B}$.
+\end{mydef}
 
+\begin{mydef}
 Formulas are evaluated with respect to states of an LTS $\mathcal{T} = (\mathcal{S},
 \rightarrow, l)$, according to the following semantics:
 
-%\begin{center}
 % TODO ectl semantics
 $\mathcal{T}, s \models q$ iff $q \in l(s)$
 $\mathcal{T}, s \models q$ iff $q \in l(s)$ \\
-$\mathcal{T}, s \models \phi_1 \vee \phi_2$ iff $\mathcal{T}, s \models \phi_1$
-or $\mathcal{T}, s \models \phi_2$ \\
+$\mathcal{T}, s \models \phi_1 \wedge \phi_2$ iff $\mathcal{T}, s \models \phi_1$
+and $\mathcal{T}, s \models \phi_2$ \\
 $\mathcal{T}, s \models \neg \phi $ iff $\mathcal{T}, s \not\models \phi$ \\
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U}^\mathcal{A} \phi_2) $ iff 
-$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $a_1 \dots a_n \in L(\mathcal{A}$ and $\mathcal{T}, s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$
+$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $a_1 \dots a_n \in L(\mathcal{A})$ and $\mathcal{T}, s_n \models \phi_2$ and $\forall i < n : \mathcal{T}, s_i \models \phi_1$
 \\ %TODO 
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R}^\mathcal{A} \phi_2) $ iff 
-$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\forall n \in dom(\pi): a_1 \dots a_n \not\in L(\mathcal{A}$ or $\mathcal{T}, s_n \models \psi$ or $\exists i < n$ s.t. $\mathcal{T}, s_i \models \phi$\\ %TODO
-%\end{center}
+$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\forall n \in dom(\pi): a_1 \dots a_n \not\in L(\mathcal{A})$ or $\mathcal{T}, s_n \models \phi_2$ or $\exists i < n$ s.t. $\mathcal{T}, s_i \models \phi_1$\\ 
+
+If $s \in \mathcal{T}$ and $\mathcal{T}, s \models \phi$ we say that $s \textit{ satisfies } \phi$.
 \end{mydef}
 
-%TODO define pushdown system
-\begin{mydef} A pushdown system is \end{mydef}
-
-% define DFA?
-
+In fact, \textbf{it is also possible to evaluate formulas w.r.t. configurations of a
+PDS}, using directly analogous semantics -- simply consider paths between
+configurations instead of just between control states. 
 
 \subsection{Model Checking}
 
 Given a formula and a labelled transition system, the global model checking
 problem consists of determining which states of the system satisfy the formula.
 The %TODO
+
+As with standard CTL, the global model-checking problem for Extended CTL admits
+a polynomial-time dynamic programming solution.  Specifically, the problem of
+checking a formula can be broken into sub-problems of checking each of the
+sub-formulas.  In dynamic programming, one achieves an efficient solution by
+solving the sub-problems in topological order; in our case this simply means
+checking the sub-formulas in a `bottom up' manner.
+
+For the clauses other than \textbf{Until} and \textbf{Release}, obvious
+checking algorithms follow directly from the semantics.  Checking path
+quantifiers in polynomial time is more complicated, and it is this that makes
+up the bulk of the project.  Axelsson et al. suggest algorithms for these
+clauses\cite{Kreutzer10} -- we shall recap and expand upon these in the Design
+section.
+
+%TODO move
+It turns out to be the case that it is possible to use an almost identical
+method for checking a CTL[DFA,DFA] formula against a deterministic PDS as for
+checking a CTL[PDA,DPDA] formula against a regular LTS. The only difference is
+in the details of how we construct the product system when checking the path
+quantifiers.
 
 \subsection{Applications of Logic to Software Verification}
 
@@ -364,55 +416,56 @@ pushdown system automatically from program source code.
 
 \section{Design}
 
-The design process essentially followed a top-down model. It was clear that
-certain specific sub-systems would be required:
+\textit{Note: the system implementation is given the name \textbf{MCECTL} (Model Checker for
+Extended CTL), and we use this name to refer both to the system as a whole and
+the core model checking module.}
+
+The design process essentially followed a top-down model. It was clear from the beginning that certain specific sub-systems would be required:
 \begin{itemize}
 \item{\textbf{Input}: some way of reading model checking problems into the system}
 \item{\textbf{Core}:  the actual model checking algorithms}
 \item{\textbf{Output}: printing results and traces obtained from checks}
 \end{itemize}
 
-Central to all of these systems would be the data structures used in the
-checking process.  
-
-Since the model checking algorithms are highly
+The data structures used in the checking process would be central to all of
+these systems.  In particular, since the model checking algorithms are highly
 automata-theoretic, it was clear that an important component of the system
 would need to be a set of automata classes with support for certain necessary
-operations. In particular, two of the most significant features required were
-the ability to construct a minimised DFA from a regular expression, and to
-compute the predecessor configurations of a set in a pushdown system. %TODO
-rewrite
+operations. In addition to basic storage of and access to states and rules,
+three more significant automata-related features were required:
+
+\begin{itemize}
+\item{The loading of automata explicitly given in text form}
+\item{The construction of a minimised DFA from a regular expression}
+\item{The computation of the predecessor configurations of a set of
+configurations in a pushdown system}
+\end{itemize}
 
 Unfortunately, investigation found no single pre-existing library of automata
-classes which would support all of these. For this reason, it was necessary to
-develop new classes for the various types of automata and systems, and use the
-various libraries by converting between the different representations as
-necessary.  This was perhaps less elegant than an entirely self-contained
-solution, but was a pragmatic approach -- since the focus of the project was
-the new model checking algorithm, it made sense to use robust and well-tested
-external code where possible, rather than re-implement these algorithms from
-scratch.
+classes which would fulfill all of the necessary requirements. However, it was
+found that at least the latter two of the above features \textit{were} already
+implemented -- by two separate libraries.
+\texttt{libfa}\footnote{\url{http://augeas.net/libfa/}} is provided as part of
+the \textbf{Augeas} project, and is able to create DFAs from regular expressions.
+\texttt{wpds}\footnote{\url{http://www.fmi.uni-stuttgart.de/szs/tools/wpds/}}
+is used as part of the \textbf{MOPED} model checker, and is able to efficiently
+compute predecessor configurations in pushdown systems.
 
-% why C++ ? -libraries
+Thus it was decided that the best approach would be to develop new classes for
+the various types of automata and systems, and use the various libraries by
+converting between the different representations as necessary.  This was
+perhaps less elegant than an entirely self-contained solution would have been,
+but was a pragmatic approach -- since the focus of the project was the new
+model checking algorithm, it made sense to use robust and well-tested external
+code where possible, rather than re-implement these algorithms from scratch.
 
-C++ was chosen for this project because it allows for linkage with the wpds
-library (which is written in C) whilst permitting an object-oriented approach.
-
-\subsection{Overview}
-
-The user interacts with the system via a command line. A typical session
-involves loading system and formula definitions from a file, followed by
-specifying checks to run against these objects. It is also possible to display
-the automata and systems that have been loaded.
-
-The interpretation of the command text, whether input directly or loaded from a file, is handled by 
-%TODO
-
-
+With this in mind, C++ was chosen for this project because it allows for
+linkage with \texttt{libfa} and \texttt{wpds} (which are written in C) whilst
+permitting an object-oriented approach.
 
 \subsection{Systems and Automata}
 
-By using C++ templates, it was possible to create the four necessary
+Using C++ templates, it was possible to create the four necessary
 automaton\footnote{For brevity, the term `automata' is taken here also to
 include transition systems} types (DFA, PDA, LTS, PDS) as a single class (with
 two template parameters).  The class is parameterised by \textit{state type}
@@ -447,53 +500,16 @@ construction of product systems.
 
 % user interface
 
-%SHOWABLE
-
-\subsection{Regular Expressions}
-% regex, libfa
-Since it can be tedious to define automata manually, it is also possible to
-specify a DFA using a regular expression. The regex is parsed into its own AST
--- as with the other structures -- but when interpreted, libfa is used to
-construct a DFA with the name given. The decision to use libfa was taken
-because to reimplement the necessary minimisation algorithms would have been
-time-consuming and potentially less robust. However, libfa naturally uses its
-own representation for automata and regular expressions, so we need to convert
-between them to retrieve the results. This is done by the
-\texttt{DeclareRegexCommand} class.
-
-% environment
-\subsection{Environment}
-
-The environment is used to store all of the automata, systems, and formulas
-that have been loaded at any given point in the program. It also stores the
-results of model-checks, so that it is only necessary to check a formula once
--- to recall the results again, they are simply looked up in the environment.
-This has the potential to save computation time if the user wishes to check
-several similar formulas against a system. It also allows the user a greater
-degree of interactivity; it's possible to define and check a new formula during
-a session, without needing to reload the transition system.
-
-\subsection{Read-eval-print loop}
-
-Given the usability requirements, a traditional read-eval-print loop was an
-obvious choice as a front-end to the system.  The REPL makes use of the
-\textbf{GNU readline} library, so that standard keyboard shortcuts can be used
-for such operations as retrieving previously entered commands from the history,
-and auto-completing filenames. 
-
-A full graphical user interface would have provided an even greater degree of
-usability, but was judged to be beyond the scope of this project. However,
-since the main core of the model checker is built as a separate (static)
-library, it would be easy to extend the system with an alternative front-end.
-
-% dot
-
 
 \subsection{Input}
+
 The input language is tokenised and parsed using \textbf{flex} and
 \textbf{Bison} respectively. See the Appendix for a detailed explanation of the
-input language.
-% TODO bison/flex
+input language. The \textbf{Boost.Spirit} parsing framework was considered as
+an alternative to the flex/Bison combination. This might have resulted in a
+more elegant input system; however flex/Bison had the advantage of being
+well-known and comparatively easy to use, once set up. Their idiosyncrasies are
+also better documented than those of Spirit.
 
 An Abstract Syntax Tree is constructed recursively during the parse; ultimately
 the input text is transformed into a series of Command objects. This helps to
@@ -522,55 +538,217 @@ By a similar duality, we can define the universal path quantifiers:\cite{Kreutze
 
 %TODO EX AX
 
+The conversion from AST to fully instantiated object is carried out by the
+\text{DeclareAutomatonCommand}, \texttt{DeclareRegexCommand} and
+\texttt{DeclareFormulaCommand} classes. These each use the Visitor pattern to
+iterate over the structure of the AST of the relevant object and incrementally
+construct the full object. Checks for validity are performed during this
+process.
+
+\subsubsection{Regular Expressions}
+
+Since it can be tedious to define automata manually, it is also possible to
+specify a DFA using a regular expression. The regex is parsed into its own AST
+-- as with the other structures -- but when interpreted, libfa is used to
+construct a DFA with the name given. The decision to use libfa was taken
+because to reimplement the necessary minimisation algorithms would have been
+time-consuming and potentially less robust. However, libfa naturally uses its
+own representation for automata and regular expressions, so we need to convert
+between them to retrieve the results. This is done by the \texttt{DeclareRegexCommand} class.
+
+\subsection{User interface}
+
+Given the usability requirements, a traditional read-eval-print loop was an
+obvious choice as a front-end to the system.  The REPL makes use of the
+\textbf{GNU readline} library, so that standard keyboard shortcuts can be used
+for such operations as retrieving previously entered commands from the history,
+and auto-completing filenames. 
+
+A full graphical user interface would have provided an even greater level of
+usability, but was judged to be beyond the scope of this project. However,
+since the main core of the model checker is built as a separate (static)
+library, it would be easy to extend the system with an alternative front-end.
+
+A typical session involves loading system and formula definitions from a file,
+followed by specifying checks to run against these objects. It is also possible
+to display the automata and systems that have been loaded.  
+
+The interpretation of the command text, whether input directly or loaded from a
+file, is handled by the \texttt{CommandParser}, which uses flex and Bison to
+convert input text into \texttt{Command} objects. These objects are executed by
+the \texttt{CommandProcessor}, which maintains a reference to the
+\texttt{Environment}.
+
+\subsection{Environment}
+
+The environment is used to store all of the automata, systems, and formulas
+that have been loaded at any given point in the program. It also stores the
+results of model-checks, so that it is only necessary to check a formula once
+-- to recall the results again, they are simply looked up in the environment.
+This has the potential to save computation time if the user wishes to check
+several similar formulas against a system. It also allows the user a greater
+degree of interactivity; it's possible to define and check a new formula during
+a session, without needing to reload the transition system.
+
+
+\subsection{Showing objects - text}
+
+The \texttt{:show} command has two purposes -- with no parameter, it outputs
+the names of all automata, systems, and formulas that have been loaded; if
+provided with the name of an object, it will output a textual representation of
+that object via the \texttt{ToString()} method. These objects all inherit from
+the \texttt{Showable} abstract class.
+
+\subsection{Showing objects - GraphViz}
+
+The \texttt{:xshow} command provides a way of displaying loaded automata and
+systems graphically. It achieves this by obtaining a \textbf{GraphViz} `dot'
+format representation of the requested object via the \texttt{ToDot()} method,
+and piping the text to the \texttt{dot} program. \texttt{dot} must be in the
+system PATH for this to work. This is somewhat rudimentary, but the feature is
+extremely helpful and contributes a great deal to usability.
+
 % algorithm
 \subsection{Model checking algorithm}
 
-As with standard CTL, the global model-checking problem for CTL Extended with
-pushdown automaton admits a polynomial-time dynamic programming solution.
+The dynamic programming aspect of the procedure is handled in a fairly standard
+way: we store a `table' of results for formulas in the Environment, and the
+entries are filled in on demand. (In fact, for fast lookup, results are stored
+in a \texttt{CheckResults} object, which contains a map from unique formula ID
+to the actual \texttt{Result} object.) This implies a recursive approach to
+iterating over sub-formulas.
 
-Specifically, the problem of checking a formula has sub-problems of checking
-each of the sub-formulas. In the %TODO
-
-In dynamic programming, one achieves an efficient solution by solving the
-sub-problems in topological order; in our case this simply means checking the
-sub-formulas in a `bottom up' manner. 
-
-
-% visitor pattern
-We use the Visitor pattern to recurse over the structure of the formula being
-checked. This allows us to break up the code with a separate method for
+We use the Visitor pattern once more to traverse the structure of the formula
+being checked. This allows us to break up the code with a separate method for
 checking each type of clause, and the check action is dispatched according to
 the class of the formula.
-% dynamic dispatch
 
+\subsubsection{Basic clauses}
 
+Checking the non-quantifier clauses is straightforward. The general process is
+to first retrieve the results for any sub-formulas (these will be calculated,
+recursively, if necessary) -- and then to iterate over the states of the system
+being checked, combining the corresponding results as appropriate.
 
-\subsection{Basic clauses}
+For example, in pseudo-code, the procedure for checking a Conjunction clause $\phi = x \wedge y$ is as follows:
+\begin{alltt}
+x_results = Check(x)
+y_results = Check(y)
+phi_results = []
+for i in Configurations(system):
+   phi_results[i] = x_results[i] && y_results[i]
+SetResults(phi, phi_results)
+\end{alltt}
 
-\subsection{Until}
+In fact, all of the clauses follow this basic pattern, but they differ in how
+they use the sub-results. (Base cases, such as \texttt{True} and \texttt{PVar}, do not perform sub-checks, rather they simply fill in the results, as you would expect.)
 
-\begin{figure}[h!] %TODO
+\subsubsection{Until}
+
+Suppose we wish to check $\texttt{E}(x\texttt{U}^\mathcal{A}y)$ against an LTS
+$\mathcal{T} = (\mathcal{S}, \rightarrow, l)$, where $\mathcal{A} = (Q, \Sigma,
+\Gamma, \delta, q_0, F)$. Axelsson et al. reduce the problem to a reachability
+check against a PDS constructed as a product of $\mathcal{A}$ and
+$\mathcal{T}$.\cite{Kreutzer10}
+
+Specifically, we construct $\mathcal{A_T} = (Q \times \mathcal{S}, \Gamma, \rightarrow, l)$
+by $ \langle (p, s), \gamma \rangle \xrightarrow{a} \langle (q, t), w \rangle $ iff $\exists a \in \Sigma$ such that $s \xrightarrow{a} t$ and $\langle p, \gamma \rangle \xrightarrow{a} \langle q, w \rangle$ and $x \in l(s)$.
+
+This PDS encodes the semantic requirement for the system and the automaton to
+be `run in step' -- recall that \textbf{Until} requires the existence of an
+alternating sequence of states and actions, and also that the first
+sub-formula, $x$, holds at each point.
+
+In addition to this, however, a valid path's actions must be \textit{accepted}
+by the automaton, and must reach a state of the system in which the
+\textit{second} subformula holds. The next step, then, is to consider the set
+of configurations of the product system in which these criteria are satisfied:
+\[
+R := \{ \langle (p, s), w \rangle : p \in F \text{ and } y \in l(s), w \in \Gamma^*  \}\]
+
+Finally, observe that a valid \textbf{Until} path from a state $s$ exists iff
+there is a path in the product system from $\langle (q_0, s), \epsilon \rangle$
+to one of the configurations in $R$ (since automaton simulation begins with the
+initial state and an empty stack). This holds exactly if $\langle (q_0, s),
+\epsilon \rangle$ is in the \textit{predecessor configurations} of $R$. The
+proof is straightforward -- see Axelsson et al. 2010\cite{Kreutzer10} for the
+details.  We shall refer to $\langle (q_0, s), \epsilon \rangle$ as the `bottom
+configuration' for $s$.
+
+The final requirement, then, is to find an efficient way of computing this set
+of predecessor configurations: the configurations of the product system from
+which, by repeatedly applying transition rules, it is possible to reach a
+configuration from the original set. Fortunately, this is well-studied --
+Axelsson et al. refer to the original method of Bouajjani et
+al.\cite{bouajjani1997reachability} For the implementation, though, we apply
+\texttt{wpds}, which uses an improved method due to Esparza et
+al.\cite{EHRS00b}  This process is involved, but the outline is as follows:
+the initial set of configurations is represented symbolically by a new
+`$\mathcal{A_T}$-automaton'\footnote{In the terminology of Bouajjani et al. this
+is a $\mathcal{A_T}$ multi automaton.} (See fig. \ref{fig:p-automata-def}), to which a \texttt{pre*} algorithm is
+applied. \texttt{pre*} is a \textit{saturation process} -- it adds new edges to
+the $\mathcal{A_T}$-automaton until it accepts all of the predecessors.
+
+\begin{figure}
+\caption{$\mathcal{P}$-automaton definition, based on Esparza et al. 2000}
+\begin{mydef}
+Given a PDS $\mathcal{P}$, a $\mathcal{P}$-automaton is a 5-tuple $(Q, \Gamma,
+\delta, P, F)$ where $Q$ is a set of states, $\Gamma$ is the stack alphabet as
+usual, $\Delta \subseteq (Q \times \Gamma) \times Q $ is a
+transition function, $P \subseteq Q$ is a set of initial states, and $F
+\subseteq Q$ is a set of accepting states.
+We define the acceptance condition as follows:
+
+Let $\rightarrow \subseteq Q \times \Gamma^* \times Q$ be the smallest relation such that
+\begin{itemize}
+\item{$q \xrightarrow{\epsilon} q$ for all $q \in Q$}
+\item{$(\langle q, \gamma \rangle, q') \in \Delta \implies q \xrightarrow{\gamma} q'$, and}
+\item{$(q \xrightarrow{w} q'$ and $q' \xrightarrow{\gamma} q'') \implies q \xrightarrow{w\gamma} q'$ }
+\end{itemize}
+
+The automaton \textbf{accepts} configuration $\langle p, w \rangle$ of $\mathcal{P}$ if $p \xrightarrow{w} q$ for some $p \in P$ and $q \in F$.
+\end{mydef}
+\label{fig:p-automata-def}
+\end{figure}
+
+Creating an automaton which accepts the set $R$ is straightforward. Define a
+$\mathcal{A_T}$-automaton $\mathcal{R} = (Q \times \mathcal{S}, \Gamma,
+\Delta_{\mathcal{R}}, P_{\mathcal{R}}, F_{\mathcal{R}})$ with $\Delta = \{
+( \langle (p, s), \gamma \rangle, (p, s) ) : (p, s) \in Q \times \mathcal{S}$
+with $p \in F$ and $y \in l(s) \}$, and $P_{\mathcal{R}} = F_{\mathcal{R}} = Q
+\times \mathcal{S}$. It is clear from the definition of the acceptance
+condition that $\mathcal{R}$ accepts $R$.
+
+Applying the \texttt{pre*} procedure of \texttt{wpds} yields
+$\mathcal{R}_{\textit{pre}^*}$: to check whether a state $s$ satisfies the
+\textbf{Until} formula, we simply check whether its bottom configuration is
+accepted by $\mathcal{R}_{\textit{pre}^*}$.
+
+In the case that it is, we can use the \texttt{wPathFind} method of
+\texttt{wpds} to retrieve a witnessing trace -- refer to the source code for
+details.
+
+\begin{figure}[h!]
 \caption{\textbf{Until} checking algorithm}
 \begin{enumerate}
-\item{Check subformulas}
+\item{Check both subformulas}
+\item{Explicitly construct the product system $\mathcal{A_T}$}
+\item{Construct a $\mathcal{A_T}$-automaton recognising the configurations which are accepting and also satisfy the second sub-formula.}
 
-\item{Construct product system}
-
-\item{Construct an automaton recognising the configurations which are accepting and also satisfy the second subformula.}
-
-\item{Compute their predecessor configurations.}
+\item{Apply the \texttt{pre*} algorithm to the automaton.}
 
 \item{For each state of the system:
-   check whether the state's `bottom configuration' is a predecessor.}
+   check whether the new automaton accepts the state's `bottom configuration'.}
    \end{enumerate}
 \end{figure}
 
-\subsection{Release}
+\subsubsection{Release}
 
 % section from kreutzer paper
 
 In Axelsson et al. (2010) the problem of checking
-$\texttt{E}(x\texttt{R}^\mathcal{A}y)$ is reduced to evaluating the LTL formula
+$\texttt{E}(x\texttt{R}^\mathcal{A}y)$ against an LTS $(\mathcal{S}, \rightarrow, l)$ 
+is reduced to evaluating the LTL formula
 \texttt{F}$p_b$ on a constructed pushdown system $\mathcal{A}_\mathcal{T} = (Q
 \times \mathcal{S} \cup \{g, b\}, \Gamma, \Delta, l')$, where 
 
@@ -601,6 +779,10 @@ and
      \end{array}
    \right.
 \end{displaymath}
+
+We refer to this system (as we do in the code) as a \texttt{ReleaseSystem}, to
+distinguish it from the \texttt{ProductSystem} used in the \textbf{Until}
+checking.
 
 % LTL checking
 To check the LTL formula, we use a method based on the one described in Esparza et al. (2000)\cite{EHRS00b}.
@@ -648,7 +830,6 @@ Following the standard definition\cite{EHRS00b}, the product of this B\"{u}chi a
 \mathcal{BA_T} = ( (Q \times \mathcal{S} \cup \{g, b\}) \times Q_\mathcal{B}, \Gamma, \Delta', G) 
 \]
 where
-%TODO
 \[ G = \{ (p, *) : p \in Q \times \mathcal{S} \cup \{g, b\} \} \]
 and 
 \[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
@@ -674,12 +855,49 @@ But note further that $ \{ p_b \} \neq l'(\langle p, \gamma \rangle) $ iff $ p
 and clearly in fact $\mathcal{BA_T} \cong \mathcal{A_T}$ via $(p, *) \mapsto p$.
 
 % Compute repeating heads
-The next step is to compute the repeating heads of $\mathcal{BA_T}$.
+The next step is to compute the repeating heads of $\mathcal{BA_T}$. Following
+Esparza et al. 2000 once more, we achieve this by computing the
+strongly-connected components of a head reachability graph. However, the
+construction of this graph is simplified by the observation that all of the
+states of the B\"{u}chi product system are accepting. This is performed in
+\texttt{WPDSRelease::ComputeRepeatingHeads()}.
+
+We also use the fact that in our implementation, all transition rules must be
+either pop, rewrite, or push actions. We use the \textbf{Boost.Graph} library
+to store the graph.
+
+\begin{figure}[h!]
+\caption{Constructing the reachability graph efficiently}
+\begin{enumerate}
+\item{$E = \emptyset$}
+\item{$\mathcal{R} = \textit{pre}^*(\{ \langle s, \epsilon \rangle : s \in (Q \times \mathcal{S} \cup \{g, b\}) \})$ }
+\item{For each rule in $\Delta$:}
+\item{\hspace{6mm}Case $\langle p, \gamma \rangle \rightarrow \langle p', \epsilon \rangle$: // Pop rule }
+\item{\hspace{12mm}$E = E \cup \{ ( \langle p, \gamma \rangle, \langle p', \epsilon \rangle  ) \}$ }
+\item{\hspace{6mm}Case $\langle p, \gamma \rangle \rightarrow \langle p', \gamma' \rangle$: // Rewrite rule }
+\item{\hspace{12mm}$E = E \cup \{ ( \langle p, \gamma \rangle, \langle p', \gamma' \rangle  ) \}$ }
+\item{\hspace{6mm}Case $\langle p, \gamma \rangle \rightarrow \langle p', \gamma''\gamma' \rangle$: // Push rule}
+\item{\hspace{12mm}$E = E \cup \{ ( \langle p, \gamma \rangle, \langle p', \gamma'' \rangle  ) \}$ }
+\item{\hspace{12mm}For all $p''$ such that $(p', \gamma'', p'') \in \mathcal{R}:$  }
+\item{\hspace{18mm}$E = E \cup \{ (\langle p, \gamma \rangle, \langle p'', \gamma' \rangle  \}$  }
+\item{return E}
+\end{enumerate}
+\end{figure}
+
+Once we have the reachability graph, we use Tarjan's algorithm to find the
+strongly-connected components -- Boost.Graph has an implementation of this.
+For a head to be repeating, it needs to be in a strongly-connected component
+which contains an edge. This holds if the component has multiple vertices, or
+if it has a single vertex with a self-loop. We also add vertices which have no
+successors in the reachability graph, excluding $b$. This gives us a set of head 
+configurations $R$ from which it is possible to avoid ever encountering the
+control state $b$. If it is possible to reach one of these configurations,
+clearly \texttt{F}$p_b$ does not hold.
 
 % Compute pre*(R\Gamma^*)
-
-
-
+It remains only to compute the predecessors of the configurations whose heads
+are in $R$. We can do this by applying $\textit{pre}^*$ to an automaton which
+accepts $R.\Gamma^*$. This is implemented in \texttt{WPDSRelease::ConstructFA()}.
 
 \begin{figure}[h!] %TODO
 \caption{\textbf{Release} checking algorithm}
@@ -694,7 +912,7 @@ Hence our final algorithm is (in pseudo-code):
 \item{A vertex is a repeating head if it is in a component with an edge, or it has no successors.}
 \item{Construct an automaton recognising the repeating heads}
 \item{Compute their predecessor configurations}
-\item{For each state, check whether its `stack bottom' configuration is a predecessor}
+\item{For each state, check whether its bottom configuration is a predecessor}
 \end{enumerate}
 \end{figure}
 
@@ -736,18 +954,17 @@ matched the expected one (or failed to parse, if the string was invalid). These
 tests were helpful during development for preventing regressions as new
 features were added.
 
-%TODO
 Example:
 \begin{alltt}
 test_case_t("FORMULA foo { E(hungry U[dfa] eat) }",
-            "FORMULA foo { [[PVAR hungry] UNTIL {AUTOMATA dfa} [PVAR eat]] }"),
+         "FORMULA foo { [[PVAR hungry] UNTIL {AUTOMATA dfa} [PVAR eat]] }"),
 \end{alltt}
 checks that an \textbf{Until} formula parses.
 
 Example:
 \begin{alltt}
 test_case_t("REGULAR foo { (toast|coffee)* }",
-            "REGULAR foo { [KLEENE [[ACTION toast] UNION [ACTION coffee]]] }"),
+         "REGULAR foo { [KLEENE [[ACTION toast] UNION [ACTION coffee]]] }"),
 \end{alltt}
 checks a regular expression's AST.
 
@@ -770,7 +987,10 @@ Example:
       type => "LTS", 
       name => "t13", 
       states => ['t0 : ' ,'t1 : ' ,'t2 : ' ,'t3 : ' ,'t4 : ' ,'t5 : p'],
-      rules => [ 'a:t0->t1' ,'b:t1->t2' ,'a:t2->t3' ,'b:t3->t4' ,'c:t4->t5']
+      rules => [ 
+         'a:t0->t1' ,'b:t1->t2' ,
+         'a:t2->t3' ,'b:t3->t4' ,'c:t4->t5'
+      ]
    \},
    automata => [
       \{
@@ -860,44 +1080,87 @@ so the test passes.
 %PDsolver and jimple
 % TODO
 A similar project which performs this task is Matthew Hague's
-\textbf{PDSolver}\cite{hague2010analysing}.  The focus of PDSolver is checking
-modal mu-calculus properties; however, it includes a \textbf{JimpleToPDSolver}
-tool for extracting pushdown control-flow graphs from Java programs. This tool
-produces output in the format used by PDSolver; by combining it with a script
-for converting PDSolver problems to MCECTL ones, we can obtain a convenient way
-of applying the model checker to real programs.
+\textbf{PDSolver}\footnote{
+http://www.comlab.ox.ac.uk/matthew.hague/pdsolver.html}\cite{hague2010analysing}.
+The focus of PDSolver is checking modal mu-calculus properties; however, it
+includes a \textbf{JimpleToPDSolver} tool for extracting pushdown control-flow
+graphs from Java programs. This tool produces output in the format used by
+PDSolver; by combining it with a script for converting PDSolver problems to
+MCECTL ones, we can obtain a convenient way of applying the model checker to
+real programs.
 
 \section{Conclusions}
 
 % summary
-I have implemented the first (to my knowledge) system for automated solution of
-the global model checking problem for CTL[PDA,DPDA].
-% regular expressions, jimple
-% testing
-%TODO
-
 % achievements
+This project has successfully implemented a system for automated solution of
+the global model checking problem for CTL[PDA,DPDA]. To the best of my
+knowledge, it is the first concrete program for doing this.
+
+\subsection{Summary}
+
+The system includes a robust and usable infrastructure for defining and
+displaying regular and pushdown automata and systems as well as Extended CTL
+formulas.  This surrounding infrastructure is sufficiently flexible that it
+could potentially provide a good basis for model checking of pushdown systems
+more generally.
+
+A number of additional convenience features are provided: regular expressions
+allow a more intuitive way to specify automata, and a conversion script is
+available for compatibility with JimpleToPDSolver. 
+
+The core model checking procedure is, for a first implementation, efficient
+% TODO complexity
+
+As well as the basic per-state satisfaction results, the algorithm produces
+witnessing traces when this is relevant.
+
+The system has been thoroughly tested and is believed to produce correct results.
+
+%TODO initial performance analysis
+
+
+
+\subsection{Project Evaluation}
+
+On the whole, the project has been a success. The key algorithms have been
+implemented, thoroughly tested, and shown to work in practice.
 
 %critical appraisal
+While the overall architecture is sound, there are elements of the design which
+could be improved upon a little. Though the use of ID numbers to represent
+states and configurations is well-advised, the approach in its current form can
+be confusing to the uninitiated, and it would benefit from a more formal
+exposition. A dedicated subsystem for output and logging would also have been
+helpful during development -- for instance, more granular log levels would have
+made debugging easier, and should probably have been included from the start.
+
+The choice of an interactive command line as an interface to the system has
+been justified by the usability improvements this delivers. Since the nature of
+the logic entails that multiple automata can be involved in a single formula, a
+persistent environment with named systems and automata is essential to prevent
+confusion. Similarly, the encapsulation of functionality into separate command
+objects proved a worthwhile decision -- this contributes greatly to the
+modularity and extensibility of the system as a whole.
 
 % lessons learnt
 
 %further work
-
 \subsection{Further work}
 
 While the system works well and demonstrates the potential usefulness of
 Extended CTL as a logic for program verification, there is much scope to
 improve upon this initial implementation. 
 
+\subsubsection{Features}
 % BNF context-free
 There are a number of features which could improve the usability of the system
 considerably, if added.
 
 Perhaps most obviously, it would be convenient to allow the non-regular portion
-of a formula or model to be described by a context-free grammar in the input.
-Currently it is necessary to explicitly enter states and rules for a pushdown
-automaton, which can be unintuitive. 
+of a formula or model to be described by a context-free grammar in the input,
+say in Backus-Naur Form.  Currently it is necessary to explicitly enter states
+and rules for a pushdown automaton, which can be unintuitive. 
 
 % determinise NPDAs
 Similarly, since the algorithm for checking Release formulas only works with
@@ -905,12 +1168,13 @@ DPDAs, it would be helpful for the system to automatically determinise PDAs
 when necessary.
 
 % optimisation
-
+\subsubsection{Optimisation}
 
 Work by Lal and Reps\cite{lal2006improving} offers an alternative algorithm for
 reachability analysis of pushdown systems; it may be worth investigating
 whether their tool is able to improve upon the performance of the wpds library
 in practice.
+
 % BDDs
 For systems with very large numbers of variables, it would be sensible to use
 Binary Decision Diagrams to represent valuations symbolically. 
@@ -920,6 +1184,7 @@ applied to the checking of pushdown systems at least in the case of
 LTL\cite{esparza2001bdd}.
 
 % integration
+\subsubsection{Integration}
 
 Finally, there is much scope for better integration with other systems, to
 better allow verification of real programs. It would be possible, for example,
@@ -982,6 +1247,12 @@ MCECTL-REPL takes two command line options.
 --file filename   Load and execute commands from a file
 \end{alltt}
 
+Upon running MCECTL-REPL, a prompt will be displayed:
+\begin{alltt}
+MCECTL >
+\end{alltt}
+at which commands in the MCECTL input language may be entered.
+
 \subsection{Input Language}
 
 The MCECTL input language is defined as follows.
@@ -992,8 +1263,13 @@ Commands in lower case and preceded by a colon
 for example, checking a formula against a system.
 
 \begin{alltt}
-DFA
-Declare a finite automaton explicitly
+DFA my_dfa {
+   STATE(  my_state_1 )
+   STATE(  my_state_2 )
+   STATE( *my_accepting_state )
+   ACTION( a : my_state_1 -> my_accepting_state )
+}
+Declare a finite automaton explicitly.
 
 REGEX
 Declare a finite automaton by providing a regular expression
@@ -1016,18 +1292,18 @@ Load commands from the specified file.
 :quit
 End the session. (Also ctrl-D)
 
-:check(formula, system)
+:check(my_formula, my_system)
 Check which states of the system model the formula.
 If the system is an LTS, any formula automata should be PDAs.
 If the system is a PDS, the formula automata should be DFAs.
 
-:show(formula)
-:show(automaton)
-:show(system)
+:show(my_formula)
+:show(my_automaton)
+:show(my_system)
 Print a textual description of the named object.
 
-:xshow(automaton)
-:xshow(system)
+:xshow(my_automaton)
+:xshow(my_system)
 Display a graphical representation of the named automaton or system.
 This requires that GraphViz is installed, and that the `dot'
 tool is present in the system PATH.
@@ -1035,12 +1311,32 @@ tool is present in the system PATH.
 
 \subsection{Conversion from JimpleToPDSolver output}
 
+To use the PDSolver integration script, simply pipe in the output from JimpleToPDSolver:
+\begin{alltt}
+\$ tools/JimpleToPDSolver "<ectl.Files: void main(java.lang.String[])>" 
+                         -pds -f jimple.out
 
+\$ scripts/convert.pl < jimple.out > files.ectl
+\end{alltt}
+
+This creates a pushdown system from the control flow of the \texttt{ectl.Files}
+Java program, and stores the appropriate MCECTL input in \texttt{files.ectl},
+ready to be checked.
+
+\begin{alltt}
+\$ ./MCECTL-REPL --file files.ectl
+\end{alltt}
 
 %TODO convert.pl
 
 
+%TODO xhookright ?
+
 \section{Code Listings}
+
+In the following listings, please note that some of the less important classes
+(e.g. exceptions) have been omitted for brevity. The full source code is
+available from the author upon request.
 
 %% NOT USED ? %%
 
@@ -1081,3 +1377,46 @@ title=\lstname,                 % show the filename of files included with \lsti
 \end{landscape}
 \end{comment}
 \end{document}
+
+
+%\subsection{Computation-tree logic}
+
+%Standard CTL has become %TODO cite
+%one of the most widely-used logics for software verification, since it is both
+%intuitive and computationally amenable.
+
+%To better understand the nature of extended CTL, we now briefly recall the
+%usual definitions of syntax and semantics for ordinary CTL.
+
+%define CTL
+%\begin{mydef}
+%The syntax of a standard CTL formula is defined recursively by
+
+%\[ \phi := q | \phi \vee \phi | \neg \phi | \texttt{E}(\phi_1 \texttt{U} \phi_2) | \texttt{E}(\phi_1 \texttt{R} \phi_2) \]
+
+%$\mathcal{T}, s \models \phi$ denotes that state $s \in \mathcal{S}$ satisfies
+%the formula $\phi$, which 
+%inductively over formulas as follows:
+
+%$\mathcal{T}, s \models q$ if $q \in l(s)$ \\
+%$\mathcal{T}, s \models \phi_1 \vee \phi_2$ if $\mathcal{T}, s \models \phi_1$
+%or $\mathcal{T}, s \models \phi_2$ \\
+%$\mathcal{T}, s \models \neg \phi $ if $\mathcal{T}, s \not\models \phi$ \\
+%$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U} \phi_2) $ if there exists
+%a path $\pi = s_0,a_1,s_1,\dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$ \\
+%TODO \
+%$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R} \phi_2) $ if %TODO \\
+
+%\end{mydef}
+%However, its expressive power is limited, and there are properties which we
+%would like to be able to check that are beyond its power.
+%For example: 
+% TODO example - buffer ?
+%To address this, more powerful logics have been proposed. CTL* % TODO CTL*
+% PDL % TODO
+%and the modal mu-calculus
+%While these are all important and worthwhile tools, they suffer from two key problems: 
+%unintuitive
+%exponential-time model-checking
+
+

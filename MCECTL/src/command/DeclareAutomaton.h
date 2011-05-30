@@ -1,14 +1,14 @@
 /*
  * =====================================================================================
  *
- *       Filename:  DeclareDFA.h
+ *       Filename:  DeclareAutomaton.h
  *    Description:  Command for creating automaton/system objects from their ASTs
  *
  * =====================================================================================
  */
 
-#ifndef _DECLARE_DFA_H
-#define _DECLARE_DFA_H
+#ifndef _DECLARE_AUTOMATON_H
+#define _DECLARE_AUTOMATON_H
 
 #include "Command.h"
 #include "Automata.h"

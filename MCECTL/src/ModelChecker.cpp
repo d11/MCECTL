@@ -703,55 +703,46 @@ public:
 
       // Create reachability graph
       typedef std::pair<Configuration, Configuration> Edge;
-      // temp
       vector<Edge> edges;
 
-
-      // for rules in _release_system
+      // For rules in _release_system, add corresponding edges
       const vector<ProductRule> &rules = _release_system.GetRules();
       vector<ProductRule>::const_iterator iter;
       for (iter = rules.begin(); iter != rules.end(); ++iter) {
-         const ProductRule &rule = *iter;
-         Configuration configuration = rule.configuration; // p
+         const ProductRule &rule      = *iter;
+         Configuration configuration  = rule.configuration;
          const PushDownAction &action = *rule.action;
-
-         Configuration dest_id = action.GetDestStateID(); // p'
-
+         Configuration dest_id = action.GetDestStateID();
          string top_symbol = "";
          string bottom_symbol = config_space.GetSymbolName(configuration);
          action.ApplyToStackTop(top_symbol, bottom_symbol);
 
-         // A rewrite rule
          if (top_symbol != "") {
             if (bottom_symbol == "") {
-               cout << "rewrite rule" ;
-               Configuration dest_config = config_space.MakeConfiguration(dest_id, top_symbol);
+               // A rewrite rule
+               Configuration dest_config = config_space.MakeConfiguration(
+                     dest_id, top_symbol);
                edges.push_back(Edge(configuration, dest_config));
-               cout << "." << endl;
             } else {
                // A push rule
-               cout << "push rule ";
-
                string dest_state = config_space.GetStateNameByID(dest_id);
-               cout << "getting successors for " << dest_state << ", " << top_symbol << endl;
-               vector<string> successors = reachability.GetSuccessors(config_space, dest_state, top_symbol);
+               vector<string> successors = reachability.GetSuccessors(config_space,
+                     dest_state, top_symbol);
                vector<string>::const_iterator iter;
                for (iter = successors.begin(); iter != successors.end(); ++iter) {
-                  edges.push_back(Edge(configuration, config_space.MakeConfiguration(*iter, bottom_symbol)));
-                  cout << ".";
+                  edges.push_back(Edge(configuration, 
+                           config_space.MakeConfiguration(*iter, bottom_symbol)));
                }
 
                //2
-               edges.push_back(Edge(configuration, config_space.MakeConfiguration(dest_id, top_symbol)));
-               cout << ".";
-               cout << endl;
+               edges.push_back(Edge(configuration, 
+                        config_space.MakeConfiguration(dest_id, top_symbol)));
             }
 
          } else {
-            cout << "pop rule" << endl;
+            // Pop rule
             Configuration dest_config = config_space.MakeConfiguration(dest_id, "_");
             edges.push_back(Edge(configuration, dest_config));
-            // pop
          }
       }
 
@@ -760,32 +751,12 @@ public:
                  property<vertex_color_t, default_color_type>
               > ReachabilityGraph;
 
-      ReachabilityGraph graph(edges.begin(), edges.end(), config_space.GetConfigurationCount());
+      ReachabilityGraph graph(
+            edges.begin(), edges.end(),
+            config_space.GetConfigurationCount()
+         );
       typedef graph_traits<ReachabilityGraph>::vertex_descriptor Vertex;
-
-      /*
-      class label_writer {
-         public:
-            label_writer(Name _name) : name(_name) {}
-            template <class VertexOrEdge>
-               void operator()(std::ostream& out, const VertexOrEdge& v) const {
-                  out << "[label=\"" << name[v] << "\"]";
-               }
-         private:
-            Name name;
-         };
-      */
       vector<string> config_names = config_space.GetConfigurationNames();
-      /*
-      ostringstream dotout;
-      write_graphviz(dotout, graph, make_label_writer(config_names.begin()));
-      FILE *dot = popen("dot -Tx11", "w");
-      string out = dotout.str();
-      fputs(out.c_str(), dot);
-      pclose(dot);*/
-
-
-
       pair<graph_traits<ReachabilityGraph>::edge_iterator, graph_traits<ReachabilityGraph>::edge_iterator> edge_range = boost::edges(graph);
       graph_traits<ReachabilityGraph>::edge_iterator i_edge;
       for (i_edge = edge_range.first; i_edge != edge_range.second; ++i_edge) {
@@ -834,7 +805,6 @@ public:
             if (config_space.GetStateName(vertex) != "_fail_state_"
                   ) {
                // If there are no successors, it counts as repeating for us
-               // TODO - dubious
                typedef ReachabilityGraph::out_edge_iterator out_edge_iterator;
                pair<out_edge_iterator, out_edge_iterator> out_list = out_edges(vertex, graph);
                if (out_list.second == out_list.first) {
@@ -848,47 +818,11 @@ public:
                }
                
             }
-            else {
-               // experiment
-//               _repeating_heads.insert(vertex);
-            }
 
          }
          cout << endl;
       }
 
-      /* hopefully not needed
-      set<ReachabilityTransition> rel;
-      vector<ReachabilityTransition> trans;
-      set<ReachabilityRule> delta_prime;
-
-      typedef ProductRule PushDownRule;
-      const vector<PushDownRule> &delta = _pds.GetRules();
-
-// todo transform rules ?
-
-      vector<PushDownRule>::const_iterator rule_iter;
-      for (rule_iter = delta.begin(); rule_iter != delta.end(); rule_iter++) {
-         ReachabilityTranstition temp;
-         temp.from_config = rule_iter->configuration;
-//         temp.reachability = rule_iter-> // TODO
-         temp.dest_id = rule_iter->action->GetDestStateID();
-         trans.push(temp)
-      }
-
-      while ( !trans.empty() ) {
-         ReachabilityRule t = trans.pop();
-         set<ReachabilityRule>::const_iterator iter;
-         iter = rel.find(t);
-         if ( iter != rel.end() ) {
-            continue;
-         }
-
-         rel.insert(t);
-
-      }
-      
-      */
    }
 
    void PrintRepeatingHeads() const {
@@ -907,9 +841,8 @@ public:
    // alphabet
    void ConstructFA() {
 
-//      WPDSWrapper::CreateAllStateIdents(_release_system.GetConfigurationSpace());
-      // TODO ?
-      const ConfigurationSpace& config_space = _release_system.GetConfigurationSpace();
+      const ConfigurationSpace& config_space
+         = _release_system.GetConfigurationSpace();
 
       // Create and store wpds idents for states
       vector<string>::const_iterator f;
@@ -919,7 +852,6 @@ public:
          char *temp = strdup(f_mod.c_str());
          _state_idents[*f] = wIdentCreate(temp);
          free(temp);
-         cout << "State: " << f_mod << " Ident: " << _state_idents[f_mod] << endl;
       }
 
       // Add final state
@@ -929,18 +861,22 @@ public:
       free(temp);
 
       set<Configuration>::const_iterator iter;
-      for ( iter = _repeating_heads.begin(); iter != _repeating_heads.end(); ++iter ) {
+      for ( iter = _repeating_heads.begin();
+            iter != _repeating_heads.end(); ++iter ) {
 
          string state_name = config_space.GetStateName(*iter);
          wIdent state_ident = _state_idents[state_name];
          string stack_symbol = config_space.GetSymbolName(*iter);
-         wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], final_state_ident, NULL, NULL);
+         wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], 
+               final_state_ident, NULL, NULL);
       }
 
       const vector<string> &stack_symbols = config_space.GetStackAlphabet();
       vector<string>::const_iterator symbol_iter;
-      for (symbol_iter = stack_symbols.begin(); symbol_iter != stack_symbols.end(); ++symbol_iter) {
-         wFAInsert(_fa, final_state_ident, _stack_idents[*symbol_iter], final_state_ident, NULL, NULL);
+      for (symbol_iter = stack_symbols.begin(); 
+            symbol_iter != stack_symbols.end(); ++symbol_iter) {
+         wFAInsert(_fa, final_state_ident, _stack_idents[*symbol_iter], 
+               final_state_ident, NULL, NULL);
       }
 
    }
