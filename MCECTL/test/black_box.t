@@ -437,6 +437,44 @@ my $release_tests = test_suite("Release", [
       automata => [ $pda_match_ab ],
       expected => { s1 => 1, s2 => 0}
    },
+   {
+      name => "15. PDS, regular",
+      formula => { name => "f1", formula => "E( 0 R[dfa] p )"},
+      system => {
+         type => "PDS",
+         name => "pds1",
+         states => [
+            't1[_]:', 't1[s]:','t1[t]:','t1[u]: p',
+            'x[_]:', 'x[s]:','x[t]:','x[u]: 0'
+         
+         ],
+         rules => [
+            'a: t1[_] -> t1[PUSH s]',
+            'a: t1[s] -> t1[PUSH t]',
+            'a: t1[t] -> t1[PUSH u]',
+            'a: t1[u] -> x[REWRITE _]',
+            'a: x[_] -> x[REWRITE _]',
+            'a: x[s] -> x[REWRITE _]',
+            'a: x[t] -> x[REWRITE _]',
+            'a: x[u] -> x[REWRITE _]'
+         ]
+      },
+      automata => [ 
+         {
+            type => "DFA",
+            name => "dfa",
+            states => ['s1', '*s2'],
+            rules => [
+               'a: s1 -> s2',
+               'a: s2 -> s1'
+            ]
+         }
+      ],
+      expected => { 
+         "<t1,_>" => 0, "<t1,s>" => 0, "<t1,t>" => 0, "<t1,u>" => 0,
+         "<x,_>" => 0, "<x,s>" => 0, "<x,t>" => 0, "<x,u>" => 0,
+      }
+   },
 ]);
 
 # Group and run all of the tests

@@ -1,0 +1,28 @@
+PDS pds1 {
+   STATE ( t1[_]: )
+   STATE ( t1[s]: )
+   STATE ( t1[t]: )
+   STATE ( t1[u]: p )
+   STATE ( x[_]: )
+   STATE ( x[s]: )
+   STATE ( x[t]: )
+   STATE ( x[u]: 0 )
+   ACTION ( a: t1[_] -> t1[PUSH s] )
+   ACTION ( a: t1[s] -> t1[PUSH t] )
+   ACTION ( a: t1[t] -> t1[PUSH u] )
+   ACTION ( a: t1[u] -> x[REWRITE _] )
+   ACTION ( a: x[_] -> x[REWRITE _] )
+   ACTION ( a: x[s] -> x[REWRITE _] )
+   ACTION ( a: x[t] -> x[REWRITE _] )
+   ACTION ( a: x[u] -> x[REWRITE _] )
+}
+DFA dfa {
+   STATE ( s1 )
+   STATE ( *s2 )
+   ACTION ( a: s1 -> s2 )
+   ACTION ( a: s2 -> s1 )
+}
+FORMULA f1 {
+   E( 0 R[dfa] p )
+}
+:check(f1, pds1)

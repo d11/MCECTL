@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  REPL.cpp
- *    Description:  
+ *    Description:  Read-eval-print loop
  *
  * =====================================================================================
  */
@@ -12,7 +12,6 @@
 #include <iostream>
 #include <readline/readline.h>
 #include <readline/history.h>
-
 #include "ModelChecker.h"
 #include "Environment.h"
 #include "CTL.h"
@@ -91,5 +90,4 @@ public:
 
       }
    }
-
 };

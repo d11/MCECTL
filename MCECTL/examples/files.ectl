@@ -42,3 +42,4 @@ DFA dfa {
 FORMULA phi1 {
    E( 1 U[dfa] csend )
 }
+:check(phi1, jimple_pds)

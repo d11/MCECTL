@@ -8,3 +8,17 @@ Makefile
 cmake_install.cmake
 *.swp
 tags
+*.a
+*.pdf
+*.ps
+MCECTL-REPL
+Test
+CTL.tab.cpp
+CTL_Lex.cc
+CTL_Parse.cc
+CTL_Parse.hh
+CTL_Parse.output
+Lex.h
+*.log
+Assignments
+Tools

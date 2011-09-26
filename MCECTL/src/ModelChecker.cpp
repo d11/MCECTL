@@ -30,7 +30,6 @@ extern "C" {
 #include "wpds.h"
 } // End 'extern C'
 
-
 using namespace std;
 
 // RESULT
@@ -50,7 +49,7 @@ void Result::SetEvaluation(bool evaluation) {
 string Result::ToString() const {
    stringstream s;
    s << _config_name << ": " << (_evaluation ? "T" : "F");
-   // temp
+   // Print trace
    if (!_trace_steps.empty()) {
       s << "     [ ";
       vector<TraceStep>::const_iterator iter;
@@ -116,19 +115,16 @@ bool ResultsTable::HasEntry( Formula::Formula::const_reference formula ) const {
 
 const CheckResults *ResultsTable::GetEntry(
       Formula::Formula::const_reference formula
-   ) const
-{
+   ) const {
    return _entries.find(formula.GetID())->second;
 }
 
 void ResultsTable::SetEntry(
       Formula::Formula::const_reference formula,
       CheckResults *check_results
-   )
-{
+   ) {
    _entries.insert(make_pair(formula.GetID(), check_results));
 }
-
 
 class JoinStateResults {
 private:
@@ -223,8 +219,8 @@ public:
       _fa = wFACreate(_p_semiring);
    }
 
-   // from libwpds example TODO rewrite
-   // For debugging
+   // From libwpds example 
+   // (For debugging)
    void PrintAutomaton (wFA *fa, const string &s) const
    {
       wTrans *t;
@@ -259,11 +255,12 @@ public:
       wPathTraceAll(fa,p);
       do {
          conf = wPathConfig(fa,p);
-         printf("[%d] <%s,%s",(int)p->value,wIdentString(conf->state),
-               wIdentString(conf->stack[0]));
+         cout << "[" << (int)p->value  << "] <" 
+            << wIdentString(conf->state)<< "," 
+            << wIdentString(conf->stack[0]);
          id = conf->stack;
-         while (*++id) printf(" %s",wIdentString(*id));
-         printf(">\t\t");
+         while (*++id) cout << " " << wIdentString(*id);
+         cout << ">\t\t";
          wConfigDelete(conf);
 
          wPathTraceStep(fa,p);
@@ -272,10 +269,10 @@ public:
          wPathDeref(fa,p);
          p = pnext;
 
-         printf("\n");
+         cout << endl;
       } while (p);
 
-      printf("\n");
+      cout << endl;
    }
    // For debugging
    void PrintPDS() const {
@@ -533,7 +530,6 @@ public:
             bool done = false;
             if (path->transitions && path->transitions->target) {
                PrintTrace(_fa_pre, path->transitions->target);
-               // TODO
                StoreTrace(result, _fa_pre, path->transitions->target);
                done = true;
                result.SetEvaluation(true);
@@ -562,9 +558,7 @@ private:
 public:
    WPDSProduct(const ProductSystem &product_system) : _product_system(product_system) {
       WPDSWrapper::CreateAllStackIdents(_product_system.GetConfigurationSpace());
-
    }
-
    void CreatePDS() {
       WPDSWrapper::CreatePDS(_product_system.GetRules(), _product_system.GetConfigurationSpace());
    }
@@ -578,17 +572,14 @@ public:
    }
 
    void AddConfigurationTop(const ProductState<State,KripkeState> &state, const string &stack_symbol, const vector<string> &stack_alphabet) {
-
       string f_mod = "s"+ state.GetName();
       char *temp = strdup(f_mod.c_str());
-//      _state_idents[state.GetName()+"__"] = _state_idents[state.GetName()];
       _state_idents[state.GetName()] = wIdentCreate(temp);
       f_mod = "_"+ state.GetName() +"__";
       free(temp);
       temp = strdup(f_mod.c_str());
       _state_idents[state.GetName()+"__"] = wIdentCreate(temp);
       free(temp);
-
 
       wIdent state_ident1 = _state_idents[state.GetName()];
       wIdent state_ident2 = _state_idents[state.GetName()+"__"];
@@ -598,11 +589,10 @@ public:
       for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
          wFAInsert(_fa, state_ident2, _stack_idents[*gamma], state_ident2, NULL, NULL);
       }
-
    }
-
 };
 
+// Product system used in release checking
 class ReleaseSystem : public Showable {
 private:
    ConfigurationSpace *_config_space;
@@ -611,17 +601,14 @@ private:
    typedef FiniteAutomaton<PushDownAction, ProductState<State, KripkeState> >::Rule Rule;
    vector<Rule> _rule_list;
 public:
-   ReleaseSystem(const vector<ProductState<State,KripkeState>*> &produce_states, ConfigurationSpace *config_space) : _config_space(config_space) {
-      
-   }
+   ReleaseSystem(const vector<ProductState<State,KripkeState>*> &produce_states,
+         ConfigurationSpace *config_space) : _config_space(config_space) { }
    const vector<Rule> &GetRules() const {
       return _rule_list;
    }
-
    ~ReleaseSystem() {
       delete _config_space;
    }
-
    void AddRule(unsigned int start_id, PushDownAction *action) {
       _rule_list.push_back(Rule(start_id, action));
    }
@@ -640,31 +627,22 @@ public:
          s << iter->action->GetDestStateName(*_config_space) << "  ";
          s << "[ " << iter->action->ToString() << " ]" << endl;
       }
-
       return s.str();
    }
 };
 
-typedef struct {
-   Configuration from_config;
-   bool reachability;
-   Configuration dest_id;
-} ReachabilityTransition;
-
+// Specialised routines for Release checking
 class WPDSRelease : public WPDSWrapper {
 private:
    const ReleaseSystem &_release_system;
    set<Configuration> _repeating_heads;
 public:
    WPDSRelease(const ReleaseSystem &release_system) : _release_system(release_system) {
-
       WPDSWrapper::CreateAllStackIdents(_release_system.GetConfigurationSpace());
    }
-
    void CreatePDS() {
       WPDSWrapper::CreatePDS(_release_system.GetRules(), _release_system.GetConfigurationSpace());
    }
-
    void ConstructBottomConfigurations() {
       const ConfigurationSpace &config_space      = _release_system.GetConfigurationSpace();
       const vector<Configuration> &configurations = config_space.GetConfigurations();
@@ -683,9 +661,7 @@ public:
       }
    }
 
-   // Implementation of Algorithm 2 described in "Efficient Algorithms for
-   // Model Checking Pushdown Systems" by Esparza, Hansel, Rossmanith and
-   // Schwoon
+   // Find the set of repeating heads
    void ComputeRepeatingHeads() {
 
       // Compute pre* of { <p, _> : p in P }
@@ -698,7 +674,6 @@ public:
       reachability.ComputePredecessorConfigurations();
       reachability.PrintPredecessorConfigurations();
       cout << endl;
-
       const ConfigurationSpace &config_space = _release_system.GetConfigurationSpace();
 
       // Create reachability graph
@@ -733,8 +708,6 @@ public:
                   edges.push_back(Edge(configuration, 
                            config_space.MakeConfiguration(*iter, bottom_symbol)));
                }
-
-               //2
                edges.push_back(Edge(configuration, 
                         config_space.MakeConfiguration(dest_id, top_symbol)));
             }
@@ -759,30 +732,20 @@ public:
       vector<string> config_names = config_space.GetConfigurationNames();
       pair<graph_traits<ReachabilityGraph>::edge_iterator, graph_traits<ReachabilityGraph>::edge_iterator> edge_range = boost::edges(graph);
       graph_traits<ReachabilityGraph>::edge_iterator i_edge;
+      // Print graph
       for (i_edge = edge_range.first; i_edge != edge_range.second; ++i_edge) {
          ReachabilityGraph::edge_descriptor edge = *i_edge;
          Configuration start_config = source(edge, graph);
          Configuration dest_config = target(edge, graph);
          cout << "Edge " << config_names[start_config] << " -> " << config_names[dest_config] << endl;
       }
-
-      
       // Find strongly connected components of the reachability graph
-      //
       // Time O(|V|+|E|)
       vector<int> component(num_vertices(graph));
       unsigned int num = strong_components(graph, &component[0]);
       vector< vector<Configuration> > buckets(num);
-
-      cout << "Total number of components: " << num << endl;
       vector<int>::size_type i;
-      for (i = 0; i != component.size(); ++i) {
-         cout << "Configuration " << config_names[i]
-            <<" is in component " << component[i] << endl;
-         buckets[component[i]].push_back(i);
-      }
-
-      // loop through components
+      // Loop through components
       for ( i = 0; i != num; ++i ) {
          cout << "Component " << i << ": ";
          vector<int>::size_type component_size = buckets[i].size();
@@ -798,10 +761,11 @@ public:
             }
          } 
          else {
+            // Single vertex
             Configuration vertex = buckets[i][0];
             cout << vertex << " ";
 
-            // TODO comment
+            // Exclude 'b' state!
             if (config_space.GetStateName(vertex) != "_fail_state_"
                   ) {
                // If there are no successors, it counts as repeating for us
@@ -816,15 +780,13 @@ public:
                if (has_loop.second) {
                   _repeating_heads.insert(vertex);
                }
-               
             }
-
          }
          cout << endl;
       }
-
    }
 
+   // For debugging
    void PrintRepeatingHeads() const {
       cout << "Repeating heads:" << endl;
       const ConfigurationSpace& config_space = _release_system.GetConfigurationSpace();
@@ -863,14 +825,12 @@ public:
       set<Configuration>::const_iterator iter;
       for ( iter = _repeating_heads.begin();
             iter != _repeating_heads.end(); ++iter ) {
-
          string state_name = config_space.GetStateName(*iter);
          wIdent state_ident = _state_idents[state_name];
          string stack_symbol = config_space.GetSymbolName(*iter);
          wFAInsert(_fa, state_ident, _stack_idents[stack_symbol], 
                final_state_ident, NULL, NULL);
       }
-
       const vector<string> &stack_symbols = config_space.GetStackAlphabet();
       vector<string>::const_iterator symbol_iter;
       for (symbol_iter = stack_symbols.begin(); 
@@ -878,13 +838,10 @@ public:
          wFAInsert(_fa, final_state_ident, _stack_idents[*symbol_iter], 
                final_state_ident, NULL, NULL);
       }
-
    }
-
 };
 
 // MODEL CHECKER
-
 ModelChecker::ModelChecker(
    Environment &environment,
    const KripkeStructure &transition_system
@@ -939,8 +896,6 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
-   cout << "Constructing release system from lts" << endl;
-
    // Check PDA is deterministic
    if (!automaton.IsDeterministic()) {
       throw CommandFailed("Release automaton must be deterministic!");
@@ -1010,7 +965,6 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
    const CheckResults *y_results = Check(y);
 
    set<Configuration> matched;
-
    vector<Configuration>::const_iterator automaton_config;
    vector<Configuration>::const_iterator system_config;
    for (automaton_config = automaton_configurations.begin();
@@ -1030,6 +984,7 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
 
          Configuration start_id = *automaton_config + *system_config * automaton_configurations.size();
          if (in_Lx && (!final || in_Ly)) {
+            // Add link to 'g' state
             Configuration dest_id = product_state_names.size()-2;
             PushDownAction *action = new RewriteAction("#goal#", dest_id, "_" );
 				release_system->AddRule(start_id, action);
@@ -1038,7 +993,7 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
          }
 
          if (final && !in_Ly) {
-//            cout << "ADDING FAIL LINK" << endl;
+            // Add link to 'b' state
             Configuration dest_id = product_state_names.size()-1;
             PushDownAction *action = new RewriteAction("#fail#", dest_id, "_" );
 				release_system->AddRule(start_id, action);
@@ -1047,20 +1002,17 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
          }
       }
    }
-
+   // Convert rules
 	vector<AutomatonRule>::const_iterator j1;
 	vector<SystemRule>::const_iterator j2;
 	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
 		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
 			if (j1->action->GetName() == j2->action->GetName()) {
-
 				unsigned int start_id;
 				start_id = j1->configuration + j2->configuration * automaton_configurations.size();
-   
             if (matched.find(start_id) != matched.end()) {
                continue;
             }
-   
 				unsigned int dest_id;
 				dest_id = j1->action->GetDestStateID() + j2->action->GetDestStateID() * automaton_states.size();
 
@@ -1070,7 +1022,6 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromLTS(
 			}
       }
    }
-
    return release_system;
 }
 
@@ -1080,10 +1031,132 @@ ReleaseSystem *ModelChecker::ConstructReleaseSystemFromPDS(
    Formula::Formula::const_reference x,
    Formula::Formula::const_reference y
 ) {
-   cout << "Constructing release system from pds" << endl;
+   // Check PDS is deterministic
+   if (!pds.IsDeterministic()) {
+      throw CommandFailed("Pushdown system must be deterministic!");
+   }
 
-   // TODO
-   return NULL;
+   vector<ProductState<State,KripkeState>*> product_states;
+   ProductState<State,KripkeState> *initial_state = NULL;
+	vector<string> product_state_names;
+	const vector<KripkeState> &system_states(pds.GetStates());
+	const vector<State> &automaton_states(automaton.GetStates());
+	vector<KripkeState>::const_iterator i1;
+	vector<State>::const_iterator i2;
+	for (i1 = system_states.begin(); i1 != system_states.end(); ++i1) {
+		for (i2 = automaton_states.begin(); i2 != automaton_states.end(); ++i2) {
+			ProductState<State, KripkeState> *new_state
+            = new ProductState<State,KripkeState>(*i2, *i1);
+
+         product_states.push_back(new_state);
+         if (i1->GetSymbol() == "_"){ 
+            product_state_names.push_back(new_state->GetName());
+         }
+
+			if (i1->GetName() == pds.GetInitialState().GetName()
+				&& i2->GetName() == automaton.GetInitialState().GetName()) {
+				initial_state = new_state;
+			}
+		}
+	}
+	if (initial_state == NULL) {
+		throw CommandFailed("Failed to find initial state..!");
+	}
+   const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
+	const ConfigurationSpace &system_config_space(pds.GetConfigurationSpace());
+   const vector<unsigned int> &automaton_configurations = automaton_config_space.GetConfigurations();
+	const vector<unsigned int> &system_configurations = system_config_space.GetConfigurations();
+	const vector<string> &stack_alphabet = automaton_config_space.GetStackAlphabet();
+   product_state_names.push_back("_goal_state_");
+   product_state_names.push_back("_fail_state_");
+   Configuration goal_state = product_state_names.size()-2;
+   Configuration fail_state = product_state_names.size()-1;
+	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
+   ReleaseSystem *release_system = new ReleaseSystem(product_states, config_space);
+   vector<string>::const_iterator iter;
+   for (iter = stack_alphabet.begin(); iter != stack_alphabet.end(); ++iter) {
+      if (*iter != "_") {
+         Configuration start_id = config_space->MakeConfiguration(goal_state, *iter);
+         PushDownAction *action = new PopAction("#goal#", goal_state);
+         release_system->AddRule(start_id, action);
+         start_id = config_space->MakeConfiguration(fail_state, *iter);
+         action = new PopAction("#fail#", fail_state);
+         release_system->AddRule(start_id, action);
+      }
+   }
+	typedef FiniteAutomaton<RegularAction,State>::Rule AutomatonRule;
+	typedef FiniteAutomaton<PushDownAction,KripkeState>::Rule SystemRule;
+	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
+	const vector<SystemRule> &system_rules = pds.GetRules();
+
+   // Recursively check the first subformula (dynamic programming)
+   const CheckResults *x_results = Check(x);
+   const CheckResults *y_results = Check(y);
+
+   set<Configuration> matched;
+
+   // Add rules
+   vector<Configuration>::const_iterator automaton_config;
+   vector<Configuration>::const_iterator system_config;
+   for (automaton_config = automaton_configurations.begin();
+         automaton_config != automaton_configurations.end();
+         ++automaton_config) {
+      const State &automaton_state = automaton.GetState(*automaton_config);
+      bool final = automaton_state.GetAccepting();
+
+      for (system_config = system_configurations.begin();
+            system_config != system_configurations.end();
+            ++system_config) {
+
+         const Result &x_res = x_results->GetResult(*system_config);
+         const Result &y_res = y_results->GetResult(*system_config);
+         bool in_Lx = x_res.GetEvaluation();
+         bool in_Ly = y_res.GetEvaluation();
+
+         Configuration start_id = *system_config + *automaton_config * system_configurations.size();
+         if (in_Lx && (!final || in_Ly)) {
+            Configuration dest_id = product_state_names.size()-2;
+            PushDownAction *action = new RewriteAction("#goal#", dest_id, "_" );
+				release_system->AddRule(start_id, action);
+            matched.insert(start_id);
+            continue;
+         }
+
+         if (final && !in_Ly) {
+            Configuration dest_id = product_state_names.size()-1;
+            PushDownAction *action = new RewriteAction("#fail#", dest_id, "_" );
+				release_system->AddRule(start_id, action);
+
+            matched.insert(start_id);
+         }
+      }
+   }
+
+   // Convert rules
+   unsigned int multiplier = system_states.size() / stack_alphabet.size();
+	vector<AutomatonRule>::const_iterator j1;
+	vector<SystemRule>::const_iterator j2;
+	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
+		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
+			if (j1->action->GetName() == j2->action->GetName()) {
+
+				unsigned int start_id;
+				start_id = j2->configuration + j1->configuration * system_configurations.size();
+   
+            if (matched.find(start_id) != matched.end()) {
+               continue;
+            }
+   
+				unsigned int dest_id;
+				dest_id = j2->action->GetDestStateID() + j1->action->GetDestStateID() * multiplier;
+
+				PushDownAction *action = j2->action->Clone();
+				action->SetDestStateID(dest_id);
+				release_system->AddRule(start_id, action);
+			}
+      }
+   }
+   return release_system;
 }
 
 ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
@@ -1094,7 +1167,6 @@ ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
 ) {
    vector<ProductState<State,KripkeState>*> product_states;
    ProductState<State,KripkeState> *initial_state = NULL;
-
 	vector<string> product_state_names;
 	vector<KripkeState> system_states(lts.GetStates());
 	vector<State> automaton_states(automaton.GetStates());
@@ -1114,52 +1186,41 @@ ProductSystem *ModelChecker::ConstructProductSystemFromLTS(
 			}
 		}
 	}
-
 	if (initial_state == NULL) {
 		throw CommandFailed("Failed to find initial state..!");
 	}
-
 	const ConfigurationSpace &automaton_config_space(automaton.GetConfigurationSpace());
 	const vector<unsigned int> &automaton_configurations = automaton_config_space.GetConfigurations();
 	const vector<string> &stack_alphabet = automaton_config_space.GetStackAlphabet();
 	ConfigurationSpace *config_space = new ConfigurationSpace(product_state_names, stack_alphabet);
-
 	ProductSystem *product_system = new ProductSystem(product_states, initial_state, config_space);
-
 	typedef FiniteAutomaton<PushDownAction,State>::Rule AutomatonRule;
 	typedef FiniteAutomaton<RegularAction,KripkeState>::Rule SystemRule;
-
 	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
 	const vector<SystemRule> &system_rules = lts.GetRules();
 
    // Recursively check the first subformula (dynamic programming)
 	const CheckResults *x_results  = Check(x);
-
 	vector<AutomatonRule>::const_iterator j1;
 	vector<SystemRule>::const_iterator j2;
 	for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
 		for (j2 = system_rules.begin(); j2 != system_rules.end(); ++j2) {
 			if (j1->action->GetName() == j2->action->GetName()) {
-
 				// Check system state satisfies x
 				const Result &res = x_results->GetResult(j2->configuration);
 				if (!res.GetEvaluation()) {
 					continue;
 				}
-
 				unsigned int start_id;
 				start_id = j1->configuration + j2->configuration * automaton_configurations.size();
-
 				unsigned int dest_id;
 				dest_id = j1->action->GetDestStateID() + j2->action->GetDestStateID() * automaton_states.size();
-
 				PushDownAction *action = j1->action->Clone();
 				action->SetDestStateID(dest_id);
 				product_system->AddRule(start_id, action);
 			}
 		}
 	}
-
    return product_system;
 }
 
@@ -1207,16 +1268,13 @@ ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
    // Initialise the product system object
 	ProductSystem *product_system
       = new ProductSystem(product_states, initial_state, config_space);
-
    // Create rules
 	typedef FiniteAutomaton<RegularAction,State>::Rule AutomatonRule;
 	typedef FiniteAutomaton<PushDownAction,KripkeState>::Rule SystemRule;
 	const vector<AutomatonRule> &automaton_rules = automaton.GetRules();
 	const vector<SystemRule> &system_rules = pds.GetRules();
-
    // Recursively check the first subformula (dynamic programming)
 	const CheckResults *x_results  = Check(x);
-
 	vector<AutomatonRule>::const_iterator j1;
 	vector<SystemRule>::const_iterator j2;
    unsigned int multiplier = system_states.size() / stack_alphabet.size();
@@ -1227,7 +1285,6 @@ ProductSystem *ModelChecker::ConstructProductSystemFromPDS(
       if (!res.GetEvaluation()) {
          continue;
       }
-
       for (j1 = automaton_rules.begin(); j1 != automaton_rules.end(); ++j1) {
 			if (j1->action->GetName() == j2->action->GetName()) {
 				unsigned int start_id = j2->configuration 
@@ -1256,77 +1313,49 @@ void ModelChecker::ConstructConfigurationSetForLTS(WPDSProduct &wpds, const Prod
 	vector<Configuration>::const_iterator iter;
 	for (iter = product_configurations.begin(); iter != product_configurations.end(); ++iter) {
 
-//      cout << *iter;
       // Is the state accepting?
       const ProductState<State,KripkeState> &state = product_system->GetState(*iter);
-//      cout  << " " << state.ToString();
       bool accepting = state.GetFirst().GetAccepting();
 
       // Does it satisfy the 'after' formula?
       Configuration system_configuration = *iter / automaton_state_count; // works for lts
-//      cout << "[" << system_configuration << "] ";
       const Result &result_after = y_results->GetResult(system_configuration);
       bool satisfying = result_after.GetEvaluation();
 
       // States which satisfy both have all of their configurations added to
       // the set.
       if (accepting && satisfying) {
-
          wpds.AddPDSState(state, true);
          vector<string>::const_iterator gamma;
          for (gamma = stack_alphabet.begin(); gamma != stack_alphabet.end(); ++gamma) {
             wpds.AddConfiguration(state, *gamma);
          }
-         //wpds.AddConfiguration(state, state.GetSecond().GetSymbol());
       } else {
          wpds.AddPDSState(state, false);
       }
-//      cout << endl;
 	}
 }
 
 void ModelChecker::ConstructConfigurationSetForPDS(WPDSProduct &wpds, const ProductSystem *product_system, const CheckResults *y_results, unsigned int system_state_count) {
-
-   // Construct a libwpds 'P-automaton' representing the set of configurations
-   // see http://www.fmi.uni-stuttgart.de/szs/publications/info/schwoosn.EHRS00b.shtml
-	// Find the accepting & after-satisfying configurations
    const vector<Configuration> &product_configurations = product_system->GetConfigurationSpace().GetConfigurations();
    const vector<string> &stack_alphabet = product_system->GetConfigurationSpace().GetStackAlphabet();
-
-//      cout << y_results->ToString();
-//   cout << "Accepting & satisfying product states:" << endl;
 	vector<Configuration>::const_iterator iter;
 	for (iter = product_configurations.begin(); iter != product_configurations.end(); ++iter) {
-
-//      cout << *iter;
       // Is the state accepting?
       const ProductState<State,KripkeState> &state = product_system->GetState(*iter);
-//      cout  << " " << state.ToString();
       bool accepting = state.GetFirst().GetAccepting();
-
-//      if (accepting)
-//         cout << " * ";
       // Does it satisfy the 'after' formula?
       Configuration system_configuration = *iter % system_state_count; 
-//      cout << "[" << system_configuration << "] ";
       const Result &result_after = y_results->GetResult(system_configuration);
       bool satisfying = result_after.GetEvaluation();
-//      if (satisfying)
-//         cout << " & ";
-
       // States which satisfy both have all of their configurations added to
       // the set.
       if (accepting && satisfying) {
-//         cout << *iter << " " << state.ToString() << endl;
-         cout << " ## ";
-
          wpds.AddPDSState(state, true);
-
          wpds.AddConfigurationTop(state, state.GetSecond().GetSymbol(),stack_alphabet);
       } else {
          wpds.AddPDSState(state, false);
       }
-//      cout << endl;
 	}
 }
 
@@ -1341,14 +1370,12 @@ void ModelChecker::Visit(const Formula::Until &until) {
 
    if (_is_pds) {
       const DFA &automaton = *_environment.GetDFA(automaton_name);
-
-      automaton_state_count = automaton.GetStates().size(); //TODO
+      automaton_state_count = automaton.GetStates().size();
       system_state_count = _system.pds->GetStates().size();
       automaton_initial_state = new State(automaton.GetInitialState());
       product_system = ConstructProductSystemFromPDS(*_system.pds, automaton, before, after); 
 
    } else {
-      // pushdown part should be in the automaton
       const PDA &automaton = *_environment.GetPDA(automaton_name);
       automaton_state_count = automaton.GetStates().size();
       system_state_count = _system.lts->GetConfigurationSpace().GetStateCount();
@@ -1357,9 +1384,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
    }
 
 	const CheckResults *y_results  = Check(after);
-
    WPDSProduct wpds(*product_system);
-
    if (_is_pds) {
       ConstructConfigurationSetForPDS(
          wpds, product_system, y_results,  system_state_count
@@ -1374,9 +1399,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
    wpds.PrintConfigurationAutomaton();
    wpds.ComputePredecessorConfigurations();
    wpds.PrintPredecessorConfigurations();
-
    CheckResults *results = new CheckResults();
-
    vector<Configuration> ids(GetConfigurations()); 
    vector<Configuration>::const_iterator state_iter;
    for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
@@ -1387,9 +1410,7 @@ void ModelChecker::Visit(const Formula::Until &until) {
       wpds.CheckPreStar( pre_state, system_state.GetSymbol(), *result );
       results->AddResult( result );
    }
-
    delete automaton_initial_state;
-
    SetCheckResults(until, results);
 }
 
@@ -1410,42 +1431,29 @@ void ModelChecker::Visit(const Formula::Release &release) {
       automaton_initial_state = new State(automaton.GetInitialState());
       release_system = ConstructReleaseSystemFromLTS(*_system.lts, automaton, before, after);
    }
-
-   cout << release_system->ToString() << endl;
-
    WPDSRelease wpds(*release_system);
-
-   // TODO
-//   wpds.AddAllStates();
-
    wpds.ComputeRepeatingHeads();
    wpds.PrintRepeatingHeads();
    wpds.ConstructFA();
    wpds.PrintConfigurationAutomaton();
    wpds.CreatePDS();
    wpds.PrintPDS();
-
    wpds.ComputePredecessorConfigurations();
    wpds.PrintPredecessorConfigurations();
-
    CheckResults *results = new CheckResults();
 
    vector<Configuration> ids(GetConfigurations()); 
    vector<Configuration>::const_iterator state_iter;
    for (state_iter = ids.begin(); state_iter != ids.end(); ++state_iter) {
-
       const KripkeState &system_state(GetSystemState(*state_iter));
       ProductState<State,KripkeState> pre_state(*automaton_initial_state, system_state);
       string pre_state_name = pre_state.GetConfigName();
-
       cout << "Seeking configuration " << pre_state_name  << endl;
-
       Result *result = new Result(*state_iter, pre_state.GetSecond().GetConfigName());
       wpds.CheckPreStar( pre_state, system_state.GetSymbol(), *result ); // ok for both?
       results->AddResult( result );
    }
    delete automaton_initial_state;
-
    SetCheckResults(release, results);
 }
 void ModelChecker::Visit(const Formula::PVar &pvar) {
@@ -1523,7 +1531,6 @@ const CheckResults *ModelChecker::Check( Formula::Formula::const_reference formu
    if ( results_table.HasEntry( formula ) ) {
       return results_table.GetEntry( formula );
    }
-
    formula.Accept(*this);
    cout << results_table.ToString() << endl;
    return results_table.GetEntry( formula );

@@ -23,7 +23,7 @@
 
 namespace Command {
 
-	// Foreward declaration
+	// Forward declaration
    template <class A, class S>
    class DeclareAutomatonCommand;
 

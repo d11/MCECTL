@@ -12,10 +12,8 @@
 
 #include <string>
 #include <iostream>
-
 #include "Command.h"
 #include "Environment.h"
-
 #include <stdio.h>
 
 struct GlobalOptions;
@@ -46,17 +44,14 @@ namespace Command {
                      automaton = environment.GetPDS(_identifier);
                   }
                }
-               //environment.GetAutomaton(automaton, _identifier);
             }
 				string s(automaton->ToDot());
-            // TODO
 	
             // If verbose, display the DOT used
             if (options.IsVerbose()) {
                cout << s.c_str() << endl;
             }
 
-				// TODO check return codes
 				FILE *dot = popen("dot -Tx11", "w");
 				if (NULL == dot) {
 					throw CommandFailed("Couldn't open pipe to 'dot' command");

@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  ModelChecker.h
- *    Description:  
+ *    Description:  Declarations for classes used in checking procedures
  *
  * =====================================================================================
  */

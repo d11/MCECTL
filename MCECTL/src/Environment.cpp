@@ -201,9 +201,20 @@ Environment::~Environment() {
    for( iter = _dfas.begin(); iter != _dfas.end(); ++iter ) {
       delete iter->second;
    }
+   map<string, const PDA*>::const_iterator iter_pda;
+   for( iter_pda = _pdas.begin(); iter_pda != _pdas.end(); ++iter_pda ) {
+      delete iter_pda->second;
+   }
+   map<string, const KripkeStructure*>::const_iterator iter_lts;
+   for( iter_lts = _ltss.begin(); iter_lts != _ltss.end(); ++iter_lts ) {
+      delete iter_lts->second;
+   }
+   map<string, const PushDownSystem*>::const_iterator iter_pds;
+   for( iter_pds = _pdss.begin(); iter_pds != _pdss.end(); ++iter_pds ) {
+      delete iter_pds->second;
+   }
    map<string, const Formula::Formula*>::const_iterator formula_iter;
    for( formula_iter = _formulas.begin(); formula_iter != _formulas.end(); ++formula_iter ) {
       delete formula_iter->second;
    }
-   // TODO 
 }

@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Environment.h
- *    Description:  
+ *    Description:  Declarations for Environment class
  *
  * =====================================================================================
  */
@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#include "formula/Formula.h" // TODO could use foredec
+#include "formula/Formula.h"
 #include "TransitionSystem.h"
 #include "Automata.h"
 #include "exception/NonExistentAutomaton.h"

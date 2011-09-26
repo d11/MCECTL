@@ -2,7 +2,7 @@
  * =====================================================================================
  *
  *       Filename:  Automata.h
- *    Description:  
+ *    Description:  Template classes for DFA, PDA, KripkeStructure and PushDownSystem
  *
  * =====================================================================================
  */
@@ -21,18 +21,17 @@
 #include <stdexcept>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/checked_delete.hpp>
-
 #include "Showable.h"
 #include "exception/CommandFailed.h"
 
-// Foreward declararations
+// Forward declararations
 typedef unsigned int Configuration;
 class KripkeState;
 class State;
 template<class S,class T>
 class ProductState;
 
-// TODO describe
+// Map between states and configurations and their ID numbers
 class ConfigurationSpace : public Showable {
 private:
    vector<string> _states;
@@ -89,7 +88,6 @@ public:
    string GetSymbolName(unsigned int symbol_id) const {
       return _stack_alphabet.at(symbol_id % _stack_alphabet.size());
    }
-
    size_t GetStateCount() const {
       return _states.size();
    }
@@ -103,15 +101,12 @@ public:
    string ToString() const {
       stringstream s;
       s << "State names: " << endl;
-      //copy( _states.begin(), _states.end(), ostream_iterator<string>(s, " "));
-      //copy( _states.begin(), _states.end(), numbering_ostream_iterator(s));
       vector<string>::const_iterator iter;
       int index = 0;
       for (iter = _states.begin(); iter != _states.end(); ++iter) {
          s << index++ << ": " << *iter << endl;
       }
       s << endl << "Stack alphabet:" << endl;
-      //copy( _stack_alphabet.begin(), _stack_alphabet.end(), ostream_iterator<string>(s, " "));
       index = 0;
       for (iter = _stack_alphabet.begin(); iter != _stack_alphabet.end(); ++iter) {
          s << index++ << ": " << *iter << endl;
@@ -125,7 +120,6 @@ public:
       s << endl;
       return s.str();
    }
-
    vector<string> GetConfigurationNames() const {
       vector<string> out;
       vector<Configuration> cs = GetConfigurations();
@@ -135,7 +129,6 @@ public:
       }
       return out;
    }
-
    vector<Configuration> GetConfigurations() const {
       vector<Configuration> ids;
       std::copy(boost::counting_iterator<int>(0),
@@ -143,7 +136,6 @@ public:
          std::back_inserter(ids));
       return ids;
    }
-
    vector<Configuration> GetProductConfigurations() const {
       vector<Configuration> ids;
       std::copy(boost::counting_iterator<int>(0),
@@ -155,7 +147,6 @@ public:
    
 };
 
-using namespace std;
 class Automaton : public Showable {
 private:
 	unsigned int _id;
@@ -245,7 +236,7 @@ public:
       return new PushAction(_action_name, _dest_id, _push_symbol);
    }
    virtual string GetDestSymbolName(const ConfigurationSpace &config_space) const {
-      return "push " + _push_symbol; // TODO
+      return "push " + _push_symbol;
    }
    virtual void ApplyToStackTop(string &symbol_1, string &symbol_2) const {
       symbol_1 = _push_symbol;
@@ -319,6 +310,7 @@ struct less_state_name {
    }
 };
 
+// Main automaton/system class
 template <class A, class S>
 class FiniteAutomaton : public Automaton {
 public:
@@ -334,19 +326,15 @@ protected:
    const ConfigurationSpace *_config_space;
    vector<Rule> _rule_list;
 public:
-   typedef unsigned int ConfigID;
-	typedef       FiniteAutomaton &reference;
-	typedef const FiniteAutomaton &const_reference;
 
    FiniteAutomaton(const vector<S*> &states, S *initial_state, const ConfigurationSpace *config_space)
       : _states(states), _initial_state(initial_state), _config_space(config_space)
    { }
 
-   // TODO - needed ?
    FiniteAutomaton(const FiniteAutomaton<A,S> &automaton) {
       _states        = automaton._states;
       _initial_state = automaton._initial_state;
-      _rule_list         = automaton._rule_list;
+      _rule_list     = automaton._rule_list;
       _config_space  = automaton._config_space;
    }
 
@@ -404,7 +392,7 @@ public:
       return *_initial_state;
    };
 
-   string ToString() const {
+      string ToString() const {
       stringstream s;
       s << "CONFIGURATION SPACE:" << endl;
       s << _config_space->ToString() << endl;
@@ -516,39 +504,25 @@ public:
             all_heads.insert(make_pair(*iter_config, *iter_action));
          }
       }
-      //temp
-      cout << "All:" << endl;
-      set< pair<Configuration, string> >::const_iterator h_iter ;
-      for (h_iter = all_heads.begin(); h_iter != all_heads.end(); ++h_iter) {
-         cout << h_iter->first << ", " << h_iter->second << endl;
-      }
-
-      cout << "Got:" << endl;
       set< pair<Configuration,string> > transitions;
       typename vector<Rule>::const_iterator iter;
       for (iter = _rule_list.begin(); iter != _rule_list.end(); ++iter) {
          Configuration head = iter->configuration;
          const string &action = iter->action->GetName();
-
-         cout << head << ", " << action << endl;
          pair<Configuration,string> transition(head, action);
          // More than one rule with the same head
          if (transitions.find(transition) != transitions.end()) {
-            cout << "Duplicate transition: " << endl;
             return false;
          }
          transitions.insert(transition);
       }
-
-      cout << "transitions " << transitions.size() << endl;
-      cout << "all heads " << all_heads.size() << endl;
       // Transition function must be total
       return transitions.size() == all_heads.size();
    }
 
 };
 
-// Finite Automaton (May actually be non-deterministic)
+// Finite Automaton
 typedef FiniteAutomaton<RegularAction, State>  DFA;
 
 // Push Down Automaton

@@ -18,6 +18,7 @@
 \usepackage{multicol}
 \usepackage{verbatim}
 \usepackage{amssymb}
+%\usepackage{graphicx}
 %\usepackage{amsfonts}
 %\usepackage{eufrak}
 
@@ -74,8 +75,8 @@ automata, which are deterministic in the case of Release.
 As well as a robust and tested core checking procedure, we provide a set of
 commands for loading and displaying automata, systems and formulas. It is
 possible to check both regular and pushdown systems, and checking a fixed
-formula is possible in time polynomial in the size of the system and the
-automata used.
+formula is possible in time quadratic in the size of the system and sizes of
+the automata used.
 
 
 \end{abstract}
@@ -105,7 +106,7 @@ Many different logics have been developed and used in this way; amongst the
 most popular have been the temporal logics CTL and LTL. Their formulas are
 evaluated over \textit{labelled transition systems}: such systems consist of a
 finite set of states at which various propositions may hold, together with
-rules specifying the possible movements between them. % TODO rewrite
+rules specifying the possible movements between them.
 
 %        - previous research
 % move 2: problem/need
@@ -170,7 +171,6 @@ described in Axelsson et al.
 
 %        - work carried out
 
-% TODO ?
 To this end, an input language was defined for specifying pushdown and
 non-pushdown automata and systems, as well as extended CTL formulas.  A set of
 commands is provided for interacting with these objects, and in particular for
@@ -190,8 +190,8 @@ programs, by representing
 control-flow with pushdown systems. 
 
 Next we analyse the requirements for the concrete implementation, followed by
-explaining and justifying the design of the system in detail. We cover some
-examples and the strategies used for testing. Finally, we use the system to
+explaining and justifying the design of the system in detail. We cover the
+strategies used for testing, and an example. Finally, we use the system to
 check a Java program, and conclude with some thoughts to future work.
 
 We also include a concise user manual, and listings of some of the project
@@ -243,7 +243,6 @@ state, and
 $F$ is the set of accepting states. We write $\langle s, \gamma \rangle
 \xrightarrow{a} \langle s', \gamma' \rangle$ if $((s, \gamma, a), (s',
 \gamma')) \in \Delta$.
-% TODO explain transition rules
 The accepting language of the PDA is defined as $L(\mathcal{A}) = \{ a_1 a_2
 ... a_n \in \Sigma^* : \exists\text{ a path }\langle q_0, \epsilon \rangle \xrightarrow{a_1} \langle q_1, \gamma_1 \rangle
 \xrightarrow{a_2} \dots \xrightarrow{a_n}
@@ -288,15 +287,13 @@ where $q \in \textbf{Prop}$, $\mathcal{A} \in \mathfrak{A}$, and $\mathcal{B} \i
 Formulas are evaluated with respect to states of an LTS $\mathcal{T} = (\mathcal{S},
 \rightarrow, l)$, according to the following semantics:
 
-% TODO ectl semantics
 $\mathcal{T}, s \models q$ iff $q \in l(s)$
 $\mathcal{T}, s \models q$ iff $q \in l(s)$ \\
 $\mathcal{T}, s \models \phi_1 \wedge \phi_2$ iff $\mathcal{T}, s \models \phi_1$
 and $\mathcal{T}, s \models \phi_2$ \\
 $\mathcal{T}, s \models \neg \phi $ iff $\mathcal{T}, s \not\models \phi$ \\
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U}^\mathcal{A} \phi_2) $ iff 
-$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $a_1 \dots a_n \in L(\mathcal{A})$ and $\mathcal{T}, s_n \models \phi_2$ and $\forall i < n : \mathcal{T}, s_i \models \phi_1$
-\\ %TODO 
+$\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $a_1 \dots a_n \in L(\mathcal{A})$ and $\mathcal{T}, s_n \models \phi_2$ and $\forall i < n : \mathcal{T}, s_i \models \phi_1$ \\
 $\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R}^\mathcal{A} \phi_2) $ iff 
 $\exists$ a path $\pi = s_0, a_1, s_1, \dots$ with $s_0 = s$ and $\forall n \in dom(\pi): a_1 \dots a_n \not\in L(\mathcal{A})$ or $\mathcal{T}, s_n \models \phi_2$ or $\exists i < n$ s.t. $\mathcal{T}, s_i \models \phi_1$\\ 
 
@@ -311,7 +308,6 @@ configurations instead of just between control states.
 
 Given a formula and a labelled transition system, the global model checking
 problem consists of determining which states of the system satisfy the formula.
-The %TODO
 
 As with standard CTL, the global model-checking problem for Extended CTL admits
 a polynomial-time dynamic programming solution.  Specifically, the problem of
@@ -327,21 +323,12 @@ up the bulk of the project.  Axelsson et al. suggest algorithms for these
 clauses\cite{Kreutzer10} -- we shall recap and expand upon these in the Design
 section.
 
-%TODO move
 It turns out to be the case that it is possible to use an almost identical
 method for checking a CTL[DFA,DFA] formula against a deterministic PDS as for
 checking a CTL[PDA,DPDA] formula against a regular LTS. The only difference is
 in the details of how we construct the product system when checking the path
-quantifiers.
-
-\subsection{Applications of Logic to Software Verification}
-
-An important topic 
-is software verification.
-Model checking
-
-
-% ...
+quantifiers.  Since both of these options are useful, both are implemented by
+the model checker.
 
 \subsection{Programs as Pushdown systems}
 
@@ -349,8 +336,6 @@ CTL extended by pushdown automata is an effective choice for verification of
 real programs because the control flow of a recursive program can naturally be
 modelled by a pushdown system. In this case, the stack of the pushdown system
 corresponds directly to the call stack of the program.
-
-
 
 \section{Requirements}
 
@@ -400,10 +385,6 @@ verification is that it saves time by finding problems which would otherwise
 only be caught by extensive testing, a tool's usefulness can easily be
 undermined if it takes a long time to produce results.
 
-\subsection{Extensibility}
-
-The system should be extensible
-
 \subsection{Integration}
  %jimple
 A secondary goal is to provide some means of applying the model-checker to
@@ -411,8 +392,6 @@ pushdown systems modelling the control flow of real programs. Most software is
 complex enough that manually creating such systems would be neither practical
 nor reliable. Hence there is a need for a way of producing the appropriate
 pushdown system automatically from program source code.
-
-%TODO ??
 
 \section{Design}
 
@@ -536,7 +515,8 @@ By a similar duality, we can define the universal path quantifiers:\cite{Kreutze
 \[ \texttt{A}(\phi\texttt{U}\psi) \equiv \neg\texttt{E}(\neg\phi\texttt{R}\neg\psi) \]
 \[ \texttt{A}(\phi\texttt{R}\psi) \equiv \neg\texttt{E}(\neg\phi\texttt{U}\neg\psi) \]
 
-%TODO EX AX
+and for \texttt{EX}, \texttt{AX} and similar -- see Axelsson et al. for
+details.
 
 The conversion from AST to fully instantiated object is carried out by the
 \text{DeclareAutomatonCommand}, \texttt{DeclareRegexCommand} and
@@ -832,35 +812,36 @@ Following the standard definition\cite{EHRS00b}, the product of this B\"{u}chi a
 where
 \[ G = \{ (p, *) : p \in Q \times \mathcal{S} \cup \{g, b\} \} \]
 and 
-\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
-\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle, *
+\[ \langle (p, *), \gamma \rangle \rightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \rightarrow \langle p', w \rangle, *
 \xrightarrow{\sigma} *\text{ and }\sigma \subseteq l'(\langle p, \gamma
 \rangle) \]
 Noting that $* \xrightarrow{\sigma} *$ iff $\sigma \subseteq \textbf{Prop}\backslash\{p_b\}$ we obtain 
-\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
-\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle,\text{ and } \textbf{Prop}\backslash\{p_b\} \cap l'(\langle p, \gamma
+\[ \langle (p, *), \gamma \rangle \rightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \rightarrow \langle p', w \rangle,\text{ and } \textbf{Prop}\backslash\{p_b\} \cap l'(\langle p, \gamma
 \rangle) \neq \emptyset\]
 
 or equivalently
 
-\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
-\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle,\text{ and } \{ p_b \} \neq l'(\langle p, \gamma \rangle) \]
+\[ \langle (p, *), \gamma \rangle \rightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \rightarrow \langle p', w \rangle,\text{ and } \{ p_b \} \neq l'(\langle p, \gamma \rangle) \]
 
 But note further that $ \{ p_b \} \neq l'(\langle p, \gamma \rangle) $ iff $ p
 \neq b $ by construction of the pushdown system. In fact, we see that there are no rules with $b$ as a head state -- so finally we simply have:
 
-\[ \langle (p, *), \gamma \rangle \hookrightarrow \langle (p', *), w\rangle \in \Delta' 
-\text{ iff } \langle p, \gamma \rangle \hookrightarrow \langle p', w \rangle \]
+\[ \langle (p, *), \gamma \rangle \rightarrow \langle (p', *), w\rangle \in \Delta' 
+\text{ iff } \langle p, \gamma \rangle \rightarrow \langle p', w \rangle \]
 
 and clearly in fact $\mathcal{BA_T} \cong \mathcal{A_T}$ via $(p, *) \mapsto p$.
 
 % Compute repeating heads
-The next step is to compute the repeating heads of $\mathcal{BA_T}$. Following
-Esparza et al. 2000 once more, we achieve this by computing the
-strongly-connected components of a head reachability graph. However, the
-construction of this graph is simplified by the observation that all of the
-states of the B\"{u}chi product system are accepting. This is performed in
-\texttt{WPDSRelease::ComputeRepeatingHeads()}.
+The next step is to compute the repeating heads of $\mathcal{BA_T}$. 
+
+This is performed in \texttt{WPDSRelease::ComputeRepeatingHeads()}. Following Esparza
+et al. 2000 once more, we achieve this by computing the strongly-connected
+components of a head reachability graph. However, the construction of this
+graph is simplified by the observation that all of the states of the B\"{u}chi
+product system are accepting. 
 
 We also use the fact that in our implementation, all transition rules must be
 either pop, rewrite, or push actions. We use the \textbf{Boost.Graph} library
@@ -899,7 +880,7 @@ It remains only to compute the predecessors of the configurations whose heads
 are in $R$. We can do this by applying $\textit{pre}^*$ to an automaton which
 accepts $R.\Gamma^*$. This is implemented in \texttt{WPDSRelease::ConstructFA()}.
 
-\begin{figure}[h!] %TODO
+\begin{figure}[h!]
 \caption{\textbf{Release} checking algorithm}
 Hence our final algorithm is (in pseudo-code):
 \begin{enumerate}
@@ -928,13 +909,48 @@ configurations, so two instances of the wrapper class are used simultaneously
 -- for this reason, a count of the active instances of libwpds is kept, so that
 initialisation and de-initialisation need only be performed once.
 
-\section{Examples}
+\subsubsection{Complexity}
 
-% TODO
+Consider an Until clause, \texttt{E}$(\phi_1\texttt{U}^{\mathcal{A}}\phi_2)$.
+Let $n_A$ be the size of the state set of $\mathcal{A}$, and $r_A$ the number of rules.
+Similarly let $n_S$ be the number of states of the system being checked, and
+$r_S$ the number of rules.
+
+Constructing the product system takes time proportional to $n_A n_S |\Gamma| + r_A r_S$.
+Creating the automaton to recognise $R$ takes time $n_A n_S |\Gamma|$.
+Computing $\textit{pre}^*$ takes $r_A r_S n_A^2 n_S^2 |\Gamma|^2$. (See Esparza et al. 2000\cite{EHRS00b})
+Checking which configurations are recognised by the new automaton takes $n_S^2 n_A^2 |\Gamma|$ in the worst case.
+Hence the complexity is dominated by calculating the predecessor configurations; Until checking is $O(r_A r_S n_A^2 n_S^2 |\Gamma|^2)$
+
+Now consider Release; \texttt{E}$(\phi_1\texttt{R}^{\mathcal{A}}\phi_2)$, and
+let us use the same notation.
+Constructing the product system is again $n_A n_S |\Gamma| + r_A r_S$ time.
+Constructing the automaton that recognises the bottom configuration for each
+control state takes time $n_A n_S$. Computing their predecessors takes time
+$n_A^2 n_S^2 r_A r_S$. Creating the reachability graph takes $r_A^2 r_S^2 |\Gamma|^2$ in
+the worst case (i.e. when all rules are push rules). Finding the SCCs is $O(|V|
++ |E|)$ so is bounded by $n_A n_S |\Gamma| + n_A^2 n_S^2 |\Gamma|^2 $.
+Retrieving the repeating heads
+is time proportional to $n_A n_S |\Gamma|$ (the maximum number of components),
+and constructing an automaton to recognise them is then $n_A n_S |\Gamma|^2 $.
+Computing its predecessors takes $n_A^2 n_S^2 r_A r_S$ since the size of the
+automaton won't be larger than the number of control states of the product
+system, which has at most of the order $r_A r_S$ rules.
+Finally, checking which configurations are predecessors takes no longer than
+$n_S^2 n_A^2 |\Gamma|$.
+
+We can see that the overall worst-case complexity for Release is then $O(r_A^2
+r_S^2 n_A^2 n_S^2 |\Gamma|^2)$. 
+
+For any formula $\phi$ then, which refers to automata $A_1, A_2, \dots, A_n$, checking $\phi$ against a system with states $S$ and rules $\Delta$ has worst-case time complexity:
+\[O(
+|\phi||\Delta|^2  |S|^2 |\Gamma|^2\prod_{i=1}^{n} |A_{i_Q}|^2 |A_{i_\Delta}|^2
+) \]
+
 
 \section{Testing}
 
-Since correctness of the checking procedure is of great importance, a
+Since correctness of the checking procedure is of utmost importance, a
 systematic test strategy was developed. This included unit testing of some
 subsystems, as well as extensive black-box testing of the whole system.
 
@@ -971,7 +987,6 @@ checks a regular expression's AST.
 See the appendix for a full list.
 
 \subsection{Black Box tests}
-% examples ?
 
 The black-box tests are specified in self-contained Perl hash objects, and are
 all evaluated independently, using different sessions of MCECTL. The results
@@ -1070,15 +1085,10 @@ Results: {
 \normalsize
 so the test passes.
 
-%TODO
-% strategy for testing
-% results ?
-
+See the appendix for a full list of tests.
 
 \section{Application to Checking Java Programs}
 
-%PDsolver and jimple
-% TODO
 A similar project which performs this task is Matthew Hague's
 \textbf{PDSolver}\footnote{
 http://www.comlab.ox.ac.uk/matthew.hague/pdsolver.html}\cite{hague2010analysing}.
@@ -1088,6 +1098,144 @@ graphs from Java programs. This tool produces output in the format used by
 PDSolver; by combining it with a script for converting PDSolver problems to
 MCECTL ones, we can obtain a convenient way of applying the model checker to
 real programs.
+
+Example:
+\footnotesize
+\begin{alltt}
+package ectl;
+
+public class Files \{
+   
+   public static void open_handle() \{ \}
+
+   public static void close_handle() \{ \}
+
+   public static void main( String[] args ) \{
+      open_handle();
+   \}
+\}
+\end{alltt}
+\normalsize
+Output from JimpleToPDSolver, filtered through \texttt{convert.pl}:
+\footnotesize
+\begin{alltt}
+PDS jimple_pds \{
+   STATE ( csend[cpl_ectl_files__open_handle_v__5_5] : 
+            csend,cpl_ectl_files__open_handle_v__5_5 )
+   STATE ( csend[cpl_ectl_files__main_aljava_lang_string_v__11_4] :
+         csend,cpl_ectl_files__main_aljava_lang_string_v__11_4 )
+   STATE ( csend[cpl_ectl_files__main_aljava_lang_string_v__10_1] :
+         csend,cpl_ectl_files__main_aljava_lang_string_v__10_1 )
+   STATE ( csend[cpl_ectl_files__main_aljava_lang_string_v__10_0] :
+         csend,cpl_ectl_files__main_aljava_lang_string_v__10_0 )
+   STATE ( csend[cpl_ectl_files__main_aljava_lang_string_v__10_3] :
+         csend,cpl_ectl_files__main_aljava_lang_string_v__10_3 )
+   STATE ( csend[cpl_ectl_files__main_aljava_lang_string_v__10_2] :
+         csend,cpl_ectl_files__main_aljava_lang_string_v__10_2 )
+   STATE ( csend[cplinit006] :
+         csend,cplinit006 )
+   STATE ( csend[_] :
+         csend,_ )
+   STATE ( csinit[cpl_ectl_files__open_handle_v__5_5] :
+         csinit,cpl_ectl_files__open_handle_v__5_5 )
+   STATE ( csinit[cpl_ectl_files__main_aljava_lang_string_v__11_4] :
+         csinit,cpl_ectl_files__main_aljava_lang_string_v__11_4 )
+   STATE ( csinit[cpl_ectl_files__main_aljava_lang_string_v__10_1] :
+         csinit,cpl_ectl_files__main_aljava_lang_string_v__10_1 )
+   STATE ( csinit[cpl_ectl_files__main_aljava_lang_string_v__10_0] :
+         csinit,cpl_ectl_files__main_aljava_lang_string_v__10_0 )
+   STATE ( csinit[cpl_ectl_files__main_aljava_lang_string_v__10_3] :
+         csinit,cpl_ectl_files__main_aljava_lang_string_v__10_3 )
+   STATE ( csinit[cpl_ectl_files__main_aljava_lang_string_v__10_2] :
+         csinit,cpl_ectl_files__main_aljava_lang_string_v__10_2 )
+   STATE ( csinit[cplinit006] :
+         csinit,cplinit006 )
+   STATE ( csinit[_] :
+         csinit,_ )
+   STATE ( csq[cpl_ectl_files__open_handle_v__5_5] :
+         csq,cpl_ectl_files__open_handle_v__5_5 )
+   STATE ( csq[cpl_ectl_files__main_aljava_lang_string_v__11_4] :
+         csq,cpl_ectl_files__main_aljava_lang_string_v__11_4 )
+   STATE ( csq[cpl_ectl_files__main_aljava_lang_string_v__10_1] :
+         csq,cpl_ectl_files__main_aljava_lang_string_v__10_1 )
+   STATE ( csq[cpl_ectl_files__main_aljava_lang_string_v__10_0] :
+         csq,cpl_ectl_files__main_aljava_lang_string_v__10_0 )
+   STATE ( csq[cpl_ectl_files__main_aljava_lang_string_v__10_3] :
+         csq,cpl_ectl_files__main_aljava_lang_string_v__10_3 )
+   STATE ( csq[cpl_ectl_files__main_aljava_lang_string_v__10_2] :
+         csq,cpl_ectl_files__main_aljava_lang_string_v__10_2 )
+   STATE ( csq[cplinit006] : csq,cplinit006 )
+   STATE ( csq[_] : csq,_ )
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__10_2] ->
+         csq[REWRITE cpl_ectl_files__main_aljava_lang_string_v__11_4])
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__10_1] ->
+         csq[REWRITE cpl_ectl_files__main_aljava_lang_string_v__10_3])
+   ACTION ( a : csq[_] ->
+         csend[REWRITE _])
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__10_1] ->
+         csq[REWRITE cpl_ectl_files__main_aljava_lang_string_v__10_2])
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__11_4] ->
+         csq[POP])
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__10_0] ->
+         csq[PUSH cpl_ectl_files__main_aljava_lang_string_v__10_1])
+   ACTION ( a : csq[cpl_ectl_files__main_aljava_lang_string_v__10_3] ->
+         csq[POP])
+   ACTION ( a : csq[cpl_ectl_files__open_handle_v__5_5] ->
+         csq[POP])
+   ACTION ( a : csinit[_] ->
+         csq[PUSH _])
+   ACTION ( a : csq[cplinit006] ->
+         csq[REWRITE cpl_ectl_files__main_aljava_lang_string_v__10_0])
+\}
+\end{alltt}
+\normalsize
+
+If we add the following simple check:
+\footnotesize
+\begin{verbatim}
+DFA dfa {
+   STATE ( *s1 )
+   ACTION( a: s1 -> s1 )
+}
+
+FORMULA phi1 {
+   E( 1 U[dfa] csend )
+}
+:check(phi1, jimple_pds)
+\end{verbatim}
+\normalsize
+We get the results:
+\footnotesize
+\begin{verbatim}
+Results: {
+   <csend,cpl_ectl_files__main_aljava_lang_string_v__11_4>: T     [ <> s(s1,csend) ]
+   <csend,cpl_ectl_files__main_aljava_lang_string_v__10_1>: T     [ <> s(s1,csend) ]
+   <csend,cpl_ectl_files__main_aljava_lang_string_v__10_0>: T     [ <> s(s1,csend) ]
+   <csend,cpl_ectl_files__main_aljava_lang_string_v__10_3>: T     [ <> s(s1,csend) ]
+   <csend,cpl_ectl_files__main_aljava_lang_string_v__10_2>: T     [ <> s(s1,csend) ]
+   <csend,cplinit006>: T     [ <> s(s1,csend) ]
+   <csend,_>: T     [ <> s(s1,csend) ]
+   <csend,cpl_ectl_files__open_handle_v__5_5>: T     [ <> s(s1,csend) ]
+   <csinit,cpl_ectl_files__main_aljava_lang_string_v__10_3>: F
+   <csinit,_>: T     [ <> s(s1,csinit) --a--> <_> s(s1,csq) --a--> <_> s(s1,csend) ]
+   <csinit,cplinit006>: F
+   <csinit,cpl_ectl_files__main_aljava_lang_string_v__10_2>: F
+   <csinit,cpl_ectl_files__main_aljava_lang_string_v__10_0>: F
+   <csinit,cpl_ectl_files__main_aljava_lang_string_v__10_1>: F
+   <csinit,cpl_ectl_files__main_aljava_lang_string_v__11_4>: F
+   <csinit,cpl_ectl_files__open_handle_v__5_5>: F
+   <csq,cpl_ectl_files__open_handle_v__5_5>: F
+   <csq,cpl_ectl_files__main_aljava_lang_string_v__11_4>: F
+   <csq,cpl_ectl_files__main_aljava_lang_string_v__10_1>: F
+   <csq,cpl_ectl_files__main_aljava_lang_string_v__10_0>: F
+   <csq,cpl_ectl_files__main_aljava_lang_string_v__10_3>: F
+   <csq,cpl_ectl_files__main_aljava_lang_string_v__10_2>: F
+   <csq,cplinit006>: F
+   <csq,_>: T     [ <> s(s1,csq) --a--> <> s(s1,csend) ]
+}
+\end{verbatim}
+\normalsize
+which indicate paths to the end state from various points in the program.
 
 \section{Conclusions}
 
@@ -1109,17 +1257,13 @@ A number of additional convenience features are provided: regular expressions
 allow a more intuitive way to specify automata, and a conversion script is
 available for compatibility with JimpleToPDSolver. 
 
-The core model checking procedure is, for a first implementation, efficient
-% TODO complexity
+The core model checking procedure is, for a first implementation, efficient --
+the worst-case complexity for checking a fixed formula is quadratic in the
+product of the sizes of the system, automata used, and the stack alphabet.
 
 As well as the basic per-state satisfaction results, the algorithm produces
-witnessing traces when this is relevant.
-
-The system has been thoroughly tested and is believed to produce correct results.
-
-%TODO initial performance analysis
-
-
+witnessing traces when this is relevant.  The system has been thoroughly tested
+and is believed to produce correct results.
 
 \subsection{Project Evaluation}
 
@@ -1134,6 +1278,12 @@ be confusing to the uninitiated, and it would benefit from a more formal
 exposition. A dedicated subsystem for output and logging would also have been
 helpful during development -- for instance, more granular log levels would have
 made debugging easier, and should probably have been included from the start.
+There is also some duplicated code in the construction of the various product
+systems -- it would have been more elegant to introduce a greater degree of
+abstraction to the process of iterating over rules of automata, which would
+have helped with this. Thankfully, none of these are fundamental problems and
+with careful use of regression testing it would be straightforward to correct
+these imperfections.
 
 The choice of an interactive command line as an interface to the system has
 been justified by the usability improvements this delivers. Since the nature of
@@ -1259,48 +1409,97 @@ The MCECTL input language is defined as follows.
 Definitions are signalled by the keyword for the type of data being defined, in
 all caps (e.g. PDS) followed by the actual definition, in curly braces.
 
-Commands in lower case and preceded by a colon 
-for example, checking a formula against a system.
+Other commands are in lower case and preceded by a colon. These include, for
+example, checking a formula against a system.
 
 \begin{alltt}
-DFA my_dfa {
+DFA my_dfa \{
    STATE(  my_state_1 )
    STATE(  my_state_2 )
    STATE( *my_accepting_state )
    ACTION( a : my_state_1 -> my_accepting_state )
-}
-Declare a finite automaton explicitly.
+\}
+Declare a finite automaton explicitly. * indicates a final state.
 
-REGEX
-Declare a finite automaton by providing a regular expression
 
-PDA
-Declare a pushdown automaton
+REGULAR my_regex \{
+	a* b*
+\}
+Declare a finite automaton by providing a regular expression.
 
-LTS
-Declare a labelled transition system
 
-PDS
-Declare a pushdown system 
+PDA my_pda \{
+   STATE ( empty )
+   STATE ( toast_ready )
+   STATE ( *fulfilled )
+   ACTION ( make_toast: empty[_] -> toast_ready[PUSH toast] )
+   ACTION ( eat_toast: toast_ready[toast] -> fulfilled[POP] )
+   ACTION ( make_and_eat: toast_ready[toast] -> toast_ready[REWRITE toast] )
+\}
+Declare a pushdown automaton. * indicates a final state.
 
-FORMULA
-Declare a formula
+
+LTS my_lts \{
+   STATE ( s1: p )
+   STATE ( s2: q )
+   STATE ( s3: )
+   ACTION ( a: s1 -> s2 )
+   ACTION ( b: s2 -> s3 )
+\}
+Declare a labelled transition system.
+
+
+PDS pds1 \{
+	STATE( p1[_] : )
+	STATE( p1[s] : )
+	STATE( p2[_] : )
+	STATE( p2[s] : p)
+	ACTION( a: p1[_] -> p1[PUSH s] )
+	ACTION( a: p1[s] -> p1[PUSH s] )
+	ACTION( b: p2[_] -> p2[PUSH s] )
+	ACTION( c: p1[s] -> p2[POP] )
+\}
+Declare a pushdown system.
+
+
+FORMULA my_formula \{
+	A( (p & E(!q U[dfa1](r -> p))) U[dfa2] (q|A(0 R[dfa1] !EX r)) )
+\}
+Declare a formula.  Formulas are input as follows:
+0                     true
+1                     false
+p                     proposition
+!formula              negation
+(f & g)               conjunction
+(f | g)               disjunction
+(f -> g)              implication
+E(f U[automaton] g)   exist until
+E(f R[automaton] g)   exist release
+A(f U[automaton] g)   all until 
+A(f R[automaton] g)   all release
+EX f                  exist next 
+AX f                  all next 
+
 
 :load("input.ectl")
-Load commands from the specified file.
+Load commands from the specified file. Tab-completion available.
+
 
 :quit
 End the session. (Also ctrl-D)
+
 
 :check(my_formula, my_system)
 Check which states of the system model the formula.
 If the system is an LTS, any formula automata should be PDAs.
 If the system is a PDS, the formula automata should be DFAs.
 
+
 :show(my_formula)
 :show(my_automaton)
 :show(my_system)
 Print a textual description of the named object.
+
 
 :xshow(my_automaton)
 :xshow(my_system)
@@ -1327,96 +1526,12 @@ ready to be checked.
 \$ ./MCECTL-REPL --file files.ectl
 \end{alltt}
 
-%TODO convert.pl
-
-
-%TODO xhookright ?
-
 \section{Code Listings}
 
-In the following listings, please note that some of the less important classes
-(e.g. exceptions) have been omitted for brevity. The full source code is
-available from the author upon request.
+In the following listings, please note that many of the less important classes
+(e.g. exceptions and AST nodes) have been omitted for brevity. The full source
+code is available from the author upon request.
 
-%% NOT USED ? %%
-
-\begin{comment}
-\lstset{ %
-language=C++,                % the language of the code
-basicstyle=\footnotesize\ttfamily,       % the size of the fonts that are used for the code
-numbers=left,                   % where to put the line-numbers
-numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
-stepnumber=1,                   % the step between two line-numbers. If it's 1, each line 
-                                % will be numbered
-numbersep=5pt,                  % how far the line-numbers are from the code
-showspaces=false,               % show spaces adding particular underscores
-showstringspaces=false,         % underline spaces within strings
-showtabs=false,                 % show tabs within strings adding particular underscores
-frame=single,                   % adds a frame around the code
-tabsize=2,                      % sets default tabsize to 2 spaces
-captionpos=b,                   % sets the caption-position to bottom
-breaklines=true,                % sets automatic line breaking
-breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
-title=\lstname,                 % show the filename of files included with \lstinputlisting;
-                                % also try caption instead of title
-}
-
-\setlength\topmargin{0in}
-\setlength\leftmargin{0in}
-\setlength\headheight{0in}
-\setlength\headsep{0in}
-\setlength\textheight{9.0in}
-\setlength\textwidth{7.0in}
-\setlength\oddsidemargin{0in}
-\setlength\evensidemargin{0in}
-\begin{landscape}
-%\begin{multicols}{2}{
-\lstinputlisting[language=C++]{src/MCECTL.cpp}
-%}
-%\end{multicols}
-\end{landscape}
-\end{comment}
 \end{document}
-
-
-%\subsection{Computation-tree logic}
-
-%Standard CTL has become %TODO cite
-%one of the most widely-used logics for software verification, since it is both
-%intuitive and computationally amenable.
-
-%To better understand the nature of extended CTL, we now briefly recall the
-%usual definitions of syntax and semantics for ordinary CTL.
-
-%define CTL
-%\begin{mydef}
-%The syntax of a standard CTL formula is defined recursively by
-
-%\[ \phi := q | \phi \vee \phi | \neg \phi | \texttt{E}(\phi_1 \texttt{U} \phi_2) | \texttt{E}(\phi_1 \texttt{R} \phi_2) \]
-
-%$\mathcal{T}, s \models \phi$ denotes that state $s \in \mathcal{S}$ satisfies
-%the formula $\phi$, which 
-%inductively over formulas as follows:
-
-%$\mathcal{T}, s \models q$ if $q \in l(s)$ \\
-%$\mathcal{T}, s \models \phi_1 \vee \phi_2$ if $\mathcal{T}, s \models \phi_1$
-%or $\mathcal{T}, s \models \phi_2$ \\
-%$\mathcal{T}, s \models \neg \phi $ if $\mathcal{T}, s \not\models \phi$ \\
-%$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{U} \phi_2) $ if there exists
-%a path $\pi = s_0,a_1,s_1,\dots$ with $s_0 = s$ and $\exists n \in dom(\pi)$ s.t. $s_n \models \psi$ and $\forall i < n : \mathcal{T}, s_i \models \phi$ \\
-%TODO \
-%$\mathcal{T}, s \models \texttt{E}(\phi_1 \texttt{R} \phi_2) $ if %TODO \\
-
-%\end{mydef}
-%However, its expressive power is limited, and there are properties which we
-%would like to be able to check that are beyond its power.
-%For example: 
-% TODO example - buffer ?
-%To address this, more powerful logics have been proposed. CTL* % TODO CTL*
-% PDL % TODO
-%and the modal mu-calculus
-%While these are all important and worthwhile tools, they suffer from two key problems: 
-%unintuitive
-%exponential-time model-checking
 
 

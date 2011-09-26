@@ -13,3 +13,6 @@ FORMULA f3 {
 FORMULA f4 {
 	A( p R[r1] q )
 }
+FORMULA my_formula {
+	A( (p & E(!q U[dfa1](r -> p))) U[dfa2] (q|A(r R[dfa1] !r)) )
+}

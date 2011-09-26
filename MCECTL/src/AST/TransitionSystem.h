@@ -215,8 +215,6 @@ namespace AST {
          copy(ts._states.begin(), ts._states.end(), back_inserter(_states));
          copy(ts._rules.begin(), ts._rules.end(), back_inserter(_rules));
          ts._owns_states = false;
-         // TODO
-         //delete &ts;
       }
 
       const vector<State*>  &GetStates() const { return _states; }
@@ -238,11 +236,6 @@ namespace AST {
          vector<State*>::const_iterator state_iter;
          for (state_iter = _states.begin(); state_iter != _states.end(); ++state_iter) {
             s << (*state_iter)->ToString() << endl;
-         }
-         vector<Rule>::const_iterator rule_iter;
-         for (rule_iter = _rules.begin(); rule_iter != _rules.end(); ++rule_iter) {
-				// TODO
-            //s << "(" << rule_iter->state1 << ", " << (*rule_iter).action->ToString() << ", " << rule_iter->state2 << ")" << endl;
          }
          return s.str();
       }
